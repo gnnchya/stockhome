@@ -1,33 +1,35 @@
-package main
+package analysis
 
 import (
-	"database/sql"
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
+/*var db *sql.DB
 
 func init() {
 	var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	db, err = sql.Open("mysql", "root:gunngunn22@tcp(127.0.0.1:3306)/stockhome")
 
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-}
+} */
 
+/*
 func main() {
 	defer db.Close()
 
-	/* 	mostWithA()					Show All
-	mostWithDate(start, end)	Show from Start to End date
-	withTime()					Show Time + Amount
-	withTime()					Show Date + Amount
-	*/
+	// 	mostWithA()					Show All
+	//mostWithDate(start, end)	Show from Start to End date
+	//withTime()					Show Time + Amount
+	//withTime()					Show Date + Amount
+
 
 	// Format YYYY-MM-DD
 	var start string = "2019-02-28"
@@ -38,9 +40,10 @@ func main() {
 	withTime()
 	withDate()
 
-}
+} */
 
-func mostWithDate(start string, end string) {
+func MostWithDate(start string, end string) (string, error) {
+	var txt strings.Builder
 	startDate, _ := time.Parse("2006-01-02", start)
 	endDate, _ := time.Parse("2006-01-02", end)
 
@@ -48,6 +51,7 @@ func mostWithDate(start string, end string) {
 
 	if err != nil {
 		fmt.Print(err)
+		return "", err
 	}
 
 	fmt.Printf("\nMost Withdrawn Item (Time: %s to %s)\n---------------\n", start, end)
@@ -79,15 +83,18 @@ func mostWithDate(start string, end string) {
 
 	for _, amount := range withSort {
 		fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
+		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
 	}
+	return txt.String(), nil
 }
 
-func mostWithA() {
-
+func MostWithA() (string, error) {
+	var txt strings.Builder
 	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0")
 
 	if err != nil {
 		fmt.Print(err)
+		return "", err
 	}
 
 	fmt.Printf("\nMost Withdrawn Item (Time: All)\n---------------\n")
@@ -119,15 +126,18 @@ func mostWithA() {
 
 	for _, amount := range withSort {
 		fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
+		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
 	}
+	return txt.String(), nil
 }
 
-func withTime() {
-
+func WithTime() (string, error) {
+	var txt strings.Builder
 	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
 
 	if err != nil {
 		fmt.Print(err)
+		return "", err
 	}
 
 	fmt.Printf("\nTime Withdrawn\n-----------------------\n")
@@ -157,15 +167,18 @@ func withTime() {
 
 	for _, time := range withSort {
 		fmt.Printf("%s - %s | %-4d\n", time+":00", time+":59", withMap[time])
+		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
+	return txt.String(), nil
 }
 
-func withDate() {
-
+func WithDate() (string, error) {
+	var txt strings.Builder
 	row, err := db.Query("SELECT date, amount FROM history WHERE action = 0")
 
 	if err != nil {
 		fmt.Print(err)
+		return "", err
 	}
 
 	fmt.Printf("\nDate Withdrawn\n-----------------------\n")
@@ -195,5 +208,8 @@ func withDate() {
 
 	for _, date := range withSort {
 		fmt.Printf("%s | %-4d\n", date, withMap[date])
+		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
+
 	}
+	return txt.String(), nil
 }
