@@ -9,15 +9,15 @@ import (
 var i int
 var dateAndTime time.Time = time.Now()
 
-type cache struct {
+type Cache struct {
 	itemID     int
 	itemAmount int
 	dateTime   string
-	prev, next *cache
+	prev, next *Cache
 }
 
-func Addcache(itemID int, itemAmount int) *cache {
-	return &cache{
+func addcache(itemID int, itemAmount int) *Cache {
+	return &Cache{
 		itemID:     itemID,
 		itemAmount: itemAmount,
 		dateTime:   dateAndTime.Format("15:04:05 2006-01-02"),
@@ -26,22 +26,22 @@ func Addcache(itemID int, itemAmount int) *cache {
 	}
 }
 
-type queue struct {
+type Queue struct {
 	members *list.List
-	rear    *cache
-	front   *cache
+	rear    *Cache
+	front   *Cache
 }
 
-func (q *queue) InitQ() {
+func (q *Queue) initQ() {
 	q.front, q.rear = nil, nil
 }
 
-func (q *queue) IsEmpty() bool {
+func (q *Queue) isEmpty() bool {
 	return q.rear == nil
 }
 
-func (q *queue) BringToMostUsed(object *cache) {
-	if q.IsEmpty() {
+func (q *Queue) bringToMostUsed(object *Cache) {
+	if q.isEmpty() {
 		return
 	} else if object == q.front {
 		return
@@ -57,8 +57,8 @@ func (q *queue) BringToMostUsed(object *cache) {
 	q.front = object
 }
 
-func (q *queue) AddRecentlyused(itemID int, itemAmount int) *cache {
-	object := Addcache(itemID, itemAmount)
+func (q *Queue) addRecentlyused(itemID int, itemAmount int) *Cache {
+	object := addcache(itemID, itemAmount)
 	if q.front == nil && q.rear == nil {
 		q.front, q.rear = object, object
 	} else {
@@ -67,7 +67,7 @@ func (q *queue) AddRecentlyused(itemID int, itemAmount int) *cache {
 				continue
 			} else {
 				if object == q.front.prev {
-					q.BringToMostUsed(object)
+					q.bringToMostUsed(object)
 				}
 			}
 		}
@@ -75,8 +75,8 @@ func (q *queue) AddRecentlyused(itemID int, itemAmount int) *cache {
 	return object
 }
 
-func (q *queue) AddFrontPage(itemID int, itemAmount int) *cache {
-	page := Addcache(itemID, itemAmount)
+func (q *Queue) AddFrontPage(itemID int, itemAmount int) *Cache {
+	page := addcache(itemID, itemAmount)
 	if q.front == nil && q.rear == nil {
 		q.front, q.rear = page, page
 	} else {
@@ -87,8 +87,8 @@ func (q *queue) AddFrontPage(itemID int, itemAmount int) *cache {
 	return page
 }
 
-func (q *queue) removeLeastUsed() {
-	if q.IsEmpty() {
+func (q *Queue) removeLeastUsed() {
+	if q.isEmpty() {
 		return
 	} else if q.front == q.rear {
 		q.front, q.rear = nil, nil
@@ -99,8 +99,8 @@ func (q *queue) removeLeastUsed() {
 }
 
 func main() {
-	var a queue
-	var b *queue = &a
+	var a Queue
+	var b *Queue = &a
 	// a.initQ()
 	a.AddFrontPage(1, 1)
 	fmt.Println(a.front)
