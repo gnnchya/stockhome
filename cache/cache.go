@@ -1,55 +1,54 @@
 package main
 
 import (
-    "container/list"
+	"container/list"
 	"fmt"
 	"time"
 )
 
 var i int
-var dateAndTime time.Time = time.Now() 
+var dateAndTime time.Time = time.Now()
 
-type cache struct{
-	itemID		int
-	itemAmount	int
-	dateTime	string
-	prev, next	*cache
+type cache struct {
+	itemID     int
+	itemAmount int
+	dateTime   string
+	prev, next *cache
 }
 
-func addcache(itemID int, itemAmount int) *cache{
+func Addcache(itemID int, itemAmount int) *cache {
 	return &cache{
-		itemID : itemID,
-		itemAmount : itemAmount,
-		dateTime: dateAndTime.Format("15:04:05 2006-01-02"),
-		next : nil,
-		prev : nil,
+		itemID:     itemID,
+		itemAmount: itemAmount,
+		dateTime:   dateAndTime.Format("15:04:05 2006-01-02"),
+		next:       nil,
+		prev:       nil,
 	}
 }
 
-type queue struct{
+type queue struct {
 	members *list.List
-	rear *cache
-	front *cache
+	rear    *cache
+	front   *cache
 }
 
-func (q *queue) initQ() {
+func (q *queue) InitQ() {
 	q.front, q.rear = nil, nil
 }
 
-func (q *queue) isEmpty() bool{
+func (q *queue) IsEmpty() bool {
 	return q.rear == nil
 }
 
-
-func(q *queue) bringToMostUsed(object *cache) {
-	if q.isEmpty() {
+func (q *queue) BringToMostUsed(object *cache) {
+	if q.IsEmpty() {
 		return
-	}else if object == q.front{
+	} else if object == q.front {
 		return
-	}else if object == q.rear{
+	} else if object == q.rear {
 		q.rear = q.rear.prev
 		q.rear.next = nil
-	}else{
+	} else {
 		object.prev.next = object.next
 		object.next.prev = object.prev
 	}
@@ -58,26 +57,26 @@ func(q *queue) bringToMostUsed(object *cache) {
 	q.front = object
 }
 
-func (q *queue)addRecentlyused(itemID int, itemAmount int) *cache{
-	object := addcache(itemID, itemAmount)
-	if q.front == nil && q.rear == nil{
+func (q *queue) AddRecentlyused(itemID int, itemAmount int) *cache {
+	object := Addcache(itemID, itemAmount)
+	if q.front == nil && q.rear == nil {
 		q.front, q.rear = object, object
-	}else{
-		for i=0; i<q.members.Len();i++{
-			if i == 0 || i == q.members.Len(){
+	} else {
+		for i = 0; i < q.members.Len(); i++ {
+			if i == 0 || i == q.members.Len() {
 				continue
-			}else{
-				if object == q.front.prev{
-					q.bringToMostUsed(object)
+			} else {
+				if object == q.front.prev {
+					q.BringToMostUsed(object)
 				}
 			}
 		}
 	}
-		return object
+	return object
 }
 
-func (q *queue) addFrontPage(itemID int, itemAmount int) *cache {
-	page := addcache(itemID, itemAmount)
+func (q *queue) AddFrontPage(itemID int, itemAmount int) *cache {
+	page := Addcache(itemID, itemAmount)
 	if q.front == nil && q.rear == nil {
 		q.front, q.rear = page, page
 	} else {
@@ -88,12 +87,12 @@ func (q *queue) addFrontPage(itemID int, itemAmount int) *cache {
 	return page
 }
 
-func (q *queue)removeLeastUsed() {
-	if q.isEmpty(){
+func (q *queue) removeLeastUsed() {
+	if q.IsEmpty() {
 		return
-	}else if q.front == q.rear{
+	} else if q.front == q.rear {
 		q.front, q.rear = nil, nil
-	}else{
+	} else {
 		q.rear = q.rear.prev
 		q.rear.next = nil
 	}
@@ -101,22 +100,18 @@ func (q *queue)removeLeastUsed() {
 
 func main() {
 	var a queue
-	var b *queue =&a
+	var b *queue = &a
 	// a.initQ()
-	a.addFrontPage(1,1)
+	a.AddFrontPage(1, 1)
 	fmt.Println(a.front)
 	fmt.Printf("%v\n\n", b)
-	a.addFrontPage(2,1)
+	a.AddFrontPage(2, 1)
 	fmt.Println(a.front)
 	fmt.Printf("%v\n\n", b)
-	a.addFrontPage(3,1)
+	a.AddFrontPage(3, 1)
 	fmt.Println(a.front)
 	fmt.Printf("%v\n\n", b)
 }
-
-
-
-
 
 //Hashmap check
 //if page exists return and bring to front
