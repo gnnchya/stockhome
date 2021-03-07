@@ -21,7 +21,6 @@ func main() {
 			return
 		}
 		go rec(con)
-		send(con)
 	}
 
 }
@@ -35,6 +34,7 @@ func rec(con net.Conn) {
 		}
 		fmt.Println(data)
 	}
+	con.Close()
 }
 
 func send(con net.Conn) {
@@ -47,4 +47,5 @@ func send(con net.Conn) {
 		}
 		con.Write([]byte("Server: " + msg + "\n"))
 	}
+	con.Close()
 }
