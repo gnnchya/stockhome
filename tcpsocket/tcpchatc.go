@@ -15,10 +15,6 @@ func main() {
 	}
 	defer con.Close()
 	for {
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
 		go rec(con)
 		send(con)
 	}

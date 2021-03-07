@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+var cnt int = 0
+
 func main() {
 	connect, err := net.Listen("tcp", ":9999")
 	if err != nil {
@@ -26,16 +28,15 @@ func main() {
 }
 
 func rec(con net.Conn) {
-	for {
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(data)
+
+	data, err := bufio.NewReader(con).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
-	con.Write([]byte("hello\n"))
-	con.Close()
+	fmt.Println(data)
+	cnt++
+	fmt.Println(cnt)
 }
 
 func send(con net.Conn) {
