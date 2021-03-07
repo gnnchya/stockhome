@@ -4,20 +4,47 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"os"
 )
 
 func main() {
-	connect, err := net.Dial("tcp", ":9999")
+	con, err := net.Dial("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	connect.Write([]byte("client"))
-	data, err := bufio.NewReader(connect).ReadString('.')
-	if err != nil {
-		fmt.Println(err)
-		return
+	defer con.Close()
+	for {
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		go rec(con)
+		send(con)
 	}
-	fmt.Println(data)
-	connect.Close()
+}
+
+func rec(con net.Conn) {
+	for {
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(data)
+	}
+	con.Close()
+}
+
+func send(con net.Conn) {
+	for {
+		reader := bufio.NewReader(os.Stdin)
+		msg, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		con.Write([]byte("Client: " + msg + "\n"))
+	}
+	con.Close()
 }
