@@ -27,7 +27,6 @@ func main() {
 }
 
 func handle(con net.Conn) {
-
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
