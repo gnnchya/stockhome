@@ -6,14 +6,16 @@ import (
 	"net"
 )
 
-func main() {
-
+func init() {
 	dstream, err := net.Listen("tcp", ":9999")
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+}
+func main() {
+
 	defer dstream.Close()
 
 	for {
@@ -24,6 +26,7 @@ func main() {
 		}
 		go handle(con)
 	}
+
 }
 
 func handle(con net.Conn) {

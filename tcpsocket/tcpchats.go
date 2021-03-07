@@ -10,7 +10,7 @@ import (
 var cnt int = 0
 
 func main() {
-	connect, err := net.Listen("tcp", ":1")
+	connect, err := net.Listen("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -31,11 +31,11 @@ func main() {
 	// Format YYYY-MM-DD
 	var start string = "2019-02-28"
 	var end string = "2021-02-26"
-	send(mostWithA())
-	send(mostWithDate(start, end))
-	send(withTime())
-	send(withDate())
-	send("end")
+	var a string = mostWithA()
+	var b string = mostWithDate(start, end)
+	var c string = withTime()
+	var d string = withDate()
+	send(a + b + c + d)
 
 }
 

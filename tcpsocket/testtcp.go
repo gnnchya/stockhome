@@ -27,7 +27,7 @@ func send() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(con.RemoteAddr())
+	// fmt.Println(con.RemoteAddr())
 	s := strconv.Itoa(a)
 	con.Write([]byte(s + "\n"))
 	a++
