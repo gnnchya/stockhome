@@ -3,19 +3,18 @@ USE stockhome;
 
 DROP TABLES IF EXISTS `stock`, `history`;
 
-CREATE TABLE IF NOT EXISTS `stock` (
-  `itemID` int unsigned NOT NULL,
-  `amount` int NOT NULL,
-  PRIMARY KEY (`ItemID`)
-);
+CREATE TABLE `stock` (
+  `itemID` int DEFAULT NULL,
+  `amount` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS `history` (
-  `historyID` int unsigned NOT NULL AUTO_INCREMENT,
-  `action` bool NOT NULL,
-  `userID` int unsigned NOT NULL,
-  `itemID` int unsigned NOT NULL,
-  `amount` int unsigned NOT NULL,
-  `date` date NOT NULL,
-  `time` time NOT NULL,
+CREATE TABLE `history` (
+  `historyID` int NOT NULL AUTO_INCREMENT,
+  `action` int DEFAULT NULL,
+  `userID` int DEFAULT NULL,
+  `itemID` int DEFAULT NULL,
+  `amount` int DEFAULT NULL,
+  `date` text,
+  `time` text,
   PRIMARY KEY (`historyID`)
-) auto_increment 1;
+) ENGINE=InnoDB AUTO_INCREMENT=539 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
