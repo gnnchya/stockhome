@@ -13,7 +13,7 @@ var db *sql.DB
 
 func init() {
 	var err error
-	db, err = sql.Open("mysql", "root:gunngunn22@tcp(127.0.0.1:3306)/stockhome")
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -22,9 +22,10 @@ func init() {
 
 func main() {
 	defer db.Close()
+	var start = time.Now()
 
 	rand.Seed(time.Now().UTC().UnixNano()) // When actually using remove from here
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 18; i++ {
 		var userID int = rand.Intn(999999)
 		var itemID int = rand.Intn(10-1) + 1
 		var amount int = rand.Intn(99-1) + 1
@@ -40,11 +41,9 @@ func main() {
 			addExist(itemID, amount, userID)
 		}
 	} // When actually using remove to here
-
 	// Format: (itemID, amount, userID). All are int.
-	addNew(422, 2, 123456)
-	addExist(2, 20, 654321)
-	withdraw(4, 2, 24680)
+	var elaspedTime = time.Since(start)
+	fmt.Println(elaspedTime)
 }
 
 func addNew(itemID int, amount int, userID int) {
@@ -115,11 +114,12 @@ func withdraw(itemID int, amount int, userID int) {
 
 func addHis(itemID int, action bool, amount int, userID int) {
 	// This already auto-adds itself to the history database, so no need to do anything here.
+
 	var datetime = time.Now()
 	date := datetime.Format("2006-01-02")
 	time := datetime.Format("15:04:05")
 
-	add, err := db.Query("INSERT INTO history (action, userID, itemID, amount, date, time) VALUES(?, ?, ?, ?, ?, ?)", action, userID, itemID, amount, date, time)
+	add, err := db.Query("INSERT INTO history (action, userID, itemID, amount, date, time) VALUES( ?, ?, ?, ?, ?, ?)", action, userID, itemID, amount, date, time)
 
 	if err != nil {
 		fmt.Println("Error: Cannot be added to history")
