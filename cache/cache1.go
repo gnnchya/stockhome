@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-// https://medium.com/@fazlulkabir94/lru-cache-golang-implementation-92b7bafb76f0
-=======
->>>>>>> 4409cee275b5d858de1509558089b649b4fe5a3a
+//reference: https://medium.com/@fazlulkabir94/lru-cache-golang-implementation-92b7bafb76f0
 package main
 import (
 	"fmt"
