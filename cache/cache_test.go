@@ -1,47 +1,39 @@
-package main
+package cache
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 )
 
-func Testaddpage(t *testing.T) {
-	var a Queue
-	var b *Queue = &a
+func TestQueueCheck(t *testing.T) {
 
 	var test = []struct {
-		input_ID, input_amt        int
-		expected_front, expected_q string
+		inputID, inputAmt, expectedFront, expectedQF, expectedQT int
 	}{
-		{1, 1, "&{1 1 22:29:31 2021-03-06 <nil> <nil>}", "&{<nil> 0xc00006c330 0xc00006c330}"},
-		{2, 1, "&{2 1 22:29:31 2021-03-06 <nil> 0xc00006c330}", "&{<nil> 0xc00006c330 0xc00006c390}"},
-		{3, 1, "&{3 1 22:29:31 2021-03-06 <nil> 0xc00006c390}", "&{<nil> 0xc00006c330 0xc00006c3f0}"},
+		// {inputID, input_amount, newly added ID, first in the queue, last in the queue}
+		{1, 1, 1, 1, 1},
+		{2, 1, 2, 1, 2},
+		{3, 1, 3, 1, 3},
 	}
 
 	for _, outcome := range test {
 
-		testname := fmt.Sprintf("ID: %d | Amount: %d", outcome.input_ID, outcome.input_amt)
+		testname := fmt.Sprintf("ID: %d | Amount: %d", outcome.inputID, outcome.inputAmt)
 		t.Run(testname, func(t *testing.T) {
 
-			a.AddFrontPage(outcome.input_ID, outcome.input_amt)
-			output_front, err := json.Marshal(a.front)
-			if err != nil {
-				t.Errorf("Error casting to string")
-			}
-			output_q, err := json.Marshal(b)
-			if err != nil {
-				t.Errorf("Error casting to string")
-			}
+			frontid, frontID, rearID := QueueCheck(outcome.inputID, outcome.inputAmt)
 
-			if cnt != outcome.expected {
-				t.Errorf("Cannot reaches the expected amount of clients")
+			if outcome.expectedFront != frontid {
+				t.Errorf("Newly added item is not correct")
 			}
-
-			fmt.Printf("Number of goroutines: %d\n", cnt)
+			if outcome.expectedQF != frontID {
+				t.Errorf("Front item is not correct")
+			}
+			if outcome.expectedQT != rearID {
+				t.Errorf("Rear item is not correct")
+			}
 
 		})
 
 	}
-
 }

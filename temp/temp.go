@@ -1,7 +1,8 @@
-package cache
+package main
 
 import (
 	"container/list"
+	"fmt"
 	"time"
 )
 
@@ -97,26 +98,21 @@ func (q *Queue) removeLeastUsed() {
 	}
 }
 
-func QueueCheck(ItemID, ItemAmt int) (int, int, int) {
-	var A Queue
-	var B *Queue = &A
+func main() {
+	var a Queue
+	//var b *Queue = &a
 
-	A.AddfrontPage(ItemID, ItemAmt)
-	return A.Front.ItemID, B.Front.ItemID, B.Rear.ItemID
-
-	// a.initQ()
-	/*a.AddfrontPage(1, 1)
+	a.AddfrontPage(1, 1)
 	fmt.Println(a.Front)
-	fmt.Printf("%v\n\n", b)
-
+	fmt.Println(a)
 
 	a.AddfrontPage(2, 1)
 	fmt.Println(a.Front)
-	fmt.Printf("%v\n\n", b)
+	fmt.Println(a)
 
 	a.AddfrontPage(3, 1)
 	fmt.Println(a.Front)
-	fmt.Printf("%v\n\n", b)*/
+	fmt.Println(a)
 
 }
 
