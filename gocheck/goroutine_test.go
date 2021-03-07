@@ -17,6 +17,7 @@ func TestGoAmount(t *testing.T) {
 		{10, 10},
 		{100, 100},
 		{1000, 1000},
+		{10000, 10000},
 	}
 
 	runtime.GOMAXPROCS(1)
