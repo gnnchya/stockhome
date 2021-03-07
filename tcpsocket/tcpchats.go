@@ -10,7 +10,7 @@ import (
 var cnt int = 0
 
 func main() {
-	connect, err := net.Listen("tcp", ":9999")
+	connect, err := net.Listen("tcp", ":1")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -20,23 +20,25 @@ func main() {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
+			connect.Close()
 			return
 		}
 		go rec(con)
+		fmt.Println(con.RemoteAddr())
 	}
 
 }
-
 func rec(con net.Conn) {
+	for {
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(data)
 
-	data, err := bufio.NewReader(con).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return
 	}
-	fmt.Println(data)
-	cnt++
-	fmt.Println(cnt)
+	con.Close()
 }
 
 func send(con net.Conn) {
