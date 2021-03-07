@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -13,7 +14,7 @@ var db *sql.DB
 
 func init() {
 	var err error
-	db, err = sql.Open("mysql", "root:gunngunn22@tcp(127.0.0.1:3306)/stockhome")
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -23,33 +24,48 @@ func init() {
 func main() {
 	defer db.Close()
 
-	rand.Seed(time.Now().UTC().UnixNano()) // When actually using remove from here
-	for i := 0; i < 20; i++ {
-		var userID int = rand.Intn(999999)
-		var itemID int = rand.Intn(10-1) + 1
-		var amount int = rand.Intn(99-1) + 1
-		var ran int = rand.Intn(99)
+	var start = time.Now()
+	rand.Seed(time.Now().UTC().UnixNano())
 
-		if ran%2 == 0 {
-			withdraw(itemID, amount, userID)
-		}
+	Wg := sync.WaitGroup{}
 
-		if ran%9 == 0 {
-			addNew(itemID, amount, userID)
-		} else {
-			addExist(itemID, amount, userID)
-		}
-	} // When actually using remove to here
+	for i := 0; i < 6; i++ {
+		Wg.Add(1)
+		go func() {
+			var userID int = rand.Intn(999999)
+			var itemID int = rand.Intn(10-1) + 1
+			var amount int = rand.Intn(99-1) + 1
+			addNew(itemID, amount, userID, &Wg)
+		}()
 
+		Wg.Add(1)
+		go func() {
+			var userID int = rand.Intn(999999)
+			var itemID int = rand.Intn(10-1) + 1
+			var amount int = rand.Intn(99-1) + 1
+			addExist(itemID, amount, userID, &Wg)
+		}()
+
+		Wg.Add(1)
+		go func() {
+			var userID int = rand.Intn(999999)
+			var itemID int = rand.Intn(10-1) + 1
+			var amount int = rand.Intn(99-1) + 1
+			withdraw(itemID, amount, userID, &Wg)
+		}()
+	}
+	// When actually using remove to here
 	// Format: (itemID, amount, userID). All are int.
-	addNew(422, 2, 123456)
-	addExist(2, 20, 654321)
-	withdraw(4, 2, 24680)
+	Wg.Wait()
+	var elaspedTime = time.Since(start)
+	fmt.Println(elaspedTime)
+
 }
 
-func addNew(itemID int, amount int, userID int) {
+func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) {
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
+	defer Wg.Done()
 	var checkID int
 
 	check := db.QueryRow("SELECT itemID FROM stock WHERE itemID = (?)", itemID).Scan(&checkID)
@@ -69,9 +85,10 @@ func addNew(itemID int, amount int, userID int) {
 	}
 }
 
-func addExist(itemID int, amount int, userID int) {
+func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) {
 	// For adding EXISTING items. For items CURRENTLY in the database.
 	// If you add a new item, it will die. Use addNew for items NOT in database
+	defer Wg.Done()
 	var checkID, stock int
 
 	check := db.QueryRow("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID).Scan(&checkID, &stock)
@@ -90,7 +107,8 @@ func addExist(itemID int, amount int, userID int) {
 	}
 }
 
-func withdraw(itemID int, amount int, userID int) {
+func withdraw(itemID int, amount int, userID int, Wg *sync.WaitGroup) {
+	defer Wg.Done()
 	var checkID, stock int
 
 	check := db.QueryRow("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID).Scan(&checkID, &stock)
