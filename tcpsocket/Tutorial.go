@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	DB "/lib"
+)
 
 func main() {
-	fmt.Println("Hello")
+	DB.Show()
+	DB.Demo()
 }
