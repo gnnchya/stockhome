@@ -34,6 +34,7 @@ func rec(con net.Conn) {
 		}
 		fmt.Println(data)
 	}
+	con.Write([]byte("hello\n"))
 	con.Close()
 }
 

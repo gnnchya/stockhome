@@ -33,6 +33,7 @@ func rec(con net.Conn) {
 		}
 		fmt.Println(data)
 	}
+	con.Close()
 }
 
 func send(con net.Conn) {
@@ -45,4 +46,5 @@ func send(con net.Conn) {
 		}
 		con.Write([]byte("Client: " + msg + "\n"))
 	}
+	con.Close()
 }
