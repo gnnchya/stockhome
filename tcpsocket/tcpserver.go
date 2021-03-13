@@ -24,8 +24,8 @@ func main() {
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 		send(con)
-	}
 
+	}
 }
 func rec(con net.Conn) {
 	for {
