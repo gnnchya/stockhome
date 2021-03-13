@@ -11,14 +11,11 @@ import (
 )
 
 func main() {
-<<<<<<< HEAD
 	con, err := net.Dial("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-=======
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 	help()
 	for {
 		fmt.Println("Command: ")
@@ -29,7 +26,6 @@ func main() {
 		com := strings.TrimSpace(msg)
 		switch com {
 		case "add":
-<<<<<<< HEAD
 			add(con)
 		case "wd":
 			wd(con)
@@ -41,18 +37,6 @@ func main() {
 			help()
 		case "exit":
 			con.Close()
-=======
-			add()
-		case "wd":
-			wd()
-		case "his":
-			his()
-		case "ana":
-			ana()
-		case "help":
-			help()
-		case "exit":
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 			return
 		default:
 			fmt.Println("Command not found. Type \"help\" for help.")
@@ -71,11 +55,7 @@ func help() {
 	fmt.Println(" Exit 			|\"exit\"")
 }
 
-<<<<<<< HEAD
 func add(con net.Conn) {
-=======
-func add() {
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 	fmt.Println("UserID (integers): ")
 	uid, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
@@ -112,39 +92,18 @@ func add() {
 		return
 	}
 	iamt += 0
-<<<<<<< HEAD
 
 	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('\n')
-=======
-	con, err := net.Dial("tcp", ":9999")
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-<<<<<<< HEAD
 	fmt.Println(data)
 }
 
 func wd(con net.Conn) {
-=======
-	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
-	for {
-		fmt.Println("Waiting for respond...")
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(data)
-		con.Close()
-	}
-}
-
-func wd() {
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 	fmt.Println("UserID (integers): ")
 	uid, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
@@ -181,39 +140,18 @@ func wd() {
 		return
 	}
 	iamt += 0
-<<<<<<< HEAD
 
 	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('\n')
-=======
-	con, err := net.Dial("tcp", ":9999")
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-<<<<<<< HEAD
 	fmt.Println(data)
 }
 
 func his(con net.Conn) {
-=======
-	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
-	for {
-		fmt.Println("Waiting for respond...")
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(data)
-		con.Close()
-	}
-}
-
-func his() {
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 	fmt.Println("Since Year -xxxx-: ")
 	yyyy, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
@@ -273,18 +211,13 @@ func his() {
 		fmt.Println("Please Enter an Integer!")
 		return
 	}
-<<<<<<< HEAD
 	con.Write([]byte("his" + ": " + yyyy + "-" + mm + "-" + dd + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('\n')
-=======
-	con, err := net.Dial("tcp", ":9999")
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-<<<<<<< HEAD
 	fmt.Println(data)
 }
 
@@ -293,41 +226,9 @@ func ana(con net.Conn) {
 	con.Write([]byte("ana" + ":" + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('\n')
-=======
-	con.Write([]byte("his" + ": " + yyyy + "-" + mm + "-" + dd + "\n"))
-	for {
-		fmt.Println("Waiting for respond...")
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(data)
-		con.Close()
-	}
-
-}
-
-func ana() {
-	con, err := net.Dial("tcp", ":9999")
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-<<<<<<< HEAD
 	fmt.Println(data)
-=======
-	con.Write([]byte("ana" + ":" + "\n"))
-	for {
-		fmt.Println("Waiting for respond...")
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(data)
-		con.Close()
-	}
->>>>>>> 89f8354fd650353a03475b5f216f64d16a2786b7
 }
