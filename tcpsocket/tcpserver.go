@@ -7,8 +7,6 @@ import (
 	"os"
 )
 
-var cnt int = 0
-
 func main() {
 	connect, err := net.Listen("tcp", ":9999")
 	if err != nil {
@@ -38,7 +36,6 @@ func rec(con net.Conn) {
 		}
 		fmt.Println(data)
 	}
-
 }
 
 func send(con net.Conn) {
