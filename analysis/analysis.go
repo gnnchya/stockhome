@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"net"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,6 +15,11 @@ import (
 var db *sql.DB
 
 func main() {
+	ans := analysis("2021", "03", "15")
+	fmt.Println(ans)
+}
+
+func analysis(year string, month string, day string) string {
 	var err error
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 	if err != nil {
@@ -24,8 +28,7 @@ func main() {
 
 	defer db.Close()
 
-	var start string = "2019-02-28"
-	var end string = "2021-02-26"
+	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 
 	Wg := sync.WaitGroup{}
@@ -33,38 +36,25 @@ func main() {
 	Wg.Add(1)
 	go func() {
 		aWith = MostWithA(&Wg)
-		fmt.Println(aWith)
 	}()
 
 	Wg.Add(1)
 	go func() {
-		bWith = MostWithDate(start, end, &Wg)
-		fmt.Println(bWith)
+		bWith = MostWithDate(start, &Wg)
 	}()
 
 	Wg.Add(1)
 	go func() {
 		cWith = WithTime(&Wg)
-		fmt.Println(cWith)
 	}()
 
 	Wg.Add(1)
 	go func() {
 		dWith = WithDate(&Wg)
-		fmt.Println(dWith)
 	}()
 
 	Wg.Wait()
-	send(aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith)
-}
-
-func send(msg string) {
-	con, err := net.Dial("tcp", ":9999")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	con.Write([]byte(msg + "."))
+	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith)
 }
 
 func MostWithA(Wg *sync.WaitGroup) string {
@@ -109,11 +99,12 @@ func MostWithA(Wg *sync.WaitGroup) string {
 	return txt.String()
 }
 
-func MostWithDate(start string, end string, Wg *sync.WaitGroup) string {
+func MostWithDate(start string, Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
 	startDate, _ := time.Parse("2006-01-02", start)
-	endDate, _ := time.Parse("2006-01-02", end)
+	var end = time.Now()
+	endDate := end.Format("2006-01-02")
 
 	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
 
