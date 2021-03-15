@@ -1,6 +1,7 @@
-package analysis
+package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net"
 	"sort"
@@ -12,18 +13,17 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-/*var db *sql.DB
+var db *sql.DB
 
-func init() {
+func main() {
 	var err error
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-}
 
-func main() {
 	defer db.Close()
+
 	var start string = "2019-02-28"
 	var end string = "2021-02-26"
 	var aWith, bWith, cWith, dWith string
@@ -55,8 +55,8 @@ func main() {
 	}()
 
 	Wg.Wait()
-	send(aWith + bWith + cWith + dWith)
-}*/
+	send(aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith)
+}
 
 func send(msg string) {
 	con, err := net.Dial("tcp", ":9999")
