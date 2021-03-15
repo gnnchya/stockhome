@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"time"
 
 	//"strings"
 
@@ -135,14 +134,6 @@ func (c *Cache) get(q *Queue, itemId int) *bytes.Buffer {
 
 var db *sql.DB
 
-func init() {
-	var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-}
-
 func retrieve(c *Cache, q *Queue, startDate string, endDate string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
@@ -255,16 +246,27 @@ func dash() {
 	fmt.Println("--------------------")
 }
 
-func main() {
+func history(daterequest int) *bytes.Buffer {
+	var err error
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
 	cache_size := 3
 	Lfu := Cache{cache_size, 0, make(map[int]*Node)}
 	Cache_queue := Queue{nil, nil}
 
-	miss_start := time.Now()
-	Lfu.get(&Cache_queue, 21022102)
-	fmt.Println("Time elapsed: ", time.Since(miss_start))
+	// miss_start := time.Now()
+	// Lfu.get(&Cache_queue, daterequest)
+	// fmt.Println("Time elapsed: ", time.Since(miss_start))
 
-	hit_start := time.Now()
-	Lfu.get(&Cache_queue, 21022102)
-	fmt.Println("Time elapsed: ", time.Since(hit_start))
+	// hit_start := time.Now()
+	// Lfu.get(&Cache_queue, daterequest)
+	// fmt.Println("Time elapsed: ", time.Since(hit_start))
+
+	return Lfu.get(&Cache_queue, daterequest)
+}
+
+func main() {
+	fmt.Println(history(210225210228))
 }
