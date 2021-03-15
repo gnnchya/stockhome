@@ -172,6 +172,27 @@ func his(con net.Conn) {
 		fmt.Println("Cannot diplay the future!")
 		return
 	}
+
+	fmt.Println("Until Year -xxxx-: ")
+	yy, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	yy = strings.TrimSpace(yy)
+	if len(yy) != 4 {
+		fmt.Println("Please Enter 4 digits of int!")
+		return
+	}
+	iyy, err := strconv.Atoi(yy)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	if iyy > time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+
 	fmt.Println("Since Month -xx-: ")
 	mm, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
@@ -187,12 +208,35 @@ func his(con net.Conn) {
 		fmt.Println("Please Enter an Integer!")
 		return
 	}
-	m := time.Now().Month()
-	var im int = int(m)
-	if imm > im && iyyyy == time.Now().Year() {
+	mmt := time.Now().Month()
+	var immt int = int(mmt)
+	if imm > immt && iyyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		return
 	}
+
+	fmt.Println("Until Month -xx-: ")
+	m, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	m = strings.TrimSpace(m)
+	if len(m) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	im, err := strconv.Atoi(m)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	mt := time.Now().Month()
+	var imt int = int(mt)
+	if im > imt && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+
 	fmt.Println("Since Day -xx-: ")
 	dd, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
@@ -212,7 +256,27 @@ func his(con net.Conn) {
 		fmt.Println("Please Enter an Integer!")
 		return
 	}
-	con.Write([]byte("his" + ": " + yyyy + "-" + mm + "-" + dd + "\n"))
+	fmt.Println("Until Day -xx-: ")
+	d, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	d = strings.TrimSpace(dd)
+	if len(d) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	id, err := strconv.Atoi(dd)
+	if id > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+
+	con.Write([]byte("his" + ": " + yyyy + mm + dd + yy + m + d + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('\n')
 	if err != nil {
