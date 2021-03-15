@@ -246,7 +246,7 @@ func dash() {
 	fmt.Println("--------------------")
 }
 
-func history(daterequest int) *bytes.Buffer {
+func history(daterequest int) string {
 	var err error
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 	if err != nil {
@@ -264,7 +264,7 @@ func history(daterequest int) *bytes.Buffer {
 	// Lfu.get(&Cache_queue, daterequest)
 	// fmt.Println("Time elapsed: ", time.Since(hit_start))
 
-	return Lfu.get(&Cache_queue, daterequest)
+	return Lfu.get(&Cache_queue, daterequest).String()
 }
 
 func main() {
