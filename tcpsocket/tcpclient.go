@@ -16,6 +16,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	defer con.Close()
 	help()
 	for {
 		fmt.Println("Command: ")
@@ -219,11 +220,70 @@ func his(con net.Conn) {
 		return
 	}
 	fmt.Println(data)
+
 }
 
 func ana(con net.Conn) {
-
-	con.Write([]byte("ana" + ":" + "\n"))
+	fmt.Println("Since Year -xxxx-: ")
+	yyyy, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	yyyy = strings.TrimSpace(yyyy)
+	if len(yyyy) != 4 {
+		fmt.Println("Please Enter 4 digits of int!")
+		return
+	}
+	iyyyy, err := strconv.Atoi(yyyy)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	if iyyyy > time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+	fmt.Println("Since Month -xx-: ")
+	mm, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	mm = strings.TrimSpace(mm)
+	if len(mm) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	imm, err := strconv.Atoi(mm)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	m := time.Now().Month()
+	var im int = int(m)
+	if imm > im && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+	fmt.Println("Since Day -xx-: ")
+	dd, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	dd = strings.TrimSpace(dd)
+	if len(dd) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	idd, err := strconv.Atoi(dd)
+	if idd > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	con.Write([]byte("ana" + ": " + yyyy + "-" + mm + "-" + dd + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('\n')
 	if err != nil {
