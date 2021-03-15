@@ -10,8 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
@@ -30,40 +29,30 @@ func main() {
 		}
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
-		go send(con, rec(con))
+		// go send(con, rec(con))
 	}
 }
-func rec(con net.Conn) string {
+func rec(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
-			return ""
+			return
 		}
-		return data
-		// msg := strings.Split(data, ":")
-		// date := strings.Split(msg[1], "-")
-		// if msg[0] == "ana" {
-		// 	analysis(date[0], date[1], date[2])
-		// }
+		fmt.Println()
+		fmt.Print("Client: " + data)
+		msg := strings.Split(data, ":")
+		date := strings.Split(msg[1], "-")
+		msg[0] = strings.TrimSpace(msg[0])
+		date[0] = strings.TrimSpace(date[0])
+		date[1] = strings.TrimSpace(date[1])
+		date[2] = strings.TrimSpace(date[2])
+		send(con, analysis(date[0], date[1], date[2]))
 	}
 }
 
-func send(con net.Conn, data string) {
-	for {
-		// reader := bufio.NewReader(os.Stdin)
-		// msg, err := reader.ReadString('\n')
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	return
-		// }
-		msg := strings.Split(data, ":")
-		date := strings.Split(msg[1], "-")
-		if msg[0] == "ana" {
-			con.Write([]byte("Server: " + analysis(date[0], date[1], date[2]) + "\n"))
-		}
-
-	}
+func send(con net.Conn, msg string) {
+	con.Write([]byte("Server: " + msg + "\n"))
 }
 
 var db *sql.DB
