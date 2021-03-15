@@ -314,6 +314,5 @@ func history(daterequest int) string {
 	// hit_start := time.Now()
 	// Lfu.get(&Cache_queue, daterequest)
 	// fmt.Println("Time elapsed: ", time.Since(hit_start))
-	fmt.Println(Lfu.get(&Cache_queue, daterequest).String())
 	return Lfu.get(&Cache_queue, daterequest).String() + "."
 }
