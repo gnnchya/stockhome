@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	// _ "github.com/go-sql-driver/mysql"
+	"bufio"
 	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -18,13 +20,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var Lfu Cache = Cache{3, 0, make(map[int]*Node)}
-var Cache_queue Queue = Queue{nil, nil}
-
 func main() {
-	// cache_size := 3
-	// Lfu := Cache{cache_size, 0, make(map[int]*Node)}
-	// Cache_queue := Queue{nil, nil}
 	connect, err := net.Listen("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
@@ -180,7 +176,7 @@ func (c *Cache) get(q *Queue, itemId int) *bytes.Buffer {
 	} else {
 		// read(c, q, strconv.Itoa(itemId))
 		filename := strconv.Itoa(itemId)
-		retrieve(c, q, filename[0:4]+"-"+filename[4:6]+"-"+filename[6:8], filename[8:12]+"-"+filename[12:14]+"-"+filename[14:16], filename)
+		retrieve(c, q, "20"+filename[0:2]+"-"+filename[2:4]+"-01", "20"+filename[4:6]+"-"+filename[6:8]+"-31", filename)
 		fmt.Println("----MISS----")
 	}
 	return c.block[itemId].value
@@ -306,6 +302,9 @@ func history(daterequest int) string {
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
+	cache_size := 3
+	Lfu := Cache{cache_size, 0, make(map[int]*Node)}
+	Cache_queue := Queue{nil, nil}
 
 	// miss_start := time.Now()
 	// Lfu.get(&Cache_queue, daterequest)
@@ -314,5 +313,6 @@ func history(daterequest int) string {
 	// hit_start := time.Now()
 	// Lfu.get(&Cache_queue, daterequest)
 	// fmt.Println("Time elapsed: ", time.Since(hit_start))
-	return Lfu.get(&Cache_queue, daterequest).String() + "."
+
+	return Lfu.get(&Cache_queue, daterequest).String()
 }

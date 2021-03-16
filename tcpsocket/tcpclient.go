@@ -261,7 +261,7 @@ func his(con net.Conn) {
 	if err != nil {
 		return
 	}
-	d = strings.TrimSpace(dd)
+	d = strings.TrimSpace(d)
 	if len(d) != 2 {
 		fmt.Println("Please Enter 2 digits of int!")
 		return
@@ -349,7 +349,7 @@ func ana(con net.Conn) {
 	}
 	con.Write([]byte("ana" + ": " + yyyy + "-" + mm + "-" + dd + "\n"))
 	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('\n')
+	data, err := bufio.NewReader(con).ReadString('.')
 	if err != nil {
 		fmt.Println(err)
 		return
