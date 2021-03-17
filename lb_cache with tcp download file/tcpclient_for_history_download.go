@@ -1,0 +1,397 @@
+// func DownloadFile(url string, filepath string) error {
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"net"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/dustin/go-humanize"
+)
+
+type WriteCounter struct {
+	Total uint64
+}
+
+func (wc *WriteCounter) Write(p []byte) (int, error) {
+	n := len(p)
+	wc.Total += uint64(n)
+	wc.PrintProgress()
+	return n, nil
+}
+
+// PrintProgress prints the progress of a file write
+func (wc WriteCounter) PrintProgress() {
+	// Clear the line by using a character return to go back to the start and remove
+	// the remaining characters by filling it with spaces
+	fmt.Printf("\r%s", strings.Repeat(" ", 50))
+
+	// Return again and print current status of download
+	// We use the humanize package to print the bytes in a meaningful way (e.g. 10 MB)
+	fmt.Printf("\rDownloading... %s complete", humanize.Bytes(wc.Total))
+}
+
+func main() {
+	con, err := net.Dial("tcp", ":9999")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer con.Close()
+	help()
+	for {
+		fmt.Println("Command: ")
+		msg, err := bufio.NewReader(os.Stdin).ReadString('\n')
+		if err != nil {
+			return
+		}
+		com := strings.TrimSpace(msg)
+		switch com {
+		case "add":
+			add(con)
+		case "wd":
+			wd(con)
+		case "his":
+			his(con)
+		case "ana":
+			ana(con)
+		case "help":
+			help()
+		case "exit":
+			con.Close()
+			return
+		default:
+			fmt.Println("Command not found. Type \"help\" for help.")
+		}
+	}
+
+}
+
+func help() {
+	fmt.Println(" Features 		|\"Command\"")
+	fmt.Println(" ---------------------------------------")
+	fmt.Println(" Add Item		|\"add\"")
+	fmt.Println(" WithDraw Item		|\"wd\"")
+	fmt.Println(" History Tracking	|\"his\"")
+	fmt.Println(" Stock Analysis 	|\"ana\"")
+	fmt.Println(" Exit 			|\"exit\"")
+}
+
+func add(con net.Conn) {
+	fmt.Println("UserID (integers): ")
+	uid, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	uid = strings.TrimSpace(uid)
+	iuid, err := strconv.Atoi(uid)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	iuid += 0
+	fmt.Println("ItemID (integers): ")
+	iid, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	iid = strings.TrimSpace(iid)
+	iiid, err := strconv.Atoi(iid)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	iiid += 0
+	fmt.Println("Amount (integers): ")
+	amt, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	amt = strings.TrimSpace(amt)
+	iamt, err := strconv.Atoi(amt)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	iamt += 0
+
+	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
+	fmt.Println("Waiting for respond...")
+	data, err := bufio.NewReader(con).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(data)
+}
+
+func wd(con net.Conn) {
+	fmt.Println("UserID (integers): ")
+	uid, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	uid = strings.TrimSpace(uid)
+	iuid, err := strconv.Atoi(uid)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	iuid += 0
+	fmt.Println("ItemID (integers): ")
+	iid, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	iid = strings.TrimSpace(iid)
+	iiid, err := strconv.Atoi(iid)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	iiid += 0
+	fmt.Println("Amount (integers): ")
+	amt, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	amt = strings.TrimSpace(amt)
+	iamt, err := strconv.Atoi(amt)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	iamt += 0
+
+	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
+	fmt.Println("Waiting for respond...")
+	data, err := bufio.NewReader(con).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(data)
+}
+
+func his(con net.Conn) {
+	fmt.Println("Since Year -xxxx-: ")
+	yyyy, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	yyyy = strings.TrimSpace(yyyy)
+	if len(yyyy) != 4 {
+		fmt.Println("Please Enter 4 digits of int!")
+		return
+	}
+	iyyyy, err := strconv.Atoi(yyyy)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	if iyyyy > time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+
+	fmt.Println("Until Year -xxxx-: ")
+	yy, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	yy = strings.TrimSpace(yy)
+	if len(yy) != 4 {
+		fmt.Println("Please Enter 4 digits of int!")
+		return
+	}
+	iyy, err := strconv.Atoi(yy)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	if iyy > time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+
+	fmt.Println("Since Month -xx-: ")
+	mm, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	mm = strings.TrimSpace(mm)
+	if len(mm) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	imm, err := strconv.Atoi(mm)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	mmt := time.Now().Month()
+	var immt int = int(mmt)
+	if imm > immt && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+
+	fmt.Println("Until Month -xx-: ")
+	m, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	m = strings.TrimSpace(m)
+	if len(m) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	im, err := strconv.Atoi(m)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	mt := time.Now().Month()
+	var imt int = int(mt)
+	if im > imt && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+
+	fmt.Println("Since Day -xx-: ")
+	dd, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	dd = strings.TrimSpace(dd)
+	if len(dd) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	idd, err := strconv.Atoi(dd)
+	if idd > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	fmt.Println("Until Day -xx-: ")
+	d, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	d = strings.TrimSpace(d)
+	if len(d) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	id, err := strconv.Atoi(dd)
+	if id > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+
+	con.Write([]byte("his" + ": " + yyyy + mm + dd + yy + m + d + "\n"))
+	// fmt.Println("Waiting for respond...")
+	fmt.Println("Downloading...")
+
+	// Create a file that the client wants to download
+	out, err := os.Create("c:/Users/fluke/Desktop/" + "filename" + ".tmp")
+	if err != nil {
+		return
+	}
+
+	// Receive data and writing the file
+	data, err := bufio.NewReader(con).ReadString('.')
+	out.Write([]byte(data))
+	out.Close()
+
+	// Rename temporary to acutal csv file
+	err = os.Rename("c:/Users/fluke/Desktop/filename.tmp", "c:/Users/fluke/Desktop/hihihihihihi.csv")
+	if err != nil {
+		return
+	}
+
+	fmt.Println("Download completed")
+	return
+}
+
+func ana(con net.Conn) {
+	fmt.Println("Since Year -xxxx-: ")
+	yyyy, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	yyyy = strings.TrimSpace(yyyy)
+	if len(yyyy) != 4 {
+		fmt.Println("Please Enter 4 digits of int!")
+		return
+	}
+	iyyyy, err := strconv.Atoi(yyyy)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	if iyyyy > time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+	fmt.Println("Since Month -xx-: ")
+	mm, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	mm = strings.TrimSpace(mm)
+	if len(mm) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	imm, err := strconv.Atoi(mm)
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	m := time.Now().Month()
+	var im int = int(m)
+	if imm > im && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+	fmt.Println("Since Day -xx-: ")
+	dd, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		return
+	}
+	dd = strings.TrimSpace(dd)
+	if len(dd) != 2 {
+		fmt.Println("Please Enter 2 digits of int!")
+		return
+	}
+	idd, err := strconv.Atoi(dd)
+	if idd > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the future!")
+		return
+	}
+	if err != nil {
+		fmt.Println("Please Enter an Integer!")
+		return
+	}
+	con.Write([]byte("ana" + ": " + yyyy + "-" + mm + "-" + dd + "\n"))
+	fmt.Println("Waiting for respond...")
+	data, err := bufio.NewReader(con).ReadString('.')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(data)
+}
