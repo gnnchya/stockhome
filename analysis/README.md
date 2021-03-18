@@ -1,6 +1,3 @@
-## NOTE
-This is for demonstration purposes only
-
 ## How to Use
 ### Running Normally with TCP Socket
 1. Make sure lines 15 and 59 **do not have** comment tags on them
@@ -34,5 +31,6 @@ ok      _/C_/Users/[name]/Desktop/[Folder]/.../analysis_new   0.187s
 - [x] Run Stock Analysis on Goroutines instead of loops
 - [x] Connect Stock Analysis to TCP Socket
 - [x] Check for race conditions within the report
+- [ ] Connect to other modules
 - [ ] Check for race conditions when interacting with other files
 - [ ] Make it fast in case the database is large

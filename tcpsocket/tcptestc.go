@@ -21,13 +21,13 @@ func main() {
 }
 
 func send() {
-	con, err := net.Dial("tcp", ":1")
+	con, err := net.Dial("tcp", ":9999")
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(con.RemoteAddr())
+	// fmt.Println(con.RemoteAddr())
 	s := strconv.Itoa(a)
 	con.Write([]byte(s + "\n"))
 	a++

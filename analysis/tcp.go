@@ -1,4 +1,4 @@
-package main
+package analysis
 
 import (
 	"bufio"
@@ -14,24 +14,9 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	defer dstream.Close()
-
-	for {
-		con, err := dstream.Accept()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		go handle(con)
-	}
-}
-
-func handle(con net.Conn) {
+	con, err := dstream.Accept()
 	data, err := bufio.NewReader(con).ReadString('.')
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	fmt.Println(data)
+
 	con.Close()
 }

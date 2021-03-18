@@ -1,4 +1,4 @@
-package main
+package analysis
 
 import (
 	"database/sql"
@@ -21,20 +21,22 @@ func init() {
 		fmt.Println("Error: Cannot open database")
 	}
 }
+
 func main() {
 	defer db.Close()
-	//  mostWithA()     Show All
-	//mostWithDate(start, end) Show from Start to End date
-	//withTime()     Show Time + Amount
-	//withTime()     Show Date + Amount
+	// 	mostWithA()					Show All
+	//mostWithDate(start, end)	Show from Start to End date
+	//withTime()					Show Time + Amount
+	//withTime()					Show Date + Amount
 	// Format YYYY-MM-DD
 	var start string = "2019-02-28"
 	var end string = "2021-02-26"
-	var a string = MostWithA() + "\n"
-	var b string = MostWithDate(start, end) + "\n"
-	var c string = WithTime() + "\n"
-	var d string = WithDate() + "\n"
+	var a string = mostWithA()
+	var b string = mostWithDate(start, end)
+	var c string = withTime()
+	var d string = withDate()
 	send(a + b + c + d)
+
 }
 
 func send(msg string) {
@@ -43,10 +45,11 @@ func send(msg string) {
 		fmt.Println(err)
 		return
 	}
-	con.Write([]byte(msg + "."))
+	con.Write([]byte(msg + "\n"))
+	con.Close()
 }
 
-func MostWithDate(start string, end string) string {
+func MostWithDate(start string, end string) (string, error) {
 	var txt strings.Builder
 	startDate, _ := time.Parse("2006-01-02", start)
 	endDate, _ := time.Parse("2006-01-02", end)
@@ -55,7 +58,7 @@ func MostWithDate(start string, end string) string {
 
 	if err != nil {
 		fmt.Print(err)
-		return ""
+		return "", err
 	}
 
 	fmt.Printf("\nMost Withdrawn Item (Time: %s to %s)\n---------------\n", start, end)
@@ -89,16 +92,16 @@ func MostWithDate(start string, end string) string {
 		fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
 		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
 	}
-	return txt.String()
+	return txt.String(), nil
 }
 
-func MostWithA() string {
+func MostWithA() (string, error) {
 	var txt strings.Builder
 	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0")
 
 	if err != nil {
 		fmt.Print(err)
-		return ""
+		return "", err
 	}
 
 	fmt.Printf("\nMost Withdrawn Item (Time: All)\n---------------\n")
@@ -132,16 +135,16 @@ func MostWithA() string {
 		fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
 		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
 	}
-	return txt.String()
+	return txt.String(), nil
 }
 
-func WithTime() string {
+func WithTime() (string, error) {
 	var txt strings.Builder
 	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
 
 	if err != nil {
 		fmt.Print(err)
-		return ""
+		return "", err
 	}
 
 	fmt.Printf("\nTime Withdrawn\n-----------------------\n")
@@ -173,16 +176,16 @@ func WithTime() string {
 		fmt.Printf("%s - %s | %-4d\n", time+":00", time+":59", withMap[time])
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
-	return txt.String()
+	return txt.String(), nil
 }
 
-func WithDate() string {
+func WithDate() (string, error) {
 	var txt strings.Builder
 	row, err := db.Query("SELECT date, amount FROM history WHERE action = 0")
 
 	if err != nil {
 		fmt.Print(err)
-		return ""
+		return "", err
 	}
 
 	fmt.Printf("\nDate Withdrawn\n-----------------------\n")
@@ -215,5 +218,5 @@ func WithDate() string {
 		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
 
 	}
-	return txt.String()
+	return txt.String(), nil
 }

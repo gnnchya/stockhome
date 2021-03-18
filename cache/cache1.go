@@ -1,37 +1,37 @@
-package cache
-
+//reference: https://medium.com/@fazlulkabir94/lru-cache-golang-implementation-92b7bafb76f0
+package main
 import (
-	"log"
+	"fmt"
 	"time"
 	// "encoding/json"
 )
 
 var i int
-var dateAndTime time.Time = time.Now()
+var dateAndTime time.Time = time.Now() 
 
-type cache struct {
-	itemID     int
-	itemAmount int
-	dateTime   string
-	prev, next *cache
+type cache struct{
+	itemID		int
+	itemAmount	int
+	dateTime	string
+	prev, next	*cache
 }
 
-func addcache(itemID int, itemAmount int) *cache {
+func addcache(itemID int, itemAmount int) *cache{
 	return &cache{
-		itemID:     itemID,
-		itemAmount: itemAmount,
-		dateTime:   dateAndTime.Format("15:04:05 2006-01-02"),
-		prev:       nil,
-		next:       nil,
+		itemID : itemID,
+		itemAmount : itemAmount,
+		dateTime: dateAndTime.Format("15:04:05 2006-01-02"),
+		prev : nil,
+		next : nil,
 	}
 }
 
-type queue struct {
+type queue struct{
 	front *cache
-	rear  *cache
+	rear *cache
 }
 
-func (q *queue) isEmpty() bool {
+func (q *queue) isEmpty() bool{
 	return q.rear == nil
 }
 
@@ -47,13 +47,13 @@ func (q *queue) addFrontPage(itemID int, itemAmount int) *cache {
 	return page
 }
 
-func (q *queue) bringToMostUsed(page *cache) {
-	if page == q.front {
+func(q *queue) bringToMostUsed(page *cache) {
+	if page == q.front{
 		return
-	} else if page == q.rear {
+	}else if page == q.rear{
 		q.rear = q.rear.prev
 		q.rear.next = nil
-	} else {
+	}else{
 		page.prev.next = page.next
 		page.next.prev = page.prev
 	}
@@ -62,73 +62,70 @@ func (q *queue) bringToMostUsed(page *cache) {
 	q.front = page
 }
 
-func (q *queue) removeLeastUsed() {
-	if q.isEmpty() {
+func (q *queue)removeLeastUsed() {
+	if q.isEmpty(){
 		return
-	} else if q.front == q.rear {
+	}else if q.front == q.rear{
 		q.front, q.rear = nil, nil
-	} else {
+	}else{
 		q.rear = q.rear.prev
 		q.rear.next = nil
 	}
 }
 
-func (q *queue) getRear() *cache {
+func (q * queue) getRear() *cache{
 	return q.rear
 }
 
 type LRU struct {
-	Capacity, Size int
-	PageList       queue
-	PageMap        map[int]*cache
+	capacity, size int
+	pageList       queue
+	pageMap        map[int]*cache
 }
 
-func (l *LRU) initLRU(capacity int) {
-	l.Capacity = capacity
-	l.PageMap = make(map[int]*cache)
+func(l *LRU) initLRU(capacity int){
+	l.capacity = capacity
+	l.pageMap = make(map[int]*cache)
 }
 
 func (l *LRU) read(itemID int) int {
-	if _, found := l.PageMap[itemID]; !found {
+	if _, found := l.pageMap[itemID]; !found {
 		return -1
 	}
-	val := l.PageMap[itemID].itemAmount
-	l.PageList.bringToMostUsed(l.PageMap[itemID])
-	return val
+	val := l.pageMap[itemID].itemAmount
+		l.pageList.bringToMostUsed(l.pageMap[itemID])
+		return val
 }
 
-func (l *LRU) input(itemID int, itemAmount int) {
-	if _, found := l.PageMap[itemID]; found {
-		l.PageMap[itemID].itemAmount = itemAmount
-		l.PageList.bringToMostUsed(l.PageMap[itemID])
+func (l *LRU) input(itemID int, itemAmount int){
+	if _, found := l.pageMap[itemID]; found{
+		l.pageMap[itemID].itemAmount = itemAmount
+		l.pageList.bringToMostUsed(l.pageMap[itemID])
 		return
 	}
-	if l.Size == l.Capacity {
-		key := l.PageList.getRear().itemID
-		l.PageList.removeLeastUsed()
-		l.Size--
-		delete(l.PageMap, key)
+	if l.size == l.capacity{
+		key := l.pageList.getRear().itemID
+		l.pageList.removeLeastUsed()
+		l.size--
+		delete(l.pageMap, key)
 	}
-	page := l.PageList.addFrontPage(itemID, itemAmount)
-	l.Size++
-	l.PageMap[itemID] = page
+	page := l.pageList.addFrontPage(itemID, itemAmount)
+	l.size++
+	l.pageMap[itemID] = page
+}
+func main() {
+	var cache LRU
+	cache.initLRU(2)
+	cache.input(2, 2)
+	fmt.Println(cache.read(2))
+	fmt.Println(cache.read(1))
+	cache.input(1, 1)
+	cache.input(1, 5)
+	fmt.Println(cache.read(1))
+	fmt.Println(cache.read(2))
+	cache.input(8, 8)
+	fmt.Println(cache.read(1))
+	fmt.Println(cache.read(8))
+	// fmt.Println(cache)
 }
 
-func QueueCheck(id, amt, read int, cache LRU) int {
-
-	if id != 0 {
-		cache.input(id, amt)
-	}
-
-	start := time.Now()
-	out := cache.read(read)
-
-	elapsed := time.Since(start)
-
-	if out == -1 {
-		log.Printf("********MISS********\nelapsed time: %v", elapsed)
-	} else {
-		log.Printf("********HIT*********\nelapsed time: %v", elapsed)
-	}
-	return out
-}
