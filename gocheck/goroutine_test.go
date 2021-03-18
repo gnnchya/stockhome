@@ -17,7 +17,10 @@ func TestGoAmount(t *testing.T) {
 		{10, 10},
 		{100, 100},
 		{1000, 1000},
+<<<<<<< Updated upstream
 		{10000, 10000},
+=======
+>>>>>>> Stashed changes
 	}
 
 	runtime.GOMAXPROCS(1)
