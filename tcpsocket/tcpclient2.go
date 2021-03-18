@@ -25,6 +25,7 @@ func main() {
 			return
 		}
 		com := strings.Split(msg, " ")
+		com[0] = strings.TrimSpace(com[0])
 		switch com[0] {
 		case "add":
 			add(con, com)
@@ -71,6 +72,7 @@ func add(con net.Conn, com []string) { //add userid itemid amount
 		fmt.Println("Please Enter an Integer!")
 		return
 	}
+	com[3] = strings.TrimSpace(com[3])
 	amt, err := strconv.Atoi(com[3])
 	if err != nil {
 		fmt.Println("Please Enter an Integer!")
@@ -113,6 +115,7 @@ func wd(con net.Conn, com []string) {
 		fmt.Println("Please Enter an Integer.")
 		return
 	}
+	com[3] = strings.TrimSpace(com[3])
 	amt, err := strconv.Atoi(com[3])
 	if err != nil {
 		fmt.Println("Please Enter an Integer.")
@@ -231,6 +234,7 @@ func his(con net.Conn, com []string) {
 		return
 	}
 
+	until[2] = strings.TrimSpace(until[2])
 	d, err := strconv.Atoi(until[2])
 	if err != nil {
 		fmt.Println("Please Enter day as an Integer!")
@@ -296,8 +300,10 @@ func ana(con net.Conn, com []string) {
 		return
 	}
 
+	since[2] = strings.TrimSpace(since[2])
 	dd, err := strconv.Atoi(since[2])
 	if err != nil {
+		fmt.Println(err)
 		fmt.Println("Please Enter day as an Integer!")
 		return
 	}

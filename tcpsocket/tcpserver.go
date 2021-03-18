@@ -21,10 +21,9 @@ func main() {
 			connect.Close()
 			return
 		}
-		go rec(con)
 		fmt.Println(con.RemoteAddr())
+		go rec(con)
 		go send(con)
-
 	}
 }
 func rec(con net.Conn) {
@@ -50,4 +49,5 @@ func send(con net.Conn) {
 		}
 		con.Write([]byte("Server: " + msg + "\n"))
 	}
+
 }
