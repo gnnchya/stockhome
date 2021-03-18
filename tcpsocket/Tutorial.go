@@ -16,5 +16,4 @@ func main() {
 	fmt.Println(s[0])
 	fmt.Println(s[1])
 	fmt.Println(s[2])
-	pond()
 }

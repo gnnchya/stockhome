@@ -10,8 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
@@ -48,7 +47,13 @@ func rec(con net.Conn) {
 		date[0] = strings.TrimSpace(date[0])
 		date[1] = strings.TrimSpace(date[1])
 		date[2] = strings.TrimSpace(date[2])
-		send(con, analysis(date[0], date[1], date[2]))
+		switch msg[0] {
+		case "ana":
+			send(con, analysis(date[0], date[1], date[2]))
+		default:
+			send(con, "didnt have function")
+		}
+
 	}
 }
 
@@ -93,7 +98,7 @@ func analysis(year string, month string, day string) string {
 	}()
 
 	Wg.Wait()
-	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
+	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith)
 }
 
 func MostWithA(Wg *sync.WaitGroup) string {

@@ -21,7 +21,6 @@ func main() {
 			log.Println(err)
 			continue
 		}
-
 		// If you want, you can increment a counter here and inject to handleClientRequest below as client identifier
 		go handleClientRequest(con)
 	}
