@@ -10,7 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-/*var db *sql.DB
+var db *sql.DB
 
 func init() {
 	var err error
@@ -34,6 +34,49 @@ func main() {
 	// Format YYYY-MM-DD
 	var start string = "2019-02-28"
 	var end string = "2021-02-26"
+<<<<<<< Updated upstream
+=======
+	var aWith, bWith, cWith, dWith string
+
+	Wg := sync.WaitGroup{}
+
+	Wg.Add(1)
+	go func() {
+		aWith = MostWithA(&Wg)
+		fmt.Println(aWith)
+	}()
+
+	Wg.Add(1)
+	go func() {
+		bWith = MostWithDate(start, end, &Wg)
+		fmt.Println(bWith)
+	}()
+
+	Wg.Add(1)
+	go func() {
+		cWith = WithTime(&Wg)
+		fmt.Println(cWith)
+	}()
+
+	Wg.Add(1)
+	go func() {
+		dWith = WithDate(&Wg)
+		fmt.Println(dWith)
+	}()
+
+	Wg.Wait()
+	send(aWith + bWith + cWith + dWith)
+}
+
+func send(msg string) {
+	con, err := net.Dial("tcp", ":9999")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	con.Write([]byte(msg + "."))
+}
+>>>>>>> Stashed changes
 
 	mostWithA()
 	mostWithDate(start, end)
