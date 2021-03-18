@@ -10,13 +10,24 @@ import (
 	"time"
 )
 
-func Client() {
-	con, err := net.Dial("tcp", ":9999")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer con.Close()
+type Month int
+
+const (
+	January Month = 1 + iota
+	February
+	March
+	April
+	May
+	June
+	July
+	August
+	September
+	October
+	November
+	December
+)
+
+func main() {
 	help()
 	for {
 		fmt.Println("Command: ")
@@ -27,17 +38,16 @@ func Client() {
 		com := strings.TrimSpace(msg)
 		switch com {
 		case "add":
-			add(con)
+			add()
 		case "wd":
-			wd(con)
+			wd()
 		case "his":
-			his(con)
+			his()
 		case "ana":
-			ana(con)
+			ana()
 		case "help":
 			help()
 		case "exit":
-			con.Close()
 			return
 		default:
 			fmt.Println("Command not found. Type \"help\" for help.")
@@ -56,7 +66,7 @@ func help() {
 	fmt.Println(" Exit 			|\"exit\"")
 }
 
-func add(con net.Conn) {
+func add() {
 	fmt.Println("UserID (integers): ")
 	uid, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
@@ -93,18 +103,25 @@ func add(con net.Conn) {
 		return
 	}
 	iamt += 0
-
-	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
-	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('\n')
+	con, err := net.Dial("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(data)
+	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
+	for {
+		fmt.Println("Waiting for respond...")
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(data)
+		con.Close()
+	}
 }
 
-func wd(con net.Conn) {
+func wd() {
 	fmt.Println("UserID (integers): ")
 	uid, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
@@ -141,153 +158,25 @@ func wd(con net.Conn) {
 		return
 	}
 	iamt += 0
-
+	con, err := net.Dial("tcp", ":9999")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
-	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return
+	for {
+		fmt.Println("Waiting for respond...")
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(data)
+		con.Close()
 	}
-	fmt.Println(data)
 }
 
-func his(con net.Conn) {
-	fmt.Println("Since Year -xxxx-: ")
-	yyyy, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	yyyy = strings.TrimSpace(yyyy)
-	if len(yyyy) != 4 {
-		fmt.Println("Please Enter 4 digits of int!")
-		return
-	}
-	iyyyy, err := strconv.Atoi(yyyy)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	if iyyyy > time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
-
-	fmt.Println("Until Year -xxxx-: ")
-	yy, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	yy = strings.TrimSpace(yy)
-	if len(yy) != 4 {
-		fmt.Println("Please Enter 4 digits of int!")
-		return
-	}
-	iyy, err := strconv.Atoi(yy)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	if iyy > time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
-
-	fmt.Println("Since Month -xx-: ")
-	mm, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	mm = strings.TrimSpace(mm)
-	if len(mm) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
-		return
-	}
-	imm, err := strconv.Atoi(mm)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	mmt := time.Now().Month()
-	var immt int = int(mmt)
-	if imm > immt && iyyyy == time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
-
-	fmt.Println("Until Month -xx-: ")
-	m, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	m = strings.TrimSpace(m)
-	if len(m) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
-		return
-	}
-	im, err := strconv.Atoi(m)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	mt := time.Now().Month()
-	var imt int = int(mt)
-	if im > imt && iyyyy == time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
-
-	fmt.Println("Since Day -xx-: ")
-	dd, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	dd = strings.TrimSpace(dd)
-	if len(dd) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
-		return
-	}
-	idd, err := strconv.Atoi(dd)
-	if idd > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	fmt.Println("Until Day -xx-: ")
-	d, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	d = strings.TrimSpace(dd)
-	if len(d) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
-		return
-	}
-	id, err := strconv.Atoi(dd)
-	if id > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-
-	con.Write([]byte("his" + ": " + yyyy + mm + dd + yy + m + d + "\n"))
-	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(data)
-
-}
-
-func ana(con net.Conn) {
+func his() {
 	fmt.Println("Since Year -xxxx-: ")
 	yyyy, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
@@ -347,12 +236,40 @@ func ana(con net.Conn) {
 		fmt.Println("Please Enter an Integer!")
 		return
 	}
-	con.Write([]byte("ana" + ": " + yyyy + "-" + mm + "-" + dd + "\n"))
-	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('.')
+	con, err := net.Dial("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(data)
+	con.Write([]byte("his" + ": " + yyyy + "-" + mm + "-" + dd + "\n"))
+	for {
+		fmt.Println("Waiting for respond...")
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(data)
+		con.Close()
+	}
+
+}
+
+func ana() {
+	con, err := net.Dial("tcp", ":9999")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	con.Write([]byte("ana" + ":" + "\n"))
+	for {
+		fmt.Println("Waiting for respond...")
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(data)
+		con.Close()
+	}
 }

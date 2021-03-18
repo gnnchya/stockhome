@@ -8,25 +8,18 @@ import (
 )
 
 func main() {
-	connect, err := net.Listen("tcp", ":9999")
+	con, err := net.Dial("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer connect.Close()
+	defer con.Close()
 	for {
-		con, err := connect.Accept()
-		if err != nil {
-			fmt.Println(err)
-			connect.Close()
-			return
-		}
 		go rec(con)
-		fmt.Println(con.RemoteAddr())
-		go send(con)
-
+		send(con)
 	}
 }
+
 func rec(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
@@ -34,10 +27,9 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println()
-		fmt.Print("Client: " + data)
-		fmt.Print("Feed back: ")
+		fmt.Println(data)
 	}
+	con.Close()
 }
 
 func send(con net.Conn) {
@@ -48,6 +40,7 @@ func send(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
-		con.Write([]byte("Server: " + msg + "\n"))
+		con.Write([]byte("Client: " + msg + "\n"))
 	}
+	con.Close()
 }

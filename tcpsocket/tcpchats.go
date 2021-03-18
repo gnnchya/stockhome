@@ -32,23 +32,23 @@ func main() {
 func rec(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
+		if err == nil {
 			fmt.Println(err)
 			return
 		}
 		fmt.Println(data)
-	}
 
+	}
+	con.Close()
 }
 
 func send(con net.Conn) {
-	for {
-		reader := bufio.NewReader(os.Stdin)
-		msg, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		con.Write([]byte("Server: " + msg + "\n"))
+	reader := bufio.NewReader(os.Stdin)
+	msg, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	con.Write([]byte("Server: " + msg + "\n"))
+
 }
