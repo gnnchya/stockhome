@@ -25,7 +25,7 @@ func main() {
 		}
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
-		send(con)
+		// send(con)
 	}
 
 }
@@ -38,17 +38,16 @@ func rec(con net.Conn) {
 		}
 		fmt.Println(data)
 	}
-
+	// con.Close()
 }
 
 func send(con net.Conn) {
-	for {
-		reader := bufio.NewReader(os.Stdin)
-		msg, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		con.Write([]byte("Server: " + msg + "\n"))
+	reader := bufio.NewReader(os.Stdin)
+	msg, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	con.Write([]byte("Server: " + msg + "\n"))
+
 }

@@ -7,8 +7,6 @@ import (
 	"os"
 )
 
-var cnt int = 0
-
 func main() {
 	connect, err := net.Listen("tcp", ":9999")
 	if err != nil {
@@ -25,9 +23,9 @@ func main() {
 		}
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
-		send(con)
-	}
+		go send(con)
 
+	}
 }
 func rec(con net.Conn) {
 	for {
@@ -36,9 +34,10 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(data)
+		fmt.Println()
+		fmt.Print("Client: " + data)
+		fmt.Print("Feed back: ")
 	}
-
 }
 
 func send(con net.Conn) {

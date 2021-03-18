@@ -1,10 +1,20 @@
 package main
 
 import (
-	DB "/lib"
+	"fmt"
+	"strings"
 )
 
 func main() {
-	DB.Show()
-	DB.Demo()
+	a := "a,b,c"
+	s := strings.Split(a, ",")
+	fmt.Println(s[0])
+	fmt.Println(s[1])
+	fmt.Println(s[2])
+	a = "1,2,3"
+	s = strings.Split(a, ",")
+	fmt.Println(s[0])
+	fmt.Println(s[1])
+	fmt.Println(s[2])
+	pond()
 }
