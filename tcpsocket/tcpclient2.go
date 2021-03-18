@@ -244,7 +244,7 @@ func his(con net.Conn, com []string) {
 		fmt.Println("Please Enter day as a 2 digits of int!")
 		return
 	}
-	if d > time.Now().Day() && mm == m && yyyy == time.Now().Year() {
+	if d > time.Now().Day() && mm == immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		return
 	}
