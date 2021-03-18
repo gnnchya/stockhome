@@ -1,3 +1,6 @@
+## NOTE
+This is for demonstration purposes only
+
 ## How to Use
 ### Running Normally with TCP Socket
 1. Make sure lines 15 and 59 **do not have** comment tags on them
