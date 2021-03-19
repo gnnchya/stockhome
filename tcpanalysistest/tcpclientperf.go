@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -22,43 +19,45 @@ import (
 
 }*/
 
+var maxUsers = 246
+var success int = 0
+var timecnt time.Duration = 0
+var avg time.Duration = 0
+
 func main() {
-	Analysistest()
+	mainC := make(chan string)
+	var count int = 0
+	for i := 0; i < maxUsers; i++ {
+		count, timecnt = Analysistesttime(mainC)
+		avg = avg + timecnt
+		//fmt.Println("success count: ", count)
+	}
+
+	fmt.Println("********************************************")
+	fmt.Println("Numbers of user input: ", maxUsers)
+	fmt.Println("total success count: ", count)
+	fmt.Println("Average time: ", (float64(avg)/float64(time.Millisecond))/float64(count), "ms")
+
 }
 
-var maxUsers = 10000
-
-/*func AnalysisTest() {
-	for i := 0; i < maxUsers; i++ {
-		go Client()
-	}
-}*/
-
-func Analysistest() {
+func Analysistesttime(mainC chan string) (int, time.Duration) {
 	c := make(chan string)
+	var elapsed time.Duration
 	go Client(c)
 	begin := <-c
-	fmt.Println("START")
-	for {
-		msg, err := bufio.NewReader(os.Stdin).ReadString('\n')
-		fmt.Println("MESSAGE RECEIVED")
-		if err != nil {
-			fmt.Println("something went wrong")
-		} else if msg == "Command: " {
-			start := time.Now()
-			fmt.Println("ana 2019-03-01")
+	if begin == "begin" {
+		start := time.Now()
 
-			msg, err := bufio.NewReader(os.Stdin).ReadString('\n')
-			if err != nil {
-				fmt.Println("something went wrong")
-			} else if strings.Contains(msg, "Server:") {
-				elapsed := time.Since(start)
-				fmt.Println("time elapsed: ", elapsed)
-				return
-			}
-			fmt.Println("error")
+		fmt.Println("ana 2019-03-01")
+		c <- "ana 2019-03-01"
+
+		done := <-c
+		if done == "done" {
+			elapsed := time.Since(start)
+			fmt.Println("time elapsed: ", elapsed)
+			success++
+			return success, elapsed
 		}
-		fmt.Println("END")
-
 	}
+	return success, elapsed
 }

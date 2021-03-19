@@ -4,13 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"net"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func Client(c chan<- string) {
+func Client(c chan string) {
 	con, err := net.Dial("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
@@ -21,10 +20,14 @@ func Client(c chan<- string) {
 	for {
 		fmt.Println("Command: ")
 		c <- "begin"
-		msg, err := bufio.NewReader(os.Stdin).ReadString('\n')
-		if err != nil {
-			return
-		}
+		msg := <-c
+
+		//or change the way pond's code works (not waiting for the input)
+		//may be do synchronization like mutex or semaphore to check result
+		// add one variable to count succesful/unsuccessful -> using mutex/semaphore to block the counting
+
+		//msg := bufio.NewScanner(os.Stdin).Text()
+
 		com := strings.Split(msg, " ")
 		com[0] = strings.TrimSpace(com[0])
 		switch com[0] {
@@ -36,6 +39,7 @@ func Client(c chan<- string) {
 			his(con, com)
 		case "ana":
 			ana(con, com)
+			c <- "done"
 		case "help":
 			help()
 		case "exit":
