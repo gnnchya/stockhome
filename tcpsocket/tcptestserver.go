@@ -51,7 +51,7 @@ func rec(con net.Conn) {
 		case "ana":
 			send(con, analysis(date[0], date[1], date[2]))
 		default:
-			send(con, "didnt have function")
+			send(con, "Didnt have function")
 		}
 
 	}
