@@ -1,19 +1,20 @@
 package cache
 
 import (
-	// "fmt"
+	"fmt"
 	"time"
-	// "strconv"
+	"strconv"
 )
 
-var Cache LRU
+// var Cache LRU
 var i int
 var dateAndTime time.Time = time.Now()
 
 type cache struct {
 	itemID     int
 	ItemAmount int
-	dateTime   string
+	Date       string
+	Time       string
 	prev, next *cache
 }
 
@@ -21,7 +22,8 @@ func addcache(itemID int, ItemAmount int) *cache {
 	return &cache{
 		itemID:     itemID,
 		ItemAmount: ItemAmount,
-		dateTime:   dateAndTime.Format("15:04:05 2006-01-02"),
+		Date:     dateAndTime.Format("2006-01-02"),
+		Time:     dateAndTime.Format("15:04:05 2006-01-02")[:8],
 		prev:       nil,
 		next:       nil,
 	}
@@ -81,65 +83,69 @@ func (q *queue) getRear() *cache {
 type LRU struct {
 	capacity, size int
 	pageList       queue
-	PageMap        map[int]*cache
+	pageMap        map[int]*cache
 
 }
 
 func (l *LRU) InitLRU(capacity int) {
 	l.capacity = capacity
-	l.PageMap = make(map[int]*cache)
+	l.pageMap = make(map[int]*cache)
 }
 
 func (l *LRU) Read(itemID int) (int, string){
-	if _, found := l.PageMap[itemID]; !found {
+	if _, found := l.pageMap[itemID]; !found {
 		return 0,"miss"
 	}
-	val := l.PageMap[itemID].ItemAmount
-	l.pageList.bringToMostUsed(l.PageMap[itemID])
+	val := l.pageMap[itemID].ItemAmount
+	l.pageList.bringToMostUsed(l.pageMap[itemID])
 	return val,"hit"
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) {
-	if _, found := l.PageMap[itemID]; found {
-		l.PageMap[itemID].ItemAmount = ItemAmount
-		l.pageList.bringToMostUsed(l.PageMap[itemID])
+	if _, found := l.pageMap[itemID]; found {
+		l.pageMap[itemID].ItemAmount = ItemAmount
+		l.pageList.bringToMostUsed(l.pageMap[itemID])
 		return
 	}
 	if l.size == l.capacity {
 		key := l.pageList.getRear().itemID
 		l.pageList.removeLeastUsed()
 		l.size--
-		delete(l.PageMap, key)
+		delete(l.pageMap, key)
 	}
 	page := l.pageList.addFrontPage(itemID, ItemAmount)
 	l.size++
-	l.PageMap[itemID] = page
+	l.pageMap[itemID] = page
 }
 
 
-// func cachedb() ([]string,[]string){
-// 	var cache LRU
-// 	cache.initLRU(2)
-// 	cache.input(10, -2)
-// 	// fmt.Println(cache.read(10))
-// 	// fmt.Println(cache.read(4))
-// 	cache.input(4, 1)
-// 	cache.input(4, 5)
-// 	// fmt.Println(cache.read(4))
-// 	// fmt.Println(cache.read(2))
-// 	cache.input(8, 8)
-// 	// fmt.Println(cache.read(4))
-// 	// fmt.Println(cache.read(8))
-// 	keys := make([]string, 0, len(cache.pageMap))
-// 	values := make([]string, 0, len(cache.pageMap))
+func cachedb() ([]string,[]string,[]string,[]string){
+	var cache LRU
+	cache.InitLRU(2)
+	cache.Input(10, -2)
+	// fmt.Println(cache.read(10))
+	// fmt.Println(cache.read(4))
+	cache.Input(4, 1)
+	cache.Input(4, 5)
+	// fmt.Println(cache.read(4))
+	// fmt.Println(cache.read(2))
+	cache.Input(8, 8)
+	// fmt.Println(cache.read(4))
+	// fmt.Println(cache.read(8))
+	keys := make([]string, 0, len(cache.pageMap))
+	values := make([]string, 0, len(cache.pageMap))
+	date := make([]string, 0, len(cache.pageMap))
+	time := make([]string, 0, len(cache.pageMap))
 
-// 	for k, v := range cache.pageMap {
-// 		keys = append(keys, strconv.Itoa(k))
-// 		values = append(values, strconv.Itoa(v.itemAmount))
-// 	}
-// 	return keys,values
-// }
+	for k, v := range cache.pageMap {
+		keys = append(keys, strconv.Itoa(k))
+		values = append(values, strconv.Itoa(v.ItemAmount))
+        date = append(date, v.Date)
+		time = append(time, v.Time)
+	}
+	return keys,values,date,time
+}
 
-// func main(){
-// 	fmt.Println(cachedb())
-// }
+func main(){
+	fmt.Println(cachedb())
+}
