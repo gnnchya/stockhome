@@ -49,11 +49,11 @@ func main() {
 
 func help() {
 	fmt.Println(" Features 		|\"Command\"						|\"Example\"")
-	fmt.Println(" ------------------------------------------------------------------------------------------------------------ ")
+	fmt.Println(" ---------------------------------------------------------------------------------------------- ")
 	fmt.Println(" Add Item		|\"add userID itemID Amount\"				|\"add 62011155 745345 12\"")
 	fmt.Println(" WithDraw Item		|\"wd userID itemID Amount\"				|\"wd 62011155 745345 12\"")
-	fmt.Println(" History Tracking	|\"his (since)year-month-day (until)year-month-day\"	|\"his 2020-12-12 2020-12-12\"")
-	fmt.Println(" Stock Analysis 	|\"ana (since)year-month-day\"				|\"ana 2020-12-12\"")
+	fmt.Println(" History Tracking	|\"his year-month\"	|\"his 2020-12\"")
+	fmt.Println(" Stock Analysis 	|\"ana year-month-day\"				|\"ana 2020-12-12\"")
 	fmt.Println(" Exit 			|\"exit\"")
 }
 
@@ -261,7 +261,12 @@ func his(con net.Conn, com []string) {
 	fmt.Println("Downloading...")
 
 	// Create a file that the client wants to download
-	out, err := os.Create("c:/Users/fluke/Desktop/" + "filename" + ".tmp")
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	out, err := os.Create(dir + "/" + since[0] + "-" + since[1] + ".tmp")
 	if err != nil {
 		return
 	}
@@ -272,7 +277,7 @@ func his(con net.Conn, com []string) {
 	out.Close()
 
 	// Rename temporary to acutal csv file
-	err = os.Rename("c:/Users/fluke/Desktop/filename.tmp", "c:/Users/fluke/Desktop/hihihihihihi.csv")
+	err = os.Rename(dir+"/"+since[0]+"-"+since[1]+".tmp", dir+"/"+since[0]+"-"+since[1]+".csv")
 	if err != nil {
 		return
 	}
