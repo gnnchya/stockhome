@@ -34,7 +34,7 @@ func Client(c chan string, wg2 *sync.WaitGroup) {
 		case "his":
 			his(con, com)
 		case "ana":
-			ana(con, com)
+			ana(con, com, c)
 			c <- "done"
 			wg2.Done()
 		case "help":
@@ -261,7 +261,7 @@ func his(con net.Conn, com []string) {
 	fmt.Println(data)
 }
 
-func ana(con net.Conn, com []string) {
+func ana(con net.Conn, com []string, c chan string) {
 	if len(com) != 2 {
 		fmt.Println("Please input as the format.")
 		return
@@ -323,7 +323,9 @@ func ana(con net.Conn, com []string) {
 	data, err := bufio.NewReader(con).ReadString('.')
 	if err != nil {
 		fmt.Println(err)
+		c <- "EOF"
 		return
 	}
+	c <- data
 	fmt.Println(data)
 }

@@ -1,16 +1,20 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-//var db *sql.DB
+var db *sql.DB
 
-/*func init() {
+func init() {
 	var err error
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 
@@ -18,28 +22,38 @@ import (
 		fmt.Println("Error: Cannot open database")
 	}
 
-}*/
+}
 
-var maxUsers = 1000
-var success int = 0
-var timecnt time.Duration = 0
-var avg time.Duration = 0
+var maxUsers = 246
+var success, correct int = 0, 0
+var timecnt, avg time.Duration = 0, 0
 
 func main() {
 	mainC := make(chan int)
 	timeC := make(chan time.Duration)
+	outC := make(chan string)
 	var count int = 0
 	wg := sync.WaitGroup{}
 	for i := 0; i < maxUsers; i++ {
 		wg.Add(1)
-		go Analysistesttime(mainC, timeC, &wg)
+		go Analysistesttime(mainC, timeC, outC, &wg)
 		count = <-mainC
 		timecnt = <-timeC
 		if timecnt == 0 {
+			wg.Done()
 			break
 		}
 		avg = avg + timecnt
 		fmt.Println("current user no. : ", count)
+
+		check := "Server: " + analysis1("2019", "03", "01")
+		output := <-outC
+		if output == check {
+			fmt.Println("*******Correct output*******")
+			correct++
+		} else {
+			fmt.Println("#######Incorrect output#######")
+		}
 	}
 	wg.Wait()
 
@@ -47,13 +61,14 @@ func main() {
 	fmt.Println("Numbers of user input: ", maxUsers)
 	fmt.Println("total success count: ", count)
 	fmt.Println("Average time: ", (float64(avg)/float64(time.Millisecond))/float64(count), "ms")
+	fmt.Println("Data correctness: ", (correct/count)*100, "%")
 
 }
 
-func Analysistesttime(mainC chan int, timeC chan time.Duration, wg *sync.WaitGroup) {
+func Analysistesttime(mainC chan int, timeC chan time.Duration, outC chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	c := make(chan string)
-	var elapsed time.Duration = 0
+	//var elapsed time.Duration = 0
 	wg2 := sync.WaitGroup{}
 	wg2.Add(1)
 	go Client(c, &wg2)
@@ -64,28 +79,243 @@ func Analysistesttime(mainC chan int, timeC chan time.Duration, wg *sync.WaitGro
 		fmt.Println("ana 2019-03-01")
 		c <- "ana 2019-03-01"
 
+		output := <-c
 		done := <-c
+
 		if done == "done" {
 			elapsed := time.Since(start)
 			fmt.Println("time elapsed: ", elapsed)
-			success++
+
 			//done = <-c
 			//c <- "exit"
 			// return success, elapsed
-			mainC <- success
-			timeC <- elapsed
+			if output != "EOF" {
+				success++
+				mainC <- success
+				timeC <- elapsed
+				outC <- output
+			} else {
+				mainC <- success
+				timeC <- 0
+				outC <- "None"
+			}
 			wg2.Wait()
 			return
 		}
 	} else if begin == "error" {
 		mainC <- success
 		timeC <- 0
+		outC <- "None"
 		wg2.Wait()
 		return
 	}
-	mainC <- success
-	timeC <- elapsed
-	wg2.Wait()
+	//mainC <- success
+	//timeC <- elapsed
+	// outC <- "None"
+	// wg2.Wait()
 	return
 	// return success, elapsed
+}
+
+// analysis code ****************************************************
+func analysis1(year string, month string, day string) string {
+	var err error
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+
+	defer db.Close()
+
+	var start string = year + "-" + month + "-" + day
+	var aWith, bWith, cWith, dWith string
+
+	Wg := sync.WaitGroup{}
+
+	Wg.Add(1)
+	go func() {
+		aWith = mostwithA(&Wg)
+	}()
+
+	Wg.Add(1)
+	go func() {
+		bWith = mostWithDate(start, &Wg)
+	}()
+
+	Wg.Add(1)
+	go func() {
+		cWith = withTime(&Wg)
+	}()
+
+	Wg.Add(1)
+	go func() {
+		dWith = withDate(&Wg)
+	}()
+
+	Wg.Wait()
+	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
+}
+
+func mostwithA(Wg *sync.WaitGroup) string {
+	defer Wg.Done()
+	var txt strings.Builder
+	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0")
+
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Make map for keeping
+	withMap := make(map[int]int)
+
+	for row.Next() {
+		var itemID, amount int
+		err = row.Scan(&itemID, &amount)
+
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[itemID]; ok {
+			withMap[itemID] = amount + val
+		} else {
+			withMap[itemID] = amount
+		}
+	}
+
+	// Make slice for sorting
+	withSort := make([]int, 0, len(withMap))
+
+	for amount := range withMap {
+		withSort = append(withSort, amount)
+	}
+
+	sort.Slice(withSort, func(i, j int) bool {
+		return withMap[withSort[i]] > withMap[withSort[j]]
+	})
+
+	for _, amount := range withSort {
+		//fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
+		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
+	}
+	return txt.String()
+}
+
+func mostWithDate(start string, Wg *sync.WaitGroup) string {
+	defer Wg.Done()
+	var txt strings.Builder
+	startDate, _ := time.Parse("2006-01-02", start)
+	var end = time.Now()
+	endDate := end.Format("2006-01-02")
+
+	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
+
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Make map for keeping
+	withMap := make(map[int]int)
+	for row.Next() {
+		var itemID, amount int
+		err = row.Scan(&itemID, &amount)
+
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[itemID]; ok {
+			withMap[itemID] = amount + val
+		} else {
+			withMap[itemID] = amount
+		}
+	}
+
+	// Make slice for sorting
+	withSort := make([]int, 0, len(withMap))
+	for amount := range withMap {
+		withSort = append(withSort, amount)
+	}
+
+	sort.Slice(withSort, func(i, j int) bool {
+		return withMap[withSort[i]] > withMap[withSort[j]]
+	})
+
+	for _, amount := range withSort {
+		//fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
+		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
+	}
+
+	return txt.String()
+}
+
+func withTime(Wg *sync.WaitGroup) string {
+	defer Wg.Done()
+	var txt strings.Builder
+	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
+
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Make map for keeping
+	withMap := make(map[string]int)
+	for row.Next() {
+		var amount int
+		var time string
+		err = row.Scan(&time, &amount)
+
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[time[0:2]]; ok {
+			withMap[time[0:2]] = amount + val
+		} else {
+			withMap[time[0:2]] = amount
+		}
+	}
+
+	// Make slice for sorting
+	withSort := make([]string, 0, len(withMap))
+	for time := range withMap {
+		withSort = append(withSort, time)
+	}
+	sort.Strings(withSort)
+
+	for _, time := range withSort {
+		//fmt.Printf("%s - %s | %-4d\n", time+":00", time+":59", withMap[time])
+		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
+	}
+	return txt.String()
+}
+
+func withDate(Wg *sync.WaitGroup) string {
+	defer Wg.Done()
+	var txt strings.Builder
+	row, err := db.Query("SELECT date, amount FROM history WHERE action = 0")
+
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Make map for keeping
+	withMap := make(map[string]int)
+	for row.Next() {
+		var amount int
+		var date string
+		err = row.Scan(&date, &amount)
+
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[date]; ok {
+			withMap[date] = amount + val
+		} else {
+			withMap[date] = amount
+		}
+	}
+
+	// Make slice for sorting
+	withSort := make([]string, 0, len(withMap))
+	for date := range withMap {
+		withSort = append(withSort, date)
+	}
+	sort.Strings(withSort)
+
+	for _, date := range withSort {
+		//fmt.Printf("%s | %-4d\n", date, withMap[date])
+		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
+
+	}
+	return txt.String()
 }
