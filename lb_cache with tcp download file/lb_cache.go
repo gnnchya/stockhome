@@ -181,7 +181,7 @@ func (c *Cache) get(q *Queue, itemId int) *bytes.Buffer {
 	} else {
 		// read(c, q, strconv.Itoa(itemId))
 		filename := strconv.Itoa(itemId)
-		retrieve(c, q, filename[0:4]+"-"+filename[4:6]+"-"+filename[6:8], filename[8:12]+"-"+filename[12:14]+"-"+filename[14:16], filename)
+		retrieve(c, q, filename[0:4]+"-"+filename[4:6], filename)
 		fmt.Println("----MISS----")
 	}
 	return c.block[itemId].value
@@ -189,14 +189,15 @@ func (c *Cache) get(q *Queue, itemId int) *bytes.Buffer {
 
 var db *sql.DB
 
-func retrieve(c *Cache, q *Queue, startDate string, endDate string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+func retrieve(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
-	// fmt.Println(col)
 	buf.Write(col)
 	// str := "userID,itemID,amount,date,time"
 
 	// Get data from startDate to endDate
+	startDate := Date + "-01"
+	endDate := Date + "-31"
 	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?)", startDate, endDate)
 	if err != nil {
 		fmt.Print(err)
@@ -216,9 +217,9 @@ func retrieve(c *Cache, q *Queue, startDate string, endDate string, filename str
 		buf.Write(line)
 	}
 	// fmt.Println(buf)
-	// dash()
 	// fmt.Printf("\nbuf: %T, \n%d\n", buf, buf)
 	// fmt.Printf("\nstr: %T, \n%s\n", str, str)
+	fmt.Println(filename)
 	name, _ := strconv.Atoi(filename)
 	c.add(q, name, buf)
 }
@@ -295,10 +296,6 @@ func Save(startDate string, endDate string, filename string) {
 			fmt.Println(err)
 		}
 	}
-}
-
-func dash() {
-	fmt.Println("--------------------")
 }
 
 func history(daterequest int) []byte {

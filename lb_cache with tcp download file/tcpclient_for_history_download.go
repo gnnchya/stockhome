@@ -9,31 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/dustin/go-humanize"
 )
-
-type WriteCounter struct {
-	Total uint64
-}
-
-func (wc *WriteCounter) Write(p []byte) (int, error) {
-	n := len(p)
-	wc.Total += uint64(n)
-	wc.PrintProgress()
-	return n, nil
-}
-
-// PrintProgress prints the progress of a file write
-func (wc WriteCounter) PrintProgress() {
-	// Clear the line by using a character return to go back to the start and remove
-	// the remaining characters by filling it with spaces
-	fmt.Printf("\r%s", strings.Repeat(" ", 50))
-
-	// Return again and print current status of download
-	// We use the humanize package to print the bytes in a meaningful way (e.g. 10 MB)
-	fmt.Printf("\rDownloading... %s complete", humanize.Bytes(wc.Total))
-}
 
 func main() {
 	con, err := net.Dial("tcp", ":9999")
@@ -306,7 +282,13 @@ func his(con net.Conn) {
 	fmt.Println("Downloading...")
 
 	// Create a file that the client wants to download
-	out, err := os.Create("c:/Users/fluke/Desktop/" + "filename" + ".tmp")
+	// Get current directory
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	out, err := os.Create(dir + "/filename" + ".tmp")
 	if err != nil {
 		return
 	}
@@ -317,7 +299,7 @@ func his(con net.Conn) {
 	out.Close()
 
 	// Rename temporary to acutal csv file
-	err = os.Rename("c:/Users/fluke/Desktop/filename.tmp", "c:/Users/fluke/Desktop/hihihihihihi.csv")
+	err = os.Rename(dir+"/filename"+".tmp", dir+"/filename"+".csv")
 	if err != nil {
 		return
 	}
