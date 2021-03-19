@@ -158,7 +158,7 @@ func (q *Queue) printQ() {
 	return
 }
 
-func (c *Cache) add(q *Queue, itemId int, value *bytes.Buffer) {
+func (c *Cache) set(q *Queue, itemId int, value *bytes.Buffer) {
 	if _, ok := c.block[itemId]; ok {
 		c.block[itemId].value = value
 		q.update(c.block[itemId])
@@ -221,7 +221,7 @@ func retrieve(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q 
 	// fmt.Printf("\nstr: %T, \n%s\n", str, str)
 	fmt.Println(filename)
 	name, _ := strconv.Atoi(filename)
-	c.add(q, name, buf)
+	c.set(q, name, buf)
 }
 func read(c *Cache, q *Queue, filename string) {
 	file, err := os.Open("c:/Users/fluke/Desktop/" + filename + ".csv")
@@ -246,7 +246,7 @@ func read(c *Cache, q *Queue, filename string) {
 	}
 	// fmt.Println(buf)
 	name, _ := strconv.Atoi(filename)
-	c.add(q, name, buf)
+	c.set(q, name, buf)
 }
 
 // "year-month-date"
