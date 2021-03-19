@@ -19,7 +19,7 @@ import (
 
 }*/
 
-var maxUsers = 246
+var maxUsers = 1000
 var success int = 0
 var timecnt time.Duration = 0
 var avg time.Duration = 0
@@ -56,6 +56,8 @@ func Analysistesttime(mainC chan string) (int, time.Duration) {
 			elapsed := time.Since(start)
 			fmt.Println("time elapsed: ", elapsed)
 			success++
+			done = <-c
+			c <- "exit"
 			return success, elapsed
 		}
 	}
