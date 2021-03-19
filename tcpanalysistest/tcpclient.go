@@ -6,13 +6,16 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
-func Client(c chan string) {
+func Client(c chan string, wg2 *sync.WaitGroup) {
 	con, err := net.Dial("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
+		c <- "error"
+		wg2.Done()
 		return
 	}
 	defer con.Close()
@@ -21,13 +24,6 @@ func Client(c chan string) {
 		fmt.Println("Command: ")
 		c <- "begin"
 		msg := <-c
-
-		//or change the way pond's code works (not waiting for the input)
-		//may be do synchronization like mutex or semaphore to check result
-		// add one variable to count succesful/unsuccessful -> using mutex/semaphore to block the counting
-
-		//msg := bufio.NewScanner(os.Stdin).Text()
-
 		com := strings.Split(msg, " ")
 		com[0] = strings.TrimSpace(com[0])
 		switch com[0] {
@@ -40,6 +36,7 @@ func Client(c chan string) {
 		case "ana":
 			ana(con, com)
 			c <- "done"
+			wg2.Done()
 		case "help":
 			help()
 		case "exit":

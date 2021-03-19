@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -25,13 +26,22 @@ var timecnt time.Duration = 0
 var avg time.Duration = 0
 
 func main() {
-	mainC := make(chan string)
+	mainC := make(chan int)
+	timeC := make(chan time.Duration)
 	var count int = 0
+	wg := sync.WaitGroup{}
 	for i := 0; i < maxUsers; i++ {
-		count, timecnt = Analysistesttime(mainC)
+		wg.Add(1)
+		go Analysistesttime(mainC, timeC, &wg)
+		count = <-mainC
+		timecnt = <-timeC
+		if timecnt == 0 {
+			break
+		}
 		avg = avg + timecnt
-		//fmt.Println("success count: ", count)
+		fmt.Println("current user no. : ", count)
 	}
+	wg.Wait()
 
 	fmt.Println("********************************************")
 	fmt.Println("Numbers of user input: ", maxUsers)
@@ -40,10 +50,13 @@ func main() {
 
 }
 
-func Analysistesttime(mainC chan string) (int, time.Duration) {
+func Analysistesttime(mainC chan int, timeC chan time.Duration, wg *sync.WaitGroup) {
+	defer wg.Done()
 	c := make(chan string)
-	var elapsed time.Duration
-	go Client(c)
+	var elapsed time.Duration = 0
+	wg2 := sync.WaitGroup{}
+	wg2.Add(1)
+	go Client(c, &wg2)
 	begin := <-c
 	if begin == "begin" {
 		start := time.Now()
@@ -56,10 +69,23 @@ func Analysistesttime(mainC chan string) (int, time.Duration) {
 			elapsed := time.Since(start)
 			fmt.Println("time elapsed: ", elapsed)
 			success++
-			done = <-c
-			c <- "exit"
-			return success, elapsed
+			//done = <-c
+			//c <- "exit"
+			// return success, elapsed
+			mainC <- success
+			timeC <- elapsed
+			wg2.Wait()
+			return
 		}
+	} else if begin == "error" {
+		mainC <- success
+		timeC <- 0
+		wg2.Wait()
+		return
 	}
-	return success, elapsed
+	mainC <- success
+	timeC <- elapsed
+	wg2.Wait()
+	return
+	// return success, elapsed
 }
