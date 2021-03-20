@@ -15,6 +15,8 @@ import (
 	// "fmt"
 	"os"
 	"strconv"
+	"sync"
+	"time"
 
 	//"strings"
 
@@ -23,6 +25,7 @@ import (
 
 var Lfu Cache = Cache{20, 0, make(map[int]*Node)}
 var Cache_queue Queue = Queue{nil, nil}
+var wg sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", ":9999")
@@ -181,7 +184,12 @@ func (c *Cache) get(q *Queue, itemId int) *bytes.Buffer {
 	} else {
 		// read(c, q, strconv.Itoa(itemId))
 		filename := strconv.Itoa(itemId)
+		a := time.Now()
 		retrieve(c, q, filename[0:4]+"-"+filename[4:6], filename)
+		fmt.Println(time.Since(a))
+		b := time.Now()
+		retrieve_go(c, q, filename[0:4]+"-"+filename[4:6], filename)
+		fmt.Println(time.Since(b))
 		fmt.Println("----MISS----")
 	}
 	return c.block[itemId].value
@@ -198,7 +206,7 @@ func retrieve(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q 
 	// Get data from startDate to endDate
 	startDate := Date + "-01" //2021-02-01
 	endDate := Date + "-31"   //2021-02-31
-	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC", startDate, endDate)
+	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -219,9 +227,56 @@ func retrieve(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q 
 	// fmt.Println(buf)
 	// fmt.Printf("\nbuf: %T, \n%d\n", buf, buf)
 	// fmt.Printf("\nstr: %T, \n%s\n", str, str)
-	fmt.Println(filename)
+	// fmt.Println(filename)
 	name, _ := strconv.Atoi(filename)
 	c.set(q, name, buf)
+}
+
+func retrieve_go(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+	buf1 := bytes.NewBuffer(make([]byte, 0))
+	buf2 := bytes.NewBuffer(make([]byte, 0))
+	col := []byte("userID,itemID,amount,date,time")
+	buf1.Write(col)
+	wg.Add(2)
+	go get_database(0, Date, buf1)
+	go get_database(1, Date, buf2)
+	wg.Wait()
+	buf1.Write(buf2.Bytes())
+	// fmt.Println(buf1)
+	name, _ := strconv.Atoi(filename)
+	c.set(q, name, buf1)
+}
+
+func get_database(halfmonth int, Date string, buf *bytes.Buffer) {
+	// Get data from startDate to endDate
+	var startDate, endDate string
+	if halfmonth == 0 {
+		startDate = Date + "-01" //2021-02-01
+		endDate = Date + "-15"   //2021-02-15
+	} else {
+		startDate = Date + "-16" //2021-02-16
+		endDate = Date + "-31"   //2021-02-31
+	}
+	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Slice each row
+	for row.Next() {
+		var userID, itemID, amount int
+		var date, time string
+		err = row.Scan(&userID, &itemID, &amount, &date, &time)
+		if err != nil {
+			fmt.Print(err)
+		}
+		// Write each line
+		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
+		// str += ("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
+		buf.Write(line)
+	}
+	wg.Done()
+	return
 }
 func read(c *Cache, q *Queue, filename string) {
 	file, err := os.Open("c:/Users/fluke/Desktop/" + filename + ".csv")
