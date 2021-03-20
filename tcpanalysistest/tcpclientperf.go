@@ -21,6 +21,7 @@ func init() {
 
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
+		return
 	}
 
 }
@@ -30,6 +31,7 @@ var success, correct int = 0, 0
 var timecnt, avg time.Duration = 0, 0
 
 func main() {
+	defer db.Close()
 	mainC := make(chan int)
 	timeC := make(chan time.Duration)
 	outC := make(chan string)
