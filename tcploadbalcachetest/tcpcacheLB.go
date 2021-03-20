@@ -2,21 +2,14 @@ package main
 
 import (
 	"bufio"
-	"fmt"
-	"net"
-	"strings"
-
-	// _ "github.com/go-sql-driver/mysql"
-	// "bufio"
 	"bytes"
 	"database/sql"
 	"encoding/csv"
-
-	// "fmt"
+	"fmt"
+	"net"
 	"os"
 	"strconv"
-
-	//"strings"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
