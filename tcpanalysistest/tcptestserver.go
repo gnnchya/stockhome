@@ -82,23 +82,28 @@ func analysis(year string, month string, day string) string {
 	go func() {
 		aWith = MostWithA(&Wg)
 	}()
+	fmt.Println("A")
 
 	Wg.Add(1)
 	go func() {
 		bWith = MostWithDate(start, &Wg)
 	}()
+	fmt.Println("B")
 
 	Wg.Add(1)
 	go func() {
 		cWith = WithTime(&Wg)
 	}()
+	fmt.Println("C")
 
 	Wg.Add(1)
 	go func() {
 		dWith = WithDate(&Wg)
 	}()
+	fmt.Println("D")
 
 	Wg.Wait()
+	fmt.Println("DONE")
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 

@@ -31,7 +31,7 @@ var success, correct int = 0, 0
 var timecnt, avg time.Duration = 0, 0
 
 func main() {
-	defer db.Close()
+	// defer db.Close()
 	mainC := make(chan int)
 	timeC := make(chan time.Duration)
 	outC := make(chan string)
@@ -67,6 +67,7 @@ func main() {
 	fmt.Println("total success count: ", count)
 	fmt.Println("Average time: ", (float64(avg)/float64(time.Millisecond))/float64(count), "ms")
 	fmt.Println("Data correctness: ", (float64(correct)/float64(count))*100, "%")
+	db.Close()
 
 }
 
