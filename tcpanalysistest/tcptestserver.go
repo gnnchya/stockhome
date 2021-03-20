@@ -25,7 +25,7 @@ func main() {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
-			connect.Close()
+			// connect.Close()
 			return
 		}
 		go rec(con)

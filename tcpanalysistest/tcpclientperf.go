@@ -64,7 +64,7 @@ func main() {
 	fmt.Println("Numbers of user input: ", maxUsers)
 	fmt.Println("total success count: ", count)
 	fmt.Println("Average time: ", (float64(avg)/float64(time.Millisecond))/float64(count), "ms")
-	fmt.Println("Data correctness: ", (correct/count)*100, "%")
+	fmt.Println("Data correctness: ", (float64(correct)/float64(count))*100, "%")
 
 }
 
