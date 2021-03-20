@@ -33,7 +33,7 @@ func withdraw(itemID int, itemAmount int, userID int) {
 
 }
 
-func main() {
+func addwith() {
 	Cache.InitLRU(2)
 
 	add(itemID, amount, userID)
