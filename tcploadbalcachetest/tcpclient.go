@@ -19,12 +19,13 @@ func Client(c chan string, wg2 *sync.WaitGroup) {
 	for {
 		con, err = net.Dial("tcp", ":9999")
 		if err != nil && try >= 3 {
-			fmt.Println(err)
+			fmt.Println("error: ", err)
 			c <- "error"
 			wg2.Done()
 			return
 		} else if err != nil && try < 3 {
 			try++
+
 		} else {
 			break
 		}

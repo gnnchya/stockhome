@@ -4,7 +4,6 @@ import (
 	"net"
 	"strings"
 
-	// _ "github.com/go-sql-driver/mysql"
 	"bufio"
 	"bytes"
 	"database/sql"
@@ -12,8 +11,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-
-	//"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -29,7 +26,7 @@ func main() {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
-			connect.Close()
+			// connect.Close()
 			return
 		}
 		go rec(con)
