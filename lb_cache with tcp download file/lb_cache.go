@@ -196,9 +196,9 @@ func retrieve(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q 
 	// str := "userID,itemID,amount,date,time"
 
 	// Get data from startDate to endDate
-	startDate := Date + "-01"
-	endDate := Date + "-31"
-	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?)", startDate, endDate)
+	startDate := Date + "-01" //2021-02-01
+	endDate := Date + "-31"   //2021-02-31
+	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC", startDate, endDate)
 	if err != nil {
 		fmt.Print(err)
 	}
