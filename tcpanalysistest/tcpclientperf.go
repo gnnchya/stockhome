@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,7 +37,8 @@ func main() {
 	wg := sync.WaitGroup{}
 	for i := 0; i < maxUsers; i++ {
 		wg.Add(1)
-		go Analysistesttime(mainC, timeC, outC, &wg)
+		randate := randomTimestamp()
+		go Analysistesttime(mainC, timeC, outC, &wg, randate)
 		count = <-mainC
 		timecnt = <-timeC
 		if timecnt == 0 {
@@ -46,7 +48,8 @@ func main() {
 		avg = avg + timecnt
 		fmt.Println("current user no. : ", count)
 
-		check := "Server: " + analysis1("2019", "03", "01")
+		com := strings.Split(randate, "-")
+		check := "Server: " + analysis1(com[0], com[1], com[2])
 		output := <-outC
 		if output == check {
 			fmt.Println("*******Correct output*******")
@@ -65,7 +68,7 @@ func main() {
 
 }
 
-func Analysistesttime(mainC chan int, timeC chan time.Duration, outC chan string, wg *sync.WaitGroup) {
+func Analysistesttime(mainC chan int, timeC chan time.Duration, outC chan string, wg *sync.WaitGroup, randate string) {
 	defer wg.Done()
 	c := make(chan string)
 	//var elapsed time.Duration = 0
@@ -76,8 +79,8 @@ func Analysistesttime(mainC chan int, timeC chan time.Duration, outC chan string
 	if begin == "begin" {
 		start := time.Now()
 
-		fmt.Println("ana 2019-03-01")
-		c <- "ana 2019-03-01"
+		fmt.Println("ana " + randate)
+		c <- "ana " + randate
 
 		output := <-c
 		done := <-c
@@ -115,6 +118,14 @@ func Analysistesttime(mainC chan int, timeC chan time.Duration, outC chan string
 	// wg2.Wait()
 	return
 	// return success, elapsed
+}
+
+// ref: https://stackoverflow.com/questions/40944233/generating-random-timestamps-in-go
+func randomTimestamp() string {
+	randomTime := rand.Int63n(time.Now().Unix()-94608000) + 94608000
+
+	randomNow := time.Unix(randomTime, 0).Format("2006-01-02")
+	return randomNow
 }
 
 // analysis code ****************************************************

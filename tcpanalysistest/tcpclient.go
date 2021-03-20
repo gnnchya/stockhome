@@ -11,12 +11,22 @@ import (
 )
 
 func Client(c chan string, wg2 *sync.WaitGroup) {
-	con, err := net.Dial("tcp", ":9999")
-	if err != nil {
-		fmt.Println(err)
-		c <- "error"
-		wg2.Done()
-		return
+	var try int = 0
+	var con net.Conn
+	var err error
+
+	for {
+		con, err = net.Dial("tcp", ":9999")
+		if err != nil && try >= 3 {
+			fmt.Println(err)
+			c <- "error"
+			wg2.Done()
+			return
+		} else if err != nil && try < 3 {
+			try++
+		} else {
+			break
+		}
 	}
 	defer con.Close()
 	help()
