@@ -1,19 +1,28 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"net"
 	"strings"
 
-	"bufio"
+	// _ "github.com/go-sql-driver/mysql"
+	// "bufio"
 	"bytes"
 	"database/sql"
 	"encoding/csv"
-	"fmt"
+
+	// "fmt"
 	"os"
 	"strconv"
 
+	//"strings"
+
 	_ "github.com/go-sql-driver/mysql"
 )
+
+var Lfu Cache = Cache{20, 0, make(map[int]*Node)}
+var Cache_queue Queue = Queue{nil, nil}
 
 func main() {
 	connect, err := net.Listen("tcp", ":9999")
@@ -26,7 +35,7 @@ func main() {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
-			// connect.Close()
+			connect.Close()
 			return
 		}
 		go rec(con)
@@ -55,8 +64,9 @@ func rec(con net.Conn) {
 	}
 }
 
-func send(con net.Conn, msg string) {
-	con.Write([]byte("Server: " + msg + "\n"))
+func send(con net.Conn, msg []byte) {
+	con.Write(msg)
+	con.Write([]byte("."))
 }
 
 type Cache struct {
@@ -148,7 +158,7 @@ func (q *Queue) printQ() {
 	return
 }
 
-func (c *Cache) add(q *Queue, itemId int, value *bytes.Buffer) {
+func (c *Cache) set(q *Queue, itemId int, value *bytes.Buffer) {
 	if _, ok := c.block[itemId]; ok {
 		c.block[itemId].value = value
 		q.update(c.block[itemId])
@@ -171,7 +181,7 @@ func (c *Cache) get(q *Queue, itemId int) *bytes.Buffer {
 	} else {
 		// read(c, q, strconv.Itoa(itemId))
 		filename := strconv.Itoa(itemId)
-		retrieve(c, q, "20"+filename[0:2]+"-"+filename[2:4]+"-01", "20"+filename[4:6]+"-"+filename[6:8]+"-31", filename)
+		retrieve(c, q, filename[0:4]+"-"+filename[4:6], filename)
 		fmt.Println("----MISS----")
 	}
 	return c.block[itemId].value
@@ -179,14 +189,15 @@ func (c *Cache) get(q *Queue, itemId int) *bytes.Buffer {
 
 var db *sql.DB
 
-func retrieve(c *Cache, q *Queue, startDate string, endDate string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+func retrieve(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
-	// fmt.Println(col)
 	buf.Write(col)
 	// str := "userID,itemID,amount,date,time"
 
 	// Get data from startDate to endDate
+	startDate := Date + "-01"
+	endDate := Date + "-31"
 	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?)", startDate, endDate)
 	if err != nil {
 		fmt.Print(err)
@@ -206,11 +217,11 @@ func retrieve(c *Cache, q *Queue, startDate string, endDate string, filename str
 		buf.Write(line)
 	}
 	// fmt.Println(buf)
-	// dash()
 	// fmt.Printf("\nbuf: %T, \n%d\n", buf, buf)
 	// fmt.Printf("\nstr: %T, \n%s\n", str, str)
+	fmt.Println(filename)
 	name, _ := strconv.Atoi(filename)
-	c.add(q, name, buf)
+	c.set(q, name, buf)
 }
 func read(c *Cache, q *Queue, filename string) {
 	file, err := os.Open("c:/Users/fluke/Desktop/" + filename + ".csv")
@@ -235,7 +246,7 @@ func read(c *Cache, q *Queue, filename string) {
 	}
 	// fmt.Println(buf)
 	name, _ := strconv.Atoi(filename)
-	c.add(q, name, buf)
+	c.set(q, name, buf)
 }
 
 // "year-month-date"
@@ -287,19 +298,12 @@ func Save(startDate string, endDate string, filename string) {
 	}
 }
 
-func dash() {
-	fmt.Println("--------------------")
-}
-
-func history(daterequest int) string {
+func history(daterequest int) []byte {
 	var err error
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-	cache_size := 3
-	Lfu := Cache{cache_size, 0, make(map[int]*Node)}
-	Cache_queue := Queue{nil, nil}
 
 	// miss_start := time.Now()
 	// Lfu.get(&Cache_queue, daterequest)
@@ -309,5 +313,5 @@ func history(daterequest int) string {
 	// Lfu.get(&Cache_queue, daterequest)
 	// fmt.Println("Time elapsed: ", time.Since(hit_start))
 
-	return (Lfu.get(&Cache_queue, daterequest).String() + ".")
+	return Lfu.get(&Cache_queue, daterequest).Bytes()
 }

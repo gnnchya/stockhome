@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
-var maxUsers = 246
+var maxUsers = 1000
 var success, correct int = 0, 0
 var timecnt, avg time.Duration = 0, 0
 
@@ -75,10 +73,8 @@ func cache(mainC chan int, timeC chan time.Duration, wg *sync.WaitGroup) {
 		wg2.Wait()
 		return
 	}
-	//mainC <- success
-	//timeC <- elapsed
-	// outC <- "None"
-	// wg2.Wait()
+	mainC <- success
+	timeC <- 0
+	wg2.Wait()
 	return
-	// return success, elapsed
 }
