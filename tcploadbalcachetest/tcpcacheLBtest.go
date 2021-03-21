@@ -17,7 +17,7 @@ func main() {
 	wg := sync.WaitGroup{}
 	for i := 0; i < maxUsers; i++ {
 		wg.Add(1)
-		go cache(mainC, timeC, &wg)
+		go cache1(mainC, timeC, &wg)
 		count = <-mainC
 		timecnt = <-timeC
 		if timecnt == 0 {
@@ -36,7 +36,7 @@ func main() {
 
 }
 
-func cache(mainC chan int, timeC chan time.Duration, wg *sync.WaitGroup) {
+func cache1(mainC chan int, timeC chan time.Duration, wg *sync.WaitGroup) {
 	defer wg.Done()
 	c := make(chan string)
 	wg2 := sync.WaitGroup{}

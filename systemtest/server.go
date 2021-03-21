@@ -1,9 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
-	"math/rand"
+	"net"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,125 +14,57 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
-
-func init() {
-	var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
-
+func main() {
+	connect, err := net.Listen("tcp", ":5001")
 	if err != nil {
-		fmt.Println("Error: Cannot open database")
+		fmt.Println(err)
 		return
 	}
-
-}
-
-var maxUsers = 20000
-var success, correct int = 0, 0
-var timecnt, avg time.Duration = 0, 0
-
-func main() {
-	defer db.Close()
-	mainC := make(chan int)
-	timeC := make(chan time.Duration)
-	outC := make(chan string)
-	var count int = 0
-	wg := sync.WaitGroup{}
-	for i := 0; i < maxUsers; i++ {
-		wg.Add(1)
-		randate := randomTimestamp()
-		go Analysistesttime(mainC, timeC, outC, &wg, randate)
-		count = <-mainC
-		timecnt = <-timeC
-		if timecnt == 0 {
-			wg.Done()
-			break
-		}
-		avg = avg + timecnt
-		fmt.Println("current user no. : ", count)
-
-		com := strings.Split(randate, "-")
-		check := "Server: " + analysis1(com[0], com[1], com[2])
-		output := <-outC
-		if output == check {
-			fmt.Println("*******Correct output*******")
-			correct++
-		} else {
-			fmt.Println("#######Incorrect output#######")
-		}
-	}
-	wg.Wait()
-
-	fmt.Println("********************************************")
-	fmt.Println("Numbers of user input: ", maxUsers)
-	fmt.Println("total success count: ", count)
-	fmt.Println("Average time: ", (float64(avg)/float64(time.Millisecond))/float64(count), "ms")
-	fmt.Println("Data correctness: ", (float64(correct)/float64(count))*100, "%")
-
-}
-
-func Analysistesttime(mainC chan int, timeC chan time.Duration, outC chan string, wg *sync.WaitGroup, randate string) {
-	defer wg.Done()
-	c := make(chan string)
-	//var elapsed time.Duration = 0
-	wg2 := sync.WaitGroup{}
-	wg2.Add(1)
-	go Client(c, &wg2)
-	begin := <-c
-	if begin == "begin" {
-		start := time.Now()
-
-		fmt.Println("ana " + randate)
-		c <- "ana " + randate
-
-		output := <-c
-		done := <-c
-
-		if done == "done" {
-			elapsed := time.Since(start)
-			fmt.Println("time elapsed: ", elapsed)
-
-			//done = <-c
-			//c <- "exit"
-			// return success, elapsed
-			if output != "EOF" {
-				success++
-				mainC <- success
-				timeC <- elapsed
-				outC <- output
-			} else {
-				mainC <- success
-				timeC <- 0
-				outC <- "None"
-			}
-			wg2.Wait()
+	defer connect.Close()
+	for {
+		con, err := connect.Accept()
+		if err != nil {
+			fmt.Println(err)
+			// connect.Close()
 			return
 		}
-	} else if begin == "error" {
-		mainC <- success
-		timeC <- 0
-		outC <- "None"
-		wg2.Wait()
-		return
+		go rec(con)
+		fmt.Println(con.RemoteAddr())
+		// go send(con, rec(con))
 	}
-	//mainC <- success
-	//timeC <- elapsed
-	// outC <- "None"
-	// wg2.Wait()
-	return
-	// return success, elapsed
+}
+func rec(con net.Conn) {
+	for {
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println()
+		fmt.Print("Client: " + data)
+		msg := strings.Split(data, ":")
+		msg[0] = strings.TrimSpace(msg[0])
+		msg[1] = strings.TrimSpace(msg[1])
+		switch msg[0] {
+		case "ana":
+			date := strings.Split(msg[1], "-")
+			date[0] = strings.TrimSpace(date[0])
+			date[1] = strings.TrimSpace(date[1])
+			date[2] = strings.TrimSpace(date[2])
+			send(con, analysis(date[0], date[1], date[2]))
+		default:
+			pulldb(con, msg[1])
+		}
+	}
 }
 
-// ref: https://stackoverflow.com/questions/40944233/generating-random-timestamps-in-go
-func randomTimestamp() string {
-	randomTime := rand.Int63n(time.Now().Unix()-94608000) + 94608000
-
-	randomNow := time.Unix(randomTime, 0).Format("2006-01-02")
-	return randomNow
+func send(con net.Conn, msg string) {
+	con.Write([]byte("Server: " + msg))
 }
 
-// analysis code ****************************************************
-func analysis1(year string, month string, day string) string {
+var db *sql.DB
+
+func analysis(year string, month string, day string) string {
 	var err error
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 	if err != nil {
@@ -147,29 +80,29 @@ func analysis1(year string, month string, day string) string {
 
 	Wg.Add(1)
 	go func() {
-		aWith = mostwithA(&Wg)
+		aWith = MostWithA(&Wg)
 	}()
 
 	Wg.Add(1)
 	go func() {
-		bWith = mostWithDate(start, &Wg)
+		bWith = MostWithDate(start, &Wg)
 	}()
 
 	Wg.Add(1)
 	go func() {
-		cWith = withTime(&Wg)
+		cWith = WithTime(&Wg)
 	}()
 
 	Wg.Add(1)
 	go func() {
-		dWith = withDate(&Wg)
+		dWith = WithDate(&Wg)
 	}()
 
 	Wg.Wait()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func mostwithA(Wg *sync.WaitGroup) string {
+func MostWithA(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
 	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0")
@@ -211,7 +144,7 @@ func mostwithA(Wg *sync.WaitGroup) string {
 	return txt.String()
 }
 
-func mostWithDate(start string, Wg *sync.WaitGroup) string {
+func MostWithDate(start string, Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
 	startDate, _ := time.Parse("2006-01-02", start)
@@ -256,7 +189,7 @@ func mostWithDate(start string, Wg *sync.WaitGroup) string {
 	return txt.String()
 }
 
-func withTime(Wg *sync.WaitGroup) string {
+func WithTime(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
 	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
@@ -294,7 +227,7 @@ func withTime(Wg *sync.WaitGroup) string {
 	return txt.String()
 }
 
-func withDate(Wg *sync.WaitGroup) string {
+func WithDate(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
 	row, err := db.Query("SELECT date, amount FROM history WHERE action = 0")
@@ -331,4 +264,44 @@ func withDate(Wg *sync.WaitGroup) string {
 
 	}
 	return txt.String()
+}
+
+func pulldb(con net.Conn, date string) {
+	var err error
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+
+	// buf := bytes.NewBuffer(make([]byte, 0))
+	col := []byte("userID,itemID,amount,date,time")
+	// buf.Write(col)
+	con.Write(col)
+	// str := "userID,itemID,amount,date,time"
+	// fmt.Println(Date)
+	// Get data from startDate to endDate
+	startDate := date + "-01" //2021-02-01
+	endDate := date + "-31"   //2021-02-31
+	fmt.Println(startDate)
+	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Slice each row
+	for row.Next() {
+		var userID, itemID, amount int
+		var date, time string
+		err = row.Scan(&userID, &itemID, &amount, &date, &time)
+		if err != nil {
+			fmt.Print(err)
+		}
+		// Write each line
+		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
+		// str += ("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
+		// buf.Write(line)
+		con.Write(line)
+	}
+	// con.Write(buf.Bytes())
+	con.Write([]byte("."))
 }

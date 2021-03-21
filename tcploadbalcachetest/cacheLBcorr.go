@@ -149,7 +149,7 @@ func retrieve(Date string) string {
 	// Get data from startDate to endDate
 	startDate := Date + "-01"
 	endDate := Date + "-31"
-	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?)", startDate, endDate)
+	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
 	if err != nil {
 		fmt.Print(err)
 	}

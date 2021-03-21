@@ -17,6 +17,7 @@ func Client(c chan string, wg2 *sync.WaitGroup) {
 	var err error
 
 	for {
+		time.Sleep(1 * time.Millisecond)
 		con, err = net.Dial("tcp", ":9999")
 		if err != nil && try >= 3 {
 			fmt.Println("error: ", err)
@@ -64,11 +65,11 @@ func Client(c chan string, wg2 *sync.WaitGroup) {
 
 func help() {
 	fmt.Println(" Features 		|\"Command\"						|\"Example\"")
-	fmt.Println(" ------------------------------------------------------------------------------------------------------------ ")
+	fmt.Println(" ---------------------------------------------------------------------------------------------- ")
 	fmt.Println(" Add Item		|\"add userID itemID Amount\"				|\"add 62011155 745345 12\"")
 	fmt.Println(" WithDraw Item		|\"wd userID itemID Amount\"				|\"wd 62011155 745345 12\"")
-	fmt.Println(" History Tracking	|\"his (since)year-month-day (until)year-month-day\"	|\"his 2020-12-12 2020-12-12\"")
-	fmt.Println(" Stock Analysis 	|\"ana (since)year-month-day\"				|\"ana 2020-12-12\"")
+	fmt.Println(" History Tracking	|\"his year-month\"	|\"his 2020-12\"")
+	fmt.Println(" Stock Analysis 	|\"ana year-month-day\"				|\"ana 2020-12-12\"")
 	fmt.Println(" Exit 			|\"exit\"")
 }
 
@@ -201,6 +202,10 @@ func his(con net.Conn, com []string, c chan string) {
 		c <- "error"
 		fmt.Println("Cannot diplay the future!")
 		return
+	} else if mm == immt && yyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the current month!")
+		c <- "error"
+		return
 	}
 
 	con.Write([]byte(com[0] + ": " + since[0] + since[1] + "\n"))
@@ -210,8 +215,8 @@ func his(con net.Conn, com []string, c chan string) {
 	// Create a file that the client wants to download
 	dir, err := os.Getwd()
 	if err != nil {
-		fmt.Println(err)
 		c <- "error"
+		fmt.Println(err)
 		return
 	}
 
@@ -235,7 +240,6 @@ func his(con net.Conn, com []string, c chan string) {
 	}
 
 	fmt.Println("Download completed")
-	//c <- "Dl cp"
 	return
 }
 

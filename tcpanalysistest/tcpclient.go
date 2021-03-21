@@ -19,7 +19,7 @@ func Client(c chan string, wg2 *sync.WaitGroup) {
 	for {
 		con, err = net.Dial("tcp", ":9999")
 		if err != nil && try >= 3 {
-			fmt.Println(err)
+			fmt.Println("error: ", err)
 			c <- "error"
 			wg2.Done()
 			return
@@ -180,6 +180,7 @@ func his(con net.Conn, com []string, c chan string) {
 	}
 	if yyyy > time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
+		c <- "error"
 		return
 	}
 
@@ -197,6 +198,7 @@ func his(con net.Conn, com []string, c chan string) {
 	mmt := time.Now().Month()
 	var immt int = int(mmt)
 	if mm > immt && yyyy == time.Now().Year() {
+		c <- "error"
 		fmt.Println("Cannot diplay the future!")
 		return
 	}
@@ -221,6 +223,7 @@ func his(con net.Conn, com []string, c chan string) {
 
 	// Receive data and writing the file
 	data, err := bufio.NewReader(con).ReadString('.')
+	c <- data
 	out.Write([]byte(data))
 	out.Close()
 
@@ -232,7 +235,7 @@ func his(con net.Conn, com []string, c chan string) {
 	}
 
 	fmt.Println("Download completed")
-	c <- "Dl cp"
+	//c <- "Dl cp"
 	return
 }
 
