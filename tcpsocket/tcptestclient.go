@@ -38,10 +38,9 @@ func main() {
 		case "help":
 			help()
 		case "exit":
+			con.Write([]byte("exit"))
 			con.Close()
 			return
-		case "get":
-			get(con, com)
 		default:
 			fmt.Println("Command not found. Type \"help\" for help.")
 		}
@@ -156,6 +155,12 @@ func his(con net.Conn, com []string) {
 		return
 	}
 
+	// until := strings.Split(com[2], "-")
+	// if len(until) != 3 {
+	// 	fmt.Println("Please input as the format.")
+	// 	return
+	// }
+
 	yyyy, err := strconv.Atoi(since[0])
 	if err != nil {
 		fmt.Println("Please Enter year as an Integer!")
@@ -170,6 +175,19 @@ func his(con net.Conn, com []string) {
 		return
 	}
 
+	// yy, err := strconv.Atoi(until[0])
+	// if err != nil {
+	// 	fmt.Println("Please Enter year as an Integer!")
+	// 	return
+	// }
+	// if len(until[0]) != 4 {
+	// 	fmt.Println("Please Enter year as a 4 digits of int!")
+	// 	return
+	// }
+	// if yy > time.Now().Year() {
+	// 	fmt.Println("Cannot diplay the future!")
+	// 	return
+	// }
 	since[1] = strings.TrimSpace(since[1])
 
 	mm, err := strconv.Atoi(since[1])
@@ -186,39 +204,61 @@ func his(con net.Conn, com []string) {
 	if mm > immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		return
-	} else if mm == immt && yyyy == time.Now().Year() {
-		fmt.Println("Cannot diplay the current month!")
-		return
 	}
+
+	// m, err := strconv.Atoi(until[1])
+	// if err != nil {
+	// 	fmt.Println("Please Enter month as an Integer!")
+	// 	return
+	// }
+	// if len(until[1]) != 2 {
+	// 	fmt.Println("Please Enter year as a 2 digits of int!")
+	// 	return
+	// }
+	// mt := time.Now().Month()
+	// var imt int = int(mt)
+	// if m > imt && yy == time.Now().Year() {
+	// 	fmt.Println("Cannot diplay the future!")
+	// 	return
+	// }
+
+	// dd, err := strconv.Atoi(since[2])
+	// if err != nil {
+	// 	fmt.Println("Please Enter day as an Integer!")
+	// 	return
+	// }
+	// if len(since[2]) != 2 {
+	// 	fmt.Println("Please Enter day as a 2 digits of int!")
+	// 	return
+	// }
+	// if dd > time.Now().Day() && mm == immt && yyyy == time.Now().Year() {
+	// 	fmt.Println("Cannot diplay the future!")
+	// 	return
+	// }
+
+	// until[2] = strings.TrimSpace(until[2])
+	// d, err := strconv.Atoi(until[2])
+	// if err != nil {
+	// 	fmt.Println("Please Enter day as an Integer!")
+	// 	return
+	// }
+	// if len(until[2]) != 2 {
+	// 	fmt.Println("Please Enter day as a 2 digits of int!")
+	// 	return
+	// }
+	// if d > time.Now().Day() && mm == immt && yyyy == time.Now().Year() {
+	// 	fmt.Println("Cannot diplay the future!")
+	// 	return
+	// }
 
 	con.Write([]byte(com[0] + ": " + since[0] + since[1] + "\n"))
-
-	fmt.Println("Downloading...")
-
-	// Create a file that the client wants to download
-	dir, err := os.Getwd()
+	fmt.Println("Waiting for respond...")
+	data, err := bufio.NewReader(con).ReadString('.')
 	if err != nil {
 		fmt.Println(err)
-	}
-
-	out, err := os.Create(dir + "/" + since[0] + "-" + since[1] + ".tmp")
-	if err != nil {
 		return
 	}
-
-	// Receive data and writing the file
-	data, err := bufio.NewReader(con).ReadString('.')
-	out.Write([]byte(data))
-	out.Close()
-
-	// Rename temporary to acutal csv file
-	err = os.Rename(dir+"/"+since[0]+"-"+since[1]+".tmp", dir+"/"+since[0]+"-"+since[1]+".csv")
-	if err != nil {
-		return
-	}
-
-	fmt.Println("Download completed")
-	return
+	fmt.Println(data)
 }
 
 func ana(con net.Conn, com []string) {
@@ -279,17 +319,6 @@ func ana(con net.Conn, com []string) {
 	}
 
 	con.Write([]byte(com[0] + ": " + since[0] + "-" + since[1] + "-" + since[2] + "\n"))
-	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('.')
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(data)
-}
-
-func get(con net.Conn, com []string) {
-	con.Write([]byte(com[0] + ": " + com[1] + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('.')
 	if err != nil {
