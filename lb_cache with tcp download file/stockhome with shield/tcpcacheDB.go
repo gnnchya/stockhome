@@ -350,8 +350,13 @@ func (l *LRU) InitLRU(capacity int) {
 
 func (l *LRU) Read(itemID int) int {
 	if _, found := l.PageMap[itemID]; !found {
+		fmt.Println("Miss")
+		page := l.pageList.addFrontPage(itemID, GetAmount(itemID))
+		l.size++
+		l.PageMap[itemID] = page
 		return GetAmount(itemID)
 	}
+	fmt.Println("HIT")
 	val := l.PageMap[itemID].currentAmount
 	l.pageList.bringToMostUsed(l.PageMap[itemID])
 	return val
