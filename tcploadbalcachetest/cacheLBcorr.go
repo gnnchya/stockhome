@@ -71,9 +71,7 @@ func main() {
 
 		check := retrieve(inputdate[i]) + "."
 		output := <-outH
-		fmt.Println(check)
 		fmt.Println("***************************")
-		fmt.Println(output)
 		if output == check {
 			fmt.Println("*******Correct output*******")
 			correct++

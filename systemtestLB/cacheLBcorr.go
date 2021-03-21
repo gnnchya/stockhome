@@ -35,6 +35,8 @@ func main() {
 	outC := make(chan string)
 
 	var count int = 0
+	var mem1 string
+	var mem2 string
 	wg := sync.WaitGroup{}
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
@@ -52,6 +54,8 @@ func main() {
 		} else {
 			fmt.Println("#######Incorrect output#######")
 		}
+		mem1 = <-outC
+		mem2 = <-outC
 	}
 	wg.Wait()
 
@@ -71,14 +75,21 @@ func main() {
 
 		check := retrieve(inputdate[i]) + "."
 		output := <-outH
-		fmt.Println(check)
 		fmt.Println("***************************")
-		fmt.Println(output)
 		if output == check {
 			fmt.Println("*******Correct output*******")
 			correct++
 		} else {
 			fmt.Println("#######Incorrect output#######")
+		}
+		mem1s := <-outH
+		mem2s := <-outH
+
+		if mem1s != "0" {
+			mem1 = mem1s
+		}
+		if mem2s != "0" {
+			mem2 = mem2s
 		}
 	}
 	wgH.Wait()
@@ -86,7 +97,9 @@ func main() {
 	fmt.Println("********************************************")
 	fmt.Println("Numbers of miss: ", count)
 	fmt.Println("Numbers of hit: ", countH, "\n")
-
+	fmt.Println("Server 1 :", mem1, "users/Server 2 : ", mem2[:len(mem2)-1])
+	no, _ := strconv.Atoi(mem2[:len(mem2)-1])
+	fmt.Println("Client distribution correct: ", countH == no)
 	fmt.Println("Average miss time : ", (float64(avgm)/float64(time.Millisecond))/float64(count), "ms")
 	fmt.Println("Average hit time : ", (float64(avgh)/float64(time.Millisecond))/float64(countH), "ms")
 	fmt.Println("Data correctness: ", (float64(correct)/float64(count+countH))*100, "%")
@@ -107,6 +120,8 @@ func cache(mainA chan int, timeA chan time.Duration, outA chan string, wg *sync.
 		c <- "his " + inputdate[i]
 
 		output := <-c
+		mem1 := <-c
+		mem2 := <-c
 		done := <-c
 
 		if done == "done" {
@@ -118,10 +133,14 @@ func cache(mainA chan int, timeA chan time.Duration, outA chan string, wg *sync.
 				mainA <- success
 				timeA <- elapsed
 				outA <- output
+				outA <- mem1
+				outA <- mem2
 			} else {
 				mainA <- success
 				timeA <- 0
 				outA <- ""
+				outA <- mem1
+				outA <- mem2
 			}
 			wg2.Wait()
 			return
@@ -130,12 +149,16 @@ func cache(mainA chan int, timeA chan time.Duration, outA chan string, wg *sync.
 		mainA <- success
 		timeA <- 0
 		outA <- ""
+		outA <- "0"
+		outA <- "0"
 		wg2.Wait()
 		return
 	}
 	mainA <- success
 	timeA <- 0
 	outA <- ""
+	outA <- "0"
+	outA <- "0"
 	wg2.Wait()
 	return
 }

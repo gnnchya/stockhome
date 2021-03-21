@@ -105,8 +105,9 @@ func fb1(con net.Conn, ser1 net.Conn) {
 			mem1--
 			return
 		}
-		fmt.Println(msg)
-		con.Write([]byte(msg))
+		con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
+		con.Write([]byte("`"))
+
 	}
 }
 
@@ -152,8 +153,9 @@ func fb2(con net.Conn, ser2 net.Conn) {
 		mem2--
 		return
 	}
-	fmt.Println(msg)
-	con.Write([]byte(msg))
+	fmt.Println("eiei")
+	con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
+	con.Write([]byte("`"))
 	// }
 }
 
@@ -183,8 +185,13 @@ func hc(port string) {
 }
 
 func send(con net.Conn, msg []byte) {
-	con.Write(msg)
-	con.Write([]byte("."))
+	temp := append(msg, []byte("*")...)
+	temp1 := append(temp, []byte(strconv.Itoa(mem1))...)
+	temp2 := append(temp1, []byte("*")...)
+	temp3 := append(temp2, []byte(strconv.Itoa(mem2))...)
+	con.Write(temp3)
+	con.Write([]byte("`"))
+
 }
 
 type Cache struct {

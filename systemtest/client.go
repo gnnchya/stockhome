@@ -182,6 +182,8 @@ func his(con net.Conn, com []string, c chan string) {
 	if yyyy > time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		c <- "error"
+		c <- "0"
+		c <- "0"
 		return
 	}
 
@@ -200,11 +202,15 @@ func his(con net.Conn, com []string, c chan string) {
 	var immt int = int(mmt)
 	if mm > immt && yyyy == time.Now().Year() {
 		c <- "error"
+		c <- "0"
+		c <- "0"
 		fmt.Println("Cannot diplay the future!")
 		return
 	} else if mm == immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the current month!")
 		c <- "error"
+		c <- "0"
+		c <- "0"
 		return
 	}
 
@@ -216,6 +222,8 @@ func his(con net.Conn, com []string, c chan string) {
 	dir, err := os.Getwd()
 	if err != nil {
 		c <- "error"
+		c <- "0"
+		c <- "0"
 		fmt.Println(err)
 		return
 	}
@@ -223,19 +231,35 @@ func his(con net.Conn, com []string, c chan string) {
 	out, err := os.Create(dir + "/" + since[0] + "-" + since[1] + ".tmp")
 	if err != nil {
 		c <- "error"
+		c <- "0"
+		c <- "0"
 		return
 	}
 
 	// Receive data and writing the file
-	data, err := bufio.NewReader(con).ReadString('.')
-	c <- data
-	out.Write([]byte(data))
+	data, err := bufio.NewReader(con).ReadString('`')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	c <- msg[0]
+	out.Write([]byte(msg[0]))
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
+	c <- mem1
+	c <- mem2
+
 	out.Close()
 
 	// Rename temporary to acutal csv file
 	err = os.Rename(dir+"/"+since[0]+"-"+since[1]+".tmp", dir+"/"+since[0]+"-"+since[1]+".csv")
 	if err != nil {
 		c <- "error"
+		c <- mem1
+		c <- mem2
 		return
 	}
 
@@ -302,12 +326,26 @@ func ana(con net.Conn, com []string, c chan string) {
 
 	con.Write([]byte(com[0] + ": " + since[0] + "-" + since[1] + "-" + since[2] + "\n"))
 	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('.')
+	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
 		c <- "EOF"
+		c <- "0"
+		c <- "0"
 		return
 	}
-	c <- data
-	fmt.Println(data)
+	fmt.Println("eiei")
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	fmt.Println("eiei")
+	c <- msg[0]
+	fmt.Println("eiei")
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
+	fmt.Println("eiei")
+	c <- mem1
+	fmt.Println("eiei")
+	c <- mem2
+	fmt.Println("eiei")
+	fmt.Println(msg[0])
 }
