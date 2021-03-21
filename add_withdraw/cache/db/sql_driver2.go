@@ -42,6 +42,21 @@ func Main2(itemID int, amount int, userID int) {
 	Wg.Wait()
 }
 
+
+func GetAmount(itemID int) int{
+	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
+
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	var amount int
+	for row.Next(){
+		err = row.Scan(&itemID, &amount)
+	}
+	return amount
+}
+
 func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) {
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
@@ -61,14 +76,14 @@ func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) {
 		insert.Close()
 
 	} else {
-		fmt.Printf("Error: Item %d already in database\n", itemID)
+		addExist(itemID, amount, userID, Wg)
 	}
 }
 
 func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) {
 	// For adding EXISTING items. For items CURRENTLY in the database.
 	// If you add a new item, it will die. Use addNew for items NOT in database
-	defer Wg.Done()
+	// defer Wg.Done()
 	var checkID, stock int
 
 	check := Db.QueryRow("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID).Scan(&checkID, &stock)
