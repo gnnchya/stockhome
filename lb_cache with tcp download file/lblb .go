@@ -73,7 +73,7 @@ type Cache struct {
 }
 
 type Node struct {
-	value *bytes.Buffer
+	value []byte
 	count int
 	next  *Node
 	prev  *Node
@@ -155,7 +155,7 @@ func (q *Queue) printQ() {
 	return
 }
 
-func (c *Cache) set(q *Queue, itemId int, value *bytes.Buffer) {
+func (c *Cache) set(q *Queue, itemId int, value []byte) {
 	if _, ok := c.block[itemId]; ok {
 		c.block[itemId].value = value
 		q.update(c.block[itemId])
@@ -171,7 +171,7 @@ func (c *Cache) set(q *Queue, itemId int, value *bytes.Buffer) {
 	return
 }
 
-func (c *Cache) get(q *Queue, itemId int) *bytes.Buffer {
+func (c *Cache) get(q *Queue, itemId int) []byte {
 	if _, ok := c.block[itemId]; ok {
 		q.update(c.block[itemId])
 		fmt.Println("----HIT----")
@@ -190,38 +190,46 @@ func (c *Cache) get(q *Queue, itemId int) *bytes.Buffer {
 var db *sql.DB
 
 func retrieve(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	buf := bytes.NewBuffer(make([]byte, 0))
-	col := []byte("userID,itemID,amount,date,time")
-	buf.Write(col)
-	// str := "userID,itemID,amount,date,time"
+	// buf := bytes.NewBuffer(make([]byte, 0))
+	// col := []byte("userID,itemID,amount,date,time")
+	// buf.Write(col)
+	// // str := "userID,itemID,amount,date,time"
 
-	// Get data from startDate to endDate
-	startDate := Date + "-01" //2021-02-01
-	endDate := Date + "-31"   //2021-02-31
-	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
-	if err != nil {
-		fmt.Print(err)
-	}
+	// // Get data from startDate to endDate
+	// startDate := Date + "-01" //2021-02-01
+	// endDate := Date + "-31"   //2021-02-31
+	// row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
+	// if err != nil {
+	// 	fmt.Print(err)
+	// }
 
-	// Slice each row
-	for row.Next() {
-		var userID, itemID, amount int
-		var date, time string
-		err = row.Scan(&userID, &itemID, &amount, &date, &time)
-		if err != nil {
-			fmt.Print(err)
-		}
-		// Write each line
-		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-		// str += ("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-		buf.Write(line)
-	}
+	// // Slice each row
+	// for row.Next() {
+	// 	var userID, itemID, amount int
+	// 	var date, time string
+	// 	err = row.Scan(&userID, &itemID, &amount, &date, &time)
+	// 	if err != nil {
+	// 		fmt.Print(err)
+	// 	}
+	// 	// Write each line
+	// 	line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
+	// 	// str += ("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
+	// 	buf.Write(line)
+	// }
 	// fmt.Println(buf)
 	// fmt.Printf("\nbuf: %T, \n%d\n", buf, buf)
 	// fmt.Printf("\nstr: %T, \n%s\n", str, str)
 	// fmt.Println(filename)
+	con, err := net.Dial("tcp", ":9998")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer con.Close()
+	con.Write([]byte(Date + "\n"))
+	data, err := bufio.NewReader(con).ReadBytes('.')
 	name, _ := strconv.Atoi(filename)
-	c.set(q, name, buf)
+	c.set(q, name, data)
 }
 
 func retrieve_go(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
@@ -236,7 +244,7 @@ func retrieve_go(c *Cache, q *Queue, Date string, filename string) { //c *Cache,
 	buf1.Write(buf2.Bytes())
 	// fmt.Println(buf1)
 	name, _ := strconv.Atoi(filename)
-	c.set(q, name, buf1)
+	c.set(q, name, buf1.Bytes())
 }
 
 func get_database(halfmonth int, Date string, buf *bytes.Buffer) {
@@ -293,7 +301,7 @@ func read(c *Cache, q *Queue, filename string) {
 	}
 	// fmt.Println(buf)
 	name, _ := strconv.Atoi(filename)
-	c.set(q, name, buf)
+	c.set(q, name, buf.Bytes())
 }
 
 // "year-month-date"
@@ -346,11 +354,11 @@ func Save(startDate string, endDate string, filename string) {
 }
 
 func history(daterequest int) []byte {
-	var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
+	// var err error
+	// db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	// if err != nil {
+	// 	fmt.Println("Error: Cannot open database")
+	// }
 
 	// miss_start := time.Now()
 	// Lfu.get(&Cache_queue, daterequest)
@@ -360,5 +368,5 @@ func history(daterequest int) []byte {
 	// Lfu.get(&Cache_queue, daterequest)
 	// fmt.Println("Time elapsed: ", time.Since(hit_start))
 
-	return Lfu.get(&Cache_queue, daterequest).Bytes()
+	return Lfu.get(&Cache_queue, daterequest)
 }

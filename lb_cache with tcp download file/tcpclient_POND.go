@@ -258,7 +258,6 @@ func his(con net.Conn, com []string) {
 	// 	return
 	// }
 	// fmt.Println(data)
-	fmt.Println("Downloading...")
 
 	// Create a file that the client wants to download
 	dir, err := os.Getwd()
@@ -275,7 +274,7 @@ func his(con net.Conn, com []string) {
 	data, err := bufio.NewReader(con).ReadString('.')
 	out.Write([]byte(data))
 	out.Close()
-
+	fmt.Println("Downloading...")
 	// Rename temporary to acutal csv file
 	err = os.Rename(dir+"/"+since[0]+"-"+since[1]+".tmp", dir+"/"+since[0]+"-"+since[1]+".csv")
 	if err != nil {
