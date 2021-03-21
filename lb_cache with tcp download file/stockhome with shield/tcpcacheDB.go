@@ -92,7 +92,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, withDrawToDB(iid, amt, uid))
+			send(con, withDrawToDB(iid, amt*(-1), uid))
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
 			iid, err := strconv.Atoi(msg[1])
