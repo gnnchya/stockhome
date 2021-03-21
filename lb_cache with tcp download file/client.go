@@ -184,6 +184,9 @@ func his(con net.Conn, com []string) {
 	if mm > immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		return
+	} else if mm == immt && yyyy == time.Now().Year() {
+		fmt.Println("Cannot diplay the current month!")
+		return
 	}
 
 	con.Write([]byte(com[0] + ": " + since[0] + since[1] + "\n"))

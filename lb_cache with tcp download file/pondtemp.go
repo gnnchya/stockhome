@@ -38,24 +38,43 @@ func main() {
 			return
 		}
 		fmt.Println(con.RemoteAddr())
-		go rec(con)
-		// if mem1 <= mem2 {
-		// 	mem1++
-		// 	go rec1(con)
-		// 	fmt.Println("server1", mem1, mem2)
-		// } else if mem2 < mem1 {
-		// 	mem2++
-		// 	go rec2(con)
-		// 	fmt.Println("server2", mem1, mem2)
-		// }
+		if mem1 <= mem2 {
+			mem1++
+			go rec1(con)
+			fmt.Println("server1", mem1, mem2)
+		} else if mem2 < mem1 {
+			mem2++
+			go rec2(con)
+			fmt.Println("server2", mem1, mem2)
+		}
 	}
 }
 
-func rec(con net.Conn) {
+// func rec(con net.Conn) {
+// 	if mem1 <= mem2 {
+// 		mem1++
+// 		go rec1(con)
+// 		fmt.Println("server1", mem1, mem2)
+// 	} else if mem2 < mem1 {
+// 		mem2++
+// 		go rec2(con)
+// 		fmt.Println("server2", mem1, mem2)
+// 	}
+
+// }
+
+func rec1(con net.Conn) {
+	ser1, err := net.Dial("tcp", ":5001")
+	if err != nil {
+		fmt.Println(err)
+		mem1--
+		return
+	}
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
+			mem1--
 			return
 		}
 		fmt.Println()
@@ -69,38 +88,11 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, history(date))
+			send(con, history(date, "5001"))
 		} else {
-			if mem1 <= mem2 {
-				mem1++
-				go rec1(con, data)
-				fmt.Println("server1", mem1, mem2)
-			} else if mem2 < mem1 {
-				mem2++
-				go rec2(con, data)
-				fmt.Println("server2", mem1, mem2)
-			}
+			ser1.Write([]byte(data))
+			go fb1(con, ser1)
 		}
-
-	}
-}
-
-func rec1(con net.Conn, data string) {
-	ser1, err := net.Dial("tcp", ":5001")
-	if err != nil {
-		fmt.Println(err)
-		mem1--
-		return
-	}
-	for {
-		// data, err := bufio.NewReader(con).ReadString('\n')
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	mem1--
-		// 	return
-		// }
-		ser1.Write([]byte(data))
-		fb1(con, ser1)
 	}
 	// mem1--
 }
@@ -118,7 +110,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 	}
 }
 
-func rec2(con net.Conn, data string) {
+func rec2(con net.Conn) {
 	ser2, err := net.Dial("tcp", ":5002")
 	if err != nil {
 		fmt.Println(err)
@@ -126,16 +118,30 @@ func rec2(con net.Conn, data string) {
 		return
 	}
 	for {
-		// data, err := bufio.NewReader(con).ReadString('\n')
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	mem2--
-		// 	return
-		// }
-		ser2.Write([]byte(data))
-		fb1(con, ser2)
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			mem2--
+			return
+		}
+		fmt.Println()
+		fmt.Print("Client: " + data)
+		msg := strings.Split(data, ":")
+		msg[0] = strings.TrimSpace(msg[0])
+		if msg[0] == "his" {
+			msg[1] = strings.TrimSpace(msg[1])
+			date, err := strconv.Atoi(msg[1])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			send(con, history(date, "5002"))
+		} else {
+			ser2.Write([]byte(data))
+			fb1(con, ser2)
+		}
+		// mem1--
 	}
-	// mem1--
 }
 
 func fb2(con net.Conn, ser2 net.Conn) {
@@ -286,7 +292,7 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 	return
 }
 
-func (c *Cache) get(q *Queue, itemId int) []byte {
+func (c *Cache) get(q *Queue, itemId int, cn string) []byte {
 	if _, ok := c.block[itemId]; ok {
 		q.update(c.block[itemId])
 		fmt.Println("----HIT----")
@@ -294,7 +300,7 @@ func (c *Cache) get(q *Queue, itemId int) []byte {
 		// read(c, q, strconv.Itoa(itemId))
 		filename := strconv.Itoa(itemId)
 		// a := time.Now()
-		retrieve(c, q, filename[0:4]+"-"+filename[4:6], filename)
+		retrieve(c, q, filename[0:4]+"-"+filename[4:6], filename, cn)
 		// fmt.Println(time.Since(a))
 
 		fmt.Println("----MISS----")
@@ -304,8 +310,8 @@ func (c *Cache) get(q *Queue, itemId int) []byte {
 
 var db *sql.DB
 
-func retrieve(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	con, err := net.Dial("tcp", ":5001")
+func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+	con, err := net.Dial("tcp", ":"+cn)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -438,7 +444,7 @@ func Save(startDate string, endDate string, filename string) {
 	}
 }
 
-func history(daterequest int) []byte {
+func history(daterequest int, cn string) []byte {
 	// var err error
 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 	// if err != nil {
@@ -453,5 +459,5 @@ func history(daterequest int) []byte {
 	// Lfu.get(&Cache_queue, daterequest)
 	// fmt.Println("Time elapsed: ", time.Since(hit_start))
 
-	return Lfu.get(&Cache_queue, daterequest)
+	return Lfu.get(&Cache_queue, daterequest, cn)
 }
