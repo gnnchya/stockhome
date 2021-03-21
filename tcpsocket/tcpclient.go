@@ -24,76 +24,74 @@ func main() {
 		if err != nil {
 			return
 		}
-		com := strings.TrimSpace(msg)
-		switch com {
+		com := strings.Split(msg, " ")
+		com[0] = strings.TrimSpace(com[0])
+		switch com[0] {
 		case "add":
-			add(con)
+			add(con, com)
 		case "wd":
-			wd(con)
+			wd(con, com)
 		case "his":
-			his(con)
+			his(con, com)
 		case "ana":
-			ana(con)
+			ana(con, com)
 		case "help":
 			help()
 		case "exit":
+			con.Write([]byte("exit"))
 			con.Close()
 			return
 		default:
 			fmt.Println("Command not found. Type \"help\" for help.")
 		}
 	}
+
 }
 
 func help() {
-	fmt.Println(" Features 		|\"Command\"")
-	fmt.Println(" ---------------------------------------")
-	fmt.Println(" Add Item		|\"add\"")
-	fmt.Println(" WithDraw Item		|\"wd\"")
-	fmt.Println(" History Tracking	|\"his\"")
-	fmt.Println(" Stock Analysis 	|\"ana\"")
+	fmt.Println(" Features 		|\"Command\"						|\"Example\"")
+	fmt.Println(" ---------------------------------------------------------------------------------------------- ")
+	fmt.Println(" Add Item		|\"add userID itemID Amount\"				|\"add 62011155 745345 12\"")
+	fmt.Println(" WithDraw Item		|\"wd userID itemID Amount\"				|\"wd 62011155 745345 12\"")
+	fmt.Println(" History Tracking	|\"his year-month\"	|\"his 2020-12\"")
+	fmt.Println(" Stock Analysis 	|\"ana year-month-day\"				|\"ana 2020-12-12\"")
 	fmt.Println(" Exit 			|\"exit\"")
 }
 
-func add(con net.Conn) {
-	fmt.Println("UserID (integers): ")
-	uid, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
+func add(con net.Conn, com []string) { //add userid itemid amount
+	if len(com) < 4 {
+		fmt.Println("Not Enough Information.")
 		return
 	}
-	uid = strings.TrimSpace(uid)
-	iuid, err := strconv.Atoi(uid)
+	uid, err := strconv.Atoi(com[1])
 	if err != nil {
 		fmt.Println("Please Enter an Integer!")
 		return
 	}
-	iuid += 0
-	fmt.Println("ItemID (integers): ")
-	iid, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	iid = strings.TrimSpace(iid)
-	iiid, err := strconv.Atoi(iid)
+	iid, err := strconv.Atoi(com[2])
 	if err != nil {
 		fmt.Println("Please Enter an Integer!")
 		return
 	}
-	iiid += 0
-	fmt.Println("Amount (integers): ")
-	amt, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	amt = strings.TrimSpace(amt)
-	iamt, err := strconv.Atoi(amt)
+	com[3] = strings.TrimSpace(com[3])
+	amt, err := strconv.Atoi(com[3])
 	if err != nil {
 		fmt.Println("Please Enter an Integer!")
 		return
 	}
-	iamt += 0
-
-	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
+	if uid <= 0 {
+		fmt.Println("UserID cannot be zero or negative.")
+		return
+	}
+	if iid <= 0 {
+		fmt.Println("ItemID cannot be zero or negative.")
+		return
+	}
+	if amt <= 0 {
+		fmt.Println("Amount cannot be zero or negative.")
+		return
+	}
+	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('\n')
 	if err != nil {
@@ -103,45 +101,40 @@ func add(con net.Conn) {
 	fmt.Println(data)
 }
 
-func wd(con net.Conn) {
-	fmt.Println("UserID (integers): ")
-	uid, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
+func wd(con net.Conn, com []string) {
+	if len(com) != 4 {
+		fmt.Println("Please input as the format.")
 		return
 	}
-	uid = strings.TrimSpace(uid)
-	iuid, err := strconv.Atoi(uid)
+	uid, err := strconv.Atoi(com[1])
 	if err != nil {
-		fmt.Println("Please Enter an Integer!")
+		fmt.Println("Please Enter an Integer.")
 		return
 	}
-	iuid += 0
-	fmt.Println("ItemID (integers): ")
-	iid, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	iid, err := strconv.Atoi(com[2])
 	if err != nil {
+		fmt.Println("Please Enter an Integer.")
 		return
 	}
-	iid = strings.TrimSpace(iid)
-	iiid, err := strconv.Atoi(iid)
+	com[3] = strings.TrimSpace(com[3])
+	amt, err := strconv.Atoi(com[3])
 	if err != nil {
-		fmt.Println("Please Enter an Integer!")
+		fmt.Println("Please Enter an Integer.")
 		return
 	}
-	iiid += 0
-	fmt.Println("Amount (integers): ")
-	amt, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
+	if uid <= 0 {
+		fmt.Println("UserID cannot be zero or negative.")
 		return
 	}
-	amt = strings.TrimSpace(amt)
-	iamt, err := strconv.Atoi(amt)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
+	if iid <= 0 {
+		fmt.Println("ItemID cannot be zero or negative.")
 		return
 	}
-	iamt += 0
-
-	con.Write([]byte("add" + ": " + uid + "." + iid + "." + amt + "\n"))
+	if amt <= 0 {
+		fmt.Println("Amount cannot be zero or negative.")
+		return
+	}
+	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('\n')
 	if err != nil {
@@ -151,202 +144,181 @@ func wd(con net.Conn) {
 	fmt.Println(data)
 }
 
-func his(con net.Conn) {
-	fmt.Println("Since Year -xxxx-: ")
-	yyyy, err := bufio.NewReader(os.Stdin).ReadString('\n')
+func his(con net.Conn, com []string) {
+	if len(com) != 2 {
+		fmt.Println("Please input as the format.")
+		return
+	}
+	since := strings.Split(com[1], "-")
+	if len(since) != 2 {
+		fmt.Println("Please input as the format.")
+		return
+	}
+
+	// until := strings.Split(com[2], "-")
+	// if len(until) != 3 {
+	// 	fmt.Println("Please input as the format.")
+	// 	return
+	// }
+
+	yyyy, err := strconv.Atoi(since[0])
 	if err != nil {
+		fmt.Println("Please Enter year as an Integer!")
 		return
 	}
-	yyyy = strings.TrimSpace(yyyy)
-	if len(yyyy) != 4 {
-		fmt.Println("Please Enter 4 digits of int!")
+	if len(since[0]) != 4 {
+		fmt.Println("Please Enter year as a 4 digits of int!")
 		return
 	}
-	iyyyy, err := strconv.Atoi(yyyy)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	if iyyyy > time.Now().Year() {
+	if yyyy > time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		return
 	}
 
-	fmt.Println("Until Year -xxxx-: ")
-	yy, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	yy = strings.TrimSpace(yy)
-	if len(yy) != 4 {
-		fmt.Println("Please Enter 4 digits of int!")
-		return
-	}
-	iyy, err := strconv.Atoi(yy)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	if iyy > time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
+	// yy, err := strconv.Atoi(until[0])
+	// if err != nil {
+	// 	fmt.Println("Please Enter year as an Integer!")
+	// 	return
+	// }
+	// if len(until[0]) != 4 {
+	// 	fmt.Println("Please Enter year as a 4 digits of int!")
+	// 	return
+	// }
+	// if yy > time.Now().Year() {
+	// 	fmt.Println("Cannot diplay the future!")
+	// 	return
+	// }
+	since[1] = strings.TrimSpace(since[1])
 
-	fmt.Println("Since Month -xx-: ")
-	mm, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	mm, err := strconv.Atoi(since[1])
 	if err != nil {
+		fmt.Println("Please Enter month as an Integer!")
 		return
 	}
-	mm = strings.TrimSpace(mm)
-	if len(mm) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
-		return
-	}
-	imm, err := strconv.Atoi(mm)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
+	if len(since[1]) != 2 {
+		fmt.Println("Please Enter year as a 2 digits of int!")
 		return
 	}
 	mmt := time.Now().Month()
 	var immt int = int(mmt)
-	if imm > immt && iyyyy == time.Now().Year() {
+	if mm > immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		return
 	}
 
-	fmt.Println("Until Month -xx-: ")
-	m, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	m = strings.TrimSpace(m)
-	if len(m) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
-		return
-	}
-	im, err := strconv.Atoi(m)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	mt := time.Now().Month()
-	var imt int = int(mt)
-	if im > imt && iyyyy == time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
+	// m, err := strconv.Atoi(until[1])
+	// if err != nil {
+	// 	fmt.Println("Please Enter month as an Integer!")
+	// 	return
+	// }
+	// if len(until[1]) != 2 {
+	// 	fmt.Println("Please Enter year as a 2 digits of int!")
+	// 	return
+	// }
+	// mt := time.Now().Month()
+	// var imt int = int(mt)
+	// if m > imt && yy == time.Now().Year() {
+	// 	fmt.Println("Cannot diplay the future!")
+	// 	return
+	// }
 
-	fmt.Println("Since Day -xx-: ")
-	dd, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	dd = strings.TrimSpace(dd)
-	if len(dd) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
-		return
-	}
-	idd, err := strconv.Atoi(dd)
-	if idd > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	fmt.Println("Until Day -xx-: ")
-	d, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil {
-		return
-	}
-	d = strings.TrimSpace(d)
-	if len(d) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
-		return
-	}
-	id, err := strconv.Atoi(dd)
-	if id > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
-		fmt.Println("Cannot diplay the future!")
-		return
-	}
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
+	// dd, err := strconv.Atoi(since[2])
+	// if err != nil {
+	// 	fmt.Println("Please Enter day as an Integer!")
+	// 	return
+	// }
+	// if len(since[2]) != 2 {
+	// 	fmt.Println("Please Enter day as a 2 digits of int!")
+	// 	return
+	// }
+	// if dd > time.Now().Day() && mm == immt && yyyy == time.Now().Year() {
+	// 	fmt.Println("Cannot diplay the future!")
+	// 	return
+	// }
 
-	con.Write([]byte("his" + ": " + yyyy + mm + dd + yy + m + d + "\n"))
+	// until[2] = strings.TrimSpace(until[2])
+	// d, err := strconv.Atoi(until[2])
+	// if err != nil {
+	// 	fmt.Println("Please Enter day as an Integer!")
+	// 	return
+	// }
+	// if len(until[2]) != 2 {
+	// 	fmt.Println("Please Enter day as a 2 digits of int!")
+	// 	return
+	// }
+	// if d > time.Now().Day() && mm == immt && yyyy == time.Now().Year() {
+	// 	fmt.Println("Cannot diplay the future!")
+	// 	return
+	// }
+
+	con.Write([]byte(com[0] + ": " + since[0] + since[1] + "\n"))
 	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('\n')
+	data, err := bufio.NewReader(con).ReadString('.')
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(data)
-
 }
 
-func ana(con net.Conn) {
-	fmt.Println("Since Year -xxxx-: ")
-	yyyy, err := bufio.NewReader(os.Stdin).ReadString('\n')
+func ana(con net.Conn, com []string) {
+	if len(com) != 2 {
+		fmt.Println("Please input as the format.")
+		return
+	}
+	since := strings.Split(com[1], "-")
+	if len(since) != 3 {
+		fmt.Println("Please input as the format.")
+		return
+	}
+
+	yyyy, err := strconv.Atoi(since[0])
 	if err != nil {
+		fmt.Println("Please Enter year as an Integer!")
 		return
 	}
-	yyyy = strings.TrimSpace(yyyy)
-	if len(yyyy) != 4 {
-		fmt.Println("Please Enter 4 digits of int!")
+	if len(since[0]) != 4 {
+		fmt.Println("Please Enter year as a 4 digits of int!")
 		return
 	}
-	iyyyy, err := strconv.Atoi(yyyy)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	if iyyyy > time.Now().Year() {
+	if yyyy > time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		return
 	}
-	fmt.Println("Since Month -xx-: ")
-	mm, err := bufio.NewReader(os.Stdin).ReadString('\n')
+
+	mm, err := strconv.Atoi(since[1])
 	if err != nil {
+		fmt.Println("Please Enter month as an Integer!")
 		return
 	}
-	mm = strings.TrimSpace(mm)
-	if len(mm) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
+	if len(since[1]) != 2 {
+		fmt.Println("Please Enter year as a 2 digits of int!")
 		return
 	}
-	imm, err := strconv.Atoi(mm)
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	m := time.Now().Month()
-	var im int = int(m)
-	if imm > im && iyyyy == time.Now().Year() {
+	mmt := time.Now().Month()
+	var immt int = int(mmt)
+	if mm > immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		return
 	}
-	fmt.Println("Since Day -xx-: ")
-	dd, err := bufio.NewReader(os.Stdin).ReadString('\n')
+
+	since[2] = strings.TrimSpace(since[2])
+	dd, err := strconv.Atoi(since[2])
 	if err != nil {
+		fmt.Println(err)
+		fmt.Println("Please Enter day as an Integer!")
 		return
 	}
-	dd = strings.TrimSpace(dd)
-	if len(dd) != 2 {
-		fmt.Println("Please Enter 2 digits of int!")
+	if len(since[2]) != 2 {
+		fmt.Println("Please Enter day as a 2 digits of int!")
 		return
 	}
-	idd, err := strconv.Atoi(dd)
-	if idd > time.Now().Day() && imm == im && iyyyy == time.Now().Year() {
+	if dd > time.Now().Day() && mm == immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
 		return
 	}
-	if err != nil {
-		fmt.Println("Please Enter an Integer!")
-		return
-	}
-	con.Write([]byte("ana" + ": " + yyyy + "-" + mm + "-" + dd + "\n"))
+
+	con.Write([]byte(com[0] + ": " + since[0] + "-" + since[1] + "-" + since[2] + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('.')
 	if err != nil {
