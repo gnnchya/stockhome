@@ -138,23 +138,23 @@ func rec2(con net.Conn) {
 			send(con, history(date, "5002"))
 		} else {
 			ser2.Write([]byte(data))
-			fb1(con, ser2)
+			go fb2(con, ser2)
 		}
-		// mem1--
 	}
+	// mem1--
 }
 
 func fb2(con net.Conn, ser2 net.Conn) {
-	// for {
-	msg, err := bufio.NewReader(ser2).ReadString('.')
-	if err != nil {
-		fmt.Println(err)
-		mem2--
-		return
+	for {
+		msg, err := bufio.NewReader(ser2).ReadString('.')
+		if err != nil {
+			fmt.Println(err)
+			mem2--
+			return
+		}
+		fmt.Println(msg)
+		con.Write([]byte(msg))
 	}
-	fmt.Println(msg)
-	con.Write([]byte(msg))
-	// }
 }
 
 func checkconnect(port string) {
@@ -184,7 +184,7 @@ func hc(port string) {
 
 func send(con net.Conn, msg []byte) {
 	con.Write(msg)
-	con.Write([]byte("."))
+	// con.Write([]byte("."))
 }
 
 type Cache struct {
