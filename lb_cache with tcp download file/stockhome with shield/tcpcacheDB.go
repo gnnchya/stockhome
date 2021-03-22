@@ -248,7 +248,7 @@ func addHis(itemID int, action bool, amount int, userID int) {
 	var datetime = time.Now()
 	date := datetime.Format("2006-01-02")
 	time := datetime.Format("15:04:05")
-	fmt.Println("hi", action, userID, itemID, amount, date, time)
+	// fmt.Println("hi", action, userID, itemID, amount, date, time)
 	add, err := Db.Query("INSERT INTO history (action, userID, itemID, amount, date, time) VALUES(?, ?, ?, ?, ?, ?)", action, userID, itemID, amount, date, time)
 
 	if err != nil {
