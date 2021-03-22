@@ -112,7 +112,7 @@ func Analysistesttime(mainC chan int, timeC chan time.Duration, outC chan string
 			//done = <-c
 			//c <- "exit"
 			// return success, elapsed
-			if output != "EOF" {
+			if output != "error" {
 				success++
 				mainC <- success
 				timeC <- elapsed

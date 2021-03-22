@@ -52,6 +52,22 @@ func rec(con net.Conn) {
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
 			send(con, analysis(date[0], date[1], date[2]))
+		case "add":
+			id := strings.Split(msg[1], "-")
+			id[0] = strings.TrimSpace(id[0])
+			id[1] = strings.TrimSpace(id[1])
+			id[2] = strings.TrimSpace(id[2])
+			send(con, add(id[0], id[1], id[2]))
+		case "wd":
+			id := strings.Split(msg[1], "-")
+			id[0] = strings.TrimSpace(id[0])
+			id[1] = strings.TrimSpace(id[1])
+			id[2] = strings.TrimSpace(id[2])
+			send(con, withdraw(id[0], id[1], id[2]))
+		case "db":
+			pulldb(con, msg[1])
+		case "get":
+			send(con, getItemAmount(msg[1]))
 		default:
 			pulldb(con, msg[1])
 		}
@@ -59,7 +75,7 @@ func rec(con net.Conn) {
 }
 
 func send(con net.Conn, msg string) {
-	con.Write([]byte("Server: " + msg))
+	con.Write([]byte("Server: " + msg + "."))
 }
 
 var db *sql.DB
@@ -304,4 +320,58 @@ func pulldb(con net.Conn, date string) {
 	}
 	// con.Write(buf.Bytes())
 	con.Write([]byte("."))
+}
+
+func add(userID string, itemID string, itemAmount string) string {
+	cs, err := net.Dial("tcp", ":5003")
+	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil"
+	}
+	defer cs.Close()
+	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
+	val, err := bufio.NewReader(cs).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	fmt.Println(val)
+	return val
+}
+
+func withdraw(userID string, itemID string, itemAmount string) string {
+	cs, err := net.Dial("tcp", ":5003")
+	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil"
+	}
+	defer cs.Close()
+	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
+	val, err := bufio.NewReader(cs).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	fmt.Println(val)
+	return val
+}
+
+func getItemAmount(itemID string) string {
+	cs, err := net.Dial("tcp", ":5003")
+	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil"
+	}
+	defer cs.Close()
+	cs.Write([]byte("get:" + itemID + "\n"))
+	val, err := bufio.NewReader(cs).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	fmt.Println(val)
+	return val
 }

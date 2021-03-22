@@ -22,6 +22,8 @@ func Client(c chan string, wg2 *sync.WaitGroup) {
 		if err != nil && try >= 3 {
 			fmt.Println("error: ", err)
 			c <- "error"
+			c <- "0"
+			c <- "0"
 			//wg2.Done()
 			return
 		} else if err != nil && try < 3 {
@@ -53,6 +55,8 @@ func Client(c chan string, wg2 *sync.WaitGroup) {
 			wg2.Done()
 		case "help":
 			help()
+		case "get":
+			get(con, com, c)
 		case "exit":
 			con.Close()
 			return
@@ -64,13 +68,14 @@ func Client(c chan string, wg2 *sync.WaitGroup) {
 }
 
 func help() {
-	fmt.Println(" Features 			|\"Command\"						|\"Example\"")
-	fmt.Println(" ----------------------------------------------------------------------------------------------------------------------- ")
-	fmt.Println(" Add Item			|\"add userID itemID Amount\"				|\"add 62011155 745345 12\"")
-	fmt.Println(" WithDraw Item			|\"wd userID itemID Amount\"				|\"wd 62011155 745345 12\"")
-	fmt.Println(" History Tracking		|\"his year-month\"					|\"his 2020-12\"")
-	fmt.Println(" Stock Analysis			|\"ana year-month-day\"					|\"ana 2020-12-12\"")
-	fmt.Println(" Exit				|\"exit\"")
+	fmt.Println(" Features 		|\"Command\"						|\"Example\"")
+	fmt.Println(" ---------------------------------------------------------------------------------------------- ")
+	fmt.Println(" Add Item		|\"add userID itemID Amount\"				|\"add 62011155 745345 12\"")
+	fmt.Println(" WithDraw Item		|\"wd userID itemID Amount\"				|\"wd 62011155 745345 12\"")
+	fmt.Println(" History Tracking	|\"his year-month\"					|\"his 2020-12\"")
+	fmt.Println(" Stock Analysis 	|\"ana year-month-day\"					|\"ana 2020-12-12\"")
+	fmt.Println(" Get Amount 		|\"get itemID\"						|\"get 745345\"")
+	fmt.Println(" Exit 			|\"exit\"")
 }
 
 func add(con net.Conn, com []string) { //add userid itemid amount
@@ -329,23 +334,39 @@ func ana(con net.Conn, com []string, c chan string) {
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
-		c <- "EOF"
+		c <- "error"
 		c <- "0"
 		c <- "0"
 		return
 	}
-	fmt.Println("eiei")
 	msg := strings.Split(data, "*")
 	msg[0] = strings.TrimSpace(msg[0])
-	fmt.Println("eiei")
 	c <- msg[0]
-	fmt.Println("eiei")
 	mem1 := strings.TrimSpace(msg[1])
 	mem2 := strings.TrimSpace(msg[2])
-	fmt.Println("eiei")
 	c <- mem1
-	fmt.Println("eiei")
 	c <- mem2
-	fmt.Println("eiei")
+	fmt.Println(msg[0])
+}
+
+func get(con net.Conn, com []string, c chan string) {
+	con.Write([]byte(com[0] + ": " + com[1] + "\n"))
+	fmt.Println("Waiting for respond...")
+	data, err := bufio.NewReader(con).ReadString('`')
+	if err != nil {
+		fmt.Println(err)
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		return
+	}
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	c <- msg[0]
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
+	c <- mem1
+	c <- mem2
+
 	fmt.Println(msg[0])
 }
