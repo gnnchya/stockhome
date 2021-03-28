@@ -19,7 +19,7 @@ var myCache LRU
 func main() {
 	//ยังไม่รู้ค่าจริงของ init
 	myCache.InitLRU(10)
-	connect, err := net.Listen("tcp", ":5003")
+	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		return

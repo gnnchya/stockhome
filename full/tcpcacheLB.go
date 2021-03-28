@@ -23,7 +23,7 @@ var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
 
 func main() {
-	connect, err := net.Listen("tcp", ":9999")
+	connect, err := net.Listen("tcp", "128.199.70.176:9999")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -64,7 +64,7 @@ func main() {
 // }
 
 func rec1(con net.Conn) {
-	ser1, err := net.Dial("tcp", ":5001")
+	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
 		mem1--
@@ -88,7 +88,7 @@ func rec1(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, history(date, "5001"))
+			send(con, history(date, "128.199.70.252:5001"))
 		} else {
 			ser1.Write([]byte(data))
 			go fb1(con, ser1)
@@ -111,7 +111,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 }
 
 func rec2(con net.Conn) {
-	ser2, err := net.Dial("tcp", ":5002")
+	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println(err)
 		mem2--
@@ -135,7 +135,7 @@ func rec2(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, history(date, "5002"))
+			send(con, history(date, "143.198.219.89:5002"))
 		} else {
 			ser2.Write([]byte(data))
 			go fb2(con, ser2)
@@ -311,7 +311,7 @@ func (c *Cache) get(q *Queue, itemId int, cn string) []byte {
 var db *sql.DB
 
 func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	con, err := net.Dial("tcp", ":"+cn)
+	con, err := net.Dial("tcp", cn)
 	if err != nil {
 		fmt.Println(err)
 		return
