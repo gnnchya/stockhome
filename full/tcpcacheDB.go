@@ -114,7 +114,7 @@ func send(con net.Conn, msg string) {
 
 func init() {
 	var err error
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
