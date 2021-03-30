@@ -210,6 +210,7 @@ func his(con net.Conn, com []string, c chan string) {
 		c <- "error"
 		c <- "0"
 		c <- "0"
+		c <- "error"
 		return
 	}
 
@@ -230,6 +231,7 @@ func his(con net.Conn, com []string, c chan string) {
 		c <- "error"
 		c <- "0"
 		c <- "0"
+		c <- "error"
 		fmt.Println("Cannot diplay the future!")
 		return
 	} else if mm == immt && yyyy == time.Now().Year() {
@@ -237,6 +239,7 @@ func his(con net.Conn, com []string, c chan string) {
 		c <- "error"
 		c <- "0"
 		c <- "0"
+		c <- "error"
 		return
 	}
 
@@ -250,6 +253,7 @@ func his(con net.Conn, com []string, c chan string) {
 		c <- "error"
 		c <- "0"
 		c <- "0"
+		c <- "error"
 		fmt.Println(err)
 		return
 	}
@@ -259,6 +263,7 @@ func his(con net.Conn, com []string, c chan string) {
 		c <- "error"
 		c <- "0"
 		c <- "0"
+		c <- "error"
 		return
 	}
 
@@ -275,8 +280,10 @@ func his(con net.Conn, com []string, c chan string) {
 	out.Write([]byte(msg[0]))
 	mem1 := strings.TrimSpace(msg[1])
 	mem2 := strings.TrimSpace(msg[2])
+	state := strings.TrimSpace(msg[3])
 	c <- mem1
 	c <- mem2
+	c <- state
 
 	out.Close()
 
@@ -286,6 +293,7 @@ func his(con net.Conn, com []string, c chan string) {
 		c <- "error"
 		c <- mem1
 		c <- mem2
+		c <- state
 		return
 	}
 

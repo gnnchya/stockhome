@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -10,6 +11,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 )
+
+var db *sql.DB
 
 func main() {
 
@@ -51,15 +54,15 @@ func main() {
 
 	timeout := time.After(time.Duration(*allt*60) * time.Second)
 
-	var anaavg time.Duration = 0
+	var anaavg, missavg, hitavg time.Duration = 0, 0, 0
 	var mem1, mem2, correct string
-	var count int = 0
+	var count, countmiss, counthit, count2 int = 0, 0, 0, 0
 
 	for {
 		select {
 		case <-timeout:
 			defer db.Close()
-			log.Printf("Test is complete, Total Online time : %d", *allt)
+			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
 			fmt.Println("-----------------------------------RESULT---------------------------------------")
 			fmt.Println("Expected number of client(s) :", *cli)
 			fmt.Println("Total number of spawned client(s) :", cliCnt)
@@ -67,9 +70,13 @@ func main() {
 			no, _ := strconv.Atoi(mem2[:len(mem2)-1])
 			fmt.Println("Client distribution correct: ", cliCnt/2 == no)
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
-			fmt.Println("Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(cliCnt), "ms")
-			fmt.Println("Analysis data correctness: ", (float64(count)/float64(*cli))*100, "%")
-			fmt.Println("--------------------------------------- ADD ITEM <<<<<<<<<<<<<<<<<<")
+			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(cliCnt), "ms")
+			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(*cli))*100, "%")
+			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
+			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
+			fmt.Println("Hit count:", counthit, ">>Average hit time : ", (float64(hitavg)/float64(time.Millisecond))/float64(counthit), "ms")
+			fmt.Println("++History Data correctness: ", (float64(counthit+countmiss)/float64(count2))*100, "%")
+
 			return
 		case ts := <-c:
 			log.Printf("Client No %d started", ts)
@@ -77,9 +84,10 @@ func main() {
 				for {
 					ctime := make(chan time.Duration)
 					cmem := make(chan string)
-
+					wg2 := sync.WaitGroup{}
 					//Analysis test
 					c1 := <-cc
+					wg2.Add(1)
 					go Analysis(c1, cmem, ctime)
 					elapsed := <-ctime
 					mem1 = <-cmem
@@ -90,8 +98,29 @@ func main() {
 					if correct == "yes" {
 						count++
 					}
+					wg2.Done()
 
-					// tests.Test2(c1)
+					//history test
+					wg2.Add(1)
+					go LBcache(c1, cmem, ctime)
+					elapsed = <-ctime
+					mem1 = <-cmem
+					mem2 = <-cmem
+					correct = <-cmem
+
+					count2++
+					if correct == "yes" {
+						switch state := <-cmem; state {
+						case "true`":
+							hitavg = hitavg + elapsed
+							counthit++
+						case "false`":
+							missavg = missavg + elapsed
+							countmiss++
+						}
+					}
+					wg2.Done()
+					wg2.Wait()
 					wg.Done()
 				}
 			}(ts)

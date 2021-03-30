@@ -13,8 +13,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
-
 func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 	// defer db.Close()
 
@@ -52,9 +50,9 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 	if output != "None" {
 		com := strings.Split(randate, "-")
 		check := "Server: " + analysis1(com[0], com[1], com[2])
-		fmt.Println(output)
-		fmt.Println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=")
-		fmt.Println(check)
+		// fmt.Println(output)
+		// fmt.Println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=")
+		// fmt.Println(check)
 		if output == check {
 			fmt.Println("-->Correct output")
 		} else {
@@ -63,6 +61,7 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 		}
 	} else {
 		fmt.Println("## ERROR ##")
+		correct = "no"
 	}
 
 	ctime <- elapsed
@@ -87,7 +86,7 @@ func analysis1(year string, month string, day string) string {
 		fmt.Println("Error: Cannot open database")
 	}
 
-	defer db.Close()
+	//defer db.Close()
 
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string

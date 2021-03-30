@@ -50,19 +50,6 @@ func main() {
 	}
 }
 
-// func rec(con net.Conn) {
-// 	if mem1 <= mem2 {
-// 		mem1++
-// 		go rec1(con)
-// 		fmt.Println("server1", mem1, mem2)
-// 	} else if mem2 < mem1 {
-// 		mem2++
-// 		go rec2(con)
-// 		fmt.Println("server2", mem1, mem2)
-// 	}
-
-// }
-
 func rec1(con net.Conn) {
 	ser1, err := net.Dial("tcp", ":5001")
 	if err != nil {
@@ -88,7 +75,8 @@ func rec1(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, history(date, "5001"))
+			a, b := Lfu.get(&Cache_queue, date, "5001")
+			send1(con, a, b)
 		} else {
 			ser1.Write([]byte(data))
 			go fb1(con, ser1)
@@ -137,7 +125,8 @@ func rec2(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, history(date, "5002"))
+			a, b := Lfu.get(&Cache_queue, date, "5002")
+			send1(con, a, b)
 		} else {
 			ser2.Write([]byte(data))
 			fb1(con, ser2)
@@ -185,12 +174,14 @@ func hc(port string) {
 	}
 }
 
-func send(con net.Conn, msg []byte) {
+func send1(con net.Conn, msg []byte, state string) {
 	temp := append(msg, []byte("*")...)
 	temp1 := append(temp, []byte(strconv.Itoa(mem1))...)
 	temp2 := append(temp1, []byte("*")...)
 	temp3 := append(temp2, []byte(strconv.Itoa(mem2))...)
-	con.Write(temp3)
+	temp4 := append(temp3, []byte("*")...)
+	temp5 := append(temp4, []byte(state)...)
+	con.Write(temp5)
 	con.Write([]byte("`"))
 
 }
@@ -300,7 +291,8 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 	return
 }
 
-func (c *Cache) get(q *Queue, itemId int, cn string) []byte {
+func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
+	state := "true"
 	if _, ok := c.block[itemId]; ok {
 		q.update(c.block[itemId])
 		fmt.Println("----HIT----")
@@ -312,8 +304,9 @@ func (c *Cache) get(q *Queue, itemId int, cn string) []byte {
 		// fmt.Println(time.Since(a))
 
 		fmt.Println("----MISS----")
+		state = "false"
 	}
-	return c.block[itemId].value
+	return c.block[itemId].value, state
 }
 
 var db *sql.DB
@@ -450,22 +443,4 @@ func Save(startDate string, endDate string, filename string) {
 			fmt.Println(err)
 		}
 	}
-}
-
-func history(daterequest int, cn string) []byte {
-	// var err error
-	// db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-
-	// miss_start := time.Now()
-	// Lfu.get(&Cache_queue, daterequest)
-	// fmt.Println("Time elapsed: ", time.Since(miss_start))
-
-	// hit_start := time.Now()
-	// Lfu.get(&Cache_queue, daterequest)
-	// fmt.Println("Time elapsed: ", time.Since(hit_start))
-
-	return Lfu.get(&Cache_queue, daterequest, cn)
 }
