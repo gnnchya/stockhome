@@ -93,7 +93,9 @@ func fb1(con net.Conn, ser1 net.Conn) {
 			mem1--
 			return
 		}
-		fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
+		fmt.Println("Forwarding response..")
+		fmt.Println()
+		// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
 		con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
 		con.Write([]byte("`"))
 
@@ -129,7 +131,7 @@ func rec2(con net.Conn) {
 			send1(con, a, b)
 		} else {
 			ser2.Write([]byte(data))
-			fb1(con, ser2)
+			go fb2(con, ser2)
 		}
 		// mem1--
 	}
@@ -143,7 +145,10 @@ func fb2(con net.Conn, ser2 net.Conn) {
 		mem2--
 		return
 	}
-	fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
+	fmt.Println("Forwarding response..")
+	fmt.Println()
+
+	// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
 	con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
 	con.Write([]byte("`"))
 	// }
@@ -183,7 +188,6 @@ func send1(con net.Conn, msg []byte, state string) {
 	temp5 := append(temp4, []byte(state)...)
 	con.Write(temp5)
 	con.Write([]byte("`"))
-
 }
 
 type Cache struct {
@@ -296,6 +300,7 @@ func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
 	if _, ok := c.block[itemId]; ok {
 		q.update(c.block[itemId])
 		fmt.Println("----HIT----")
+		fmt.Println()
 	} else {
 		// read(c, q, strconv.Itoa(itemId))
 		filename := strconv.Itoa(itemId)
@@ -304,6 +309,7 @@ func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
 		// fmt.Println(time.Since(a))
 
 		fmt.Println("----MISS----")
+		fmt.Println()
 		state = "false"
 	}
 	return c.block[itemId].value, state

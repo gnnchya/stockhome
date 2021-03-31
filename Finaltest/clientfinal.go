@@ -188,21 +188,37 @@ func wd(con net.Conn, com []string, c chan string) {
 func his(con net.Conn, com []string, c chan string) {
 	if len(com) != 2 {
 		fmt.Println("Please input as the format.")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	since := strings.Split(com[1], "-")
 	if len(since) != 2 {
 		fmt.Println("Please input as the format.")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 
 	yyyy, err := strconv.Atoi(since[0])
 	if err != nil {
 		fmt.Println("Please Enter year as an Integer!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	if len(since[0]) != 4 {
 		fmt.Println("Please Enter year as a 4 digits of int!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	if yyyy > time.Now().Year() {
@@ -219,10 +235,18 @@ func his(con net.Conn, com []string, c chan string) {
 	mm, err := strconv.Atoi(since[1])
 	if err != nil {
 		fmt.Println("Please Enter month as an Integer!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	if len(since[1]) != 2 {
 		fmt.Println("Please Enter year as a 2 digits of int!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	mmt := time.Now().Month()
@@ -273,7 +297,6 @@ func his(con net.Conn, com []string, c chan string) {
 		fmt.Println(err)
 		return
 	}
-
 	msg := strings.Split(data, "*")
 	msg[0] = strings.TrimSpace(msg[0])
 	c <- msg[0]
