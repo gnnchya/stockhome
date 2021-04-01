@@ -350,40 +350,18 @@ func (l *LRU) InitLRU(capacity int) {
 
 func (l *LRU) Read(itemID int) int {
 	if _, found := l.PageMap[itemID]; !found {
-		fmt.Println("Miss")
-		page := l.pageList.addFrontPage(itemID, GetAmount(itemID))
-		l.size++
-		l.PageMap[itemID] = page
 		return GetAmount(itemID)
 	}
-	fmt.Println("HIT")
 	val := l.PageMap[itemID].currentAmount
 	l.pageList.bringToMostUsed(l.PageMap[itemID])
 	return val
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) int {
-	fmt.Println(ItemAmount)
-
 	if _, found := l.PageMap[itemID]; found {
-		if ItemAmount < 0 {
-			if GetAmount(itemID)+ItemAmount < 0 {
-				fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-				return -1
-			} else {
-				page := l.pageList.addFrontPage(itemID, l.PageMap[itemID].currentAmount+ItemAmount)
-				l.size++
-				l.PageMap[itemID] = page
-			}
-		} else {
-			l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
-			l.pageList.bringToMostUsed(l.PageMap[itemID])
-		}
-	}
-	if ItemAmount > 0 {
-		page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
-		l.size++
-		l.PageMap[itemID] = page
+		l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
+		l.pageList.bringToMostUsed(l.PageMap[itemID])
+		return 0
 	}
 	if l.size == l.capacity {
 		key := l.pageList.getRear().itemID
@@ -391,7 +369,22 @@ func (l *LRU) Input(itemID int, ItemAmount int) int {
 		l.size--
 		delete(l.PageMap, key)
 	}
+	if ItemAmount < 0 {
+		if GetAmount(itemID)+ItemAmount < 0 {
+			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
+			return -1
+		} else {
+			page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
+			l.size++
+			l.PageMap[itemID] = page
+		}
+	}
 
+	if ItemAmount > 0 {
+		page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
+		l.size++
+		l.PageMap[itemID] = page
+	}
 	return 0
 }
 
@@ -423,10 +416,10 @@ func addToDB(itemID int, amount int, userID int) string {
 //withdraw() tcp
 //withdraw()database จาก server
 func withDrawToDB(itemID int, amount int, userID int) string {
-	eir := myCache.Input(itemID, amount*-1)
-	if eir == -1 {
+	err := myCache.Input(itemID, amount)
+	if err == -1 {
 		// return error ให้ users
-		return "cannot withdraw, Database got negative amount \n"
+		return "cannot withdraw, Database got negative amount."
 	}
 	statement := Main2(itemID, amount, userID)
 	// itemid := strconv.Itoa(itemID)

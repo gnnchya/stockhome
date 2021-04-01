@@ -10,38 +10,55 @@ import (
 	"time"
 )
 
-func main() {
-	con, err := net.Dial("tcp", ":9999")
-	if err != nil {
-		fmt.Println(err)
-		return
+func Client(c chan string) {
+	var try int = 0
+	var con net.Conn
+	var err error
+
+	for {
+		// time.Sleep(1 * time.Millisecond)
+		con, err = net.Dial("tcp", ":9999")
+		if err != nil && try >= 3 {
+			fmt.Println("error: ", err)
+			c <- "error"
+			c <- "0"
+			c <- "0"
+			return
+		} else if err != nil && try < 3 {
+			try++
+		} else {
+			break
+		}
 	}
 	defer con.Close()
-	help()
+	// help()
 	for {
-		fmt.Println("Command: ")
-		msg, err := bufio.NewReader(os.Stdin).ReadString('\n')
-		if err != nil {
-			return
-		}
+		// fmt.Println("Command: ")
+		c <- "begin"
+		msg := <-c
 		com := strings.Split(msg, " ")
 		com[0] = strings.TrimSpace(com[0])
 		switch com[0] {
 		case "add":
-			add(con, com)
+			add(con, com, c)
+			c <- "done"
 		case "wd":
-			wd(con, com)
+			wd(con, com, c)
+			c <- "done"
 		case "his":
-			his(con, com)
+			his(con, com, c)
+			c <- "done"
 		case "ana":
-			ana(con, com)
+			ana(con, com, c)
+			c <- "done"
 		case "help":
 			help()
+		case "get":
+			get(con, com, c)
+			c <- "done"
 		case "exit":
 			con.Close()
 			return
-		case "get":
-			get(con, com)
 		default:
 			fmt.Println("Command not found. Type \"help\" for help.")
 		}
@@ -54,12 +71,13 @@ func help() {
 	fmt.Println(" ---------------------------------------------------------------------------------------------- ")
 	fmt.Println(" Add Item		|\"add userID itemID Amount\"				|\"add 62011155 745345 12\"")
 	fmt.Println(" WithDraw Item		|\"wd userID itemID Amount\"				|\"wd 62011155 745345 12\"")
-	fmt.Println(" History Tracking	|\"his year-month\"	|\"his 2020-12\"")
-	fmt.Println(" Stock Analysis 	|\"ana year-month-day\"				|\"ana 2020-12-12\"")
+	fmt.Println(" History Tracking	|\"his year-month\"					|\"his 2020-12\"")
+	fmt.Println(" Stock Analysis 	|\"ana year-month-day\"					|\"ana 2020-12-12\"")
+	fmt.Println(" Get Amount 		|\"get itemID\"						|\"get 745345\"")
 	fmt.Println(" Exit 			|\"exit\"")
 }
 
-func add(con net.Conn, com []string) { //add userid itemid amount
+func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 	if len(com) < 4 {
 		fmt.Println("Not Enough Information.")
 		return
@@ -94,15 +112,26 @@ func add(con net.Conn, com []string) { //add userid itemid amount
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
 	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('\n')
+	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
+		c <- "error"
+		c <- "0"
+		c <- "0"
 		return
 	}
-	fmt.Println(data)
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	c <- msg[0]
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
+	c <- mem1
+	c <- mem2
+
+	fmt.Println(msg[0])
 }
 
-func wd(con net.Conn, com []string) {
+func wd(con net.Conn, com []string, c chan string) {
 	if len(com) != 4 {
 		fmt.Println("Please input as the format.")
 		return
@@ -137,36 +166,67 @@ func wd(con net.Conn, com []string) {
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
 	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('\n')
+	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
+		c <- "error"
+		c <- "0"
+		c <- "0"
 		return
 	}
-	fmt.Println(data)
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	c <- msg[0]
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
+	c <- mem1
+	c <- mem2
+
+	fmt.Println(msg[0])
 }
 
-func his(con net.Conn, com []string) {
+func his(con net.Conn, com []string, c chan string) {
 	if len(com) != 2 {
 		fmt.Println("Please input as the format.")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	since := strings.Split(com[1], "-")
 	if len(since) != 2 {
 		fmt.Println("Please input as the format.")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 
 	yyyy, err := strconv.Atoi(since[0])
 	if err != nil {
 		fmt.Println("Please Enter year as an Integer!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	if len(since[0]) != 4 {
 		fmt.Println("Please Enter year as a 4 digits of int!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	if yyyy > time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 
@@ -175,19 +235,35 @@ func his(con net.Conn, com []string) {
 	mm, err := strconv.Atoi(since[1])
 	if err != nil {
 		fmt.Println("Please Enter month as an Integer!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	if len(since[1]) != 2 {
 		fmt.Println("Please Enter year as a 2 digits of int!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 	mmt := time.Now().Month()
 	var immt int = int(mmt)
 	if mm > immt && yyyy == time.Now().Year() {
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		fmt.Println("Cannot diplay the future!")
 		return
 	} else if mm == immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the current month!")
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 
@@ -198,22 +274,49 @@ func his(con net.Conn, com []string) {
 	// Create a file that the client wants to download
 	dir, err := os.Getwd()
 	if err != nil {
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		fmt.Println(err)
+		return
 	}
 
 	out, err := os.Create(dir + "/" + since[0] + "-" + since[1] + ".tmp")
 	if err != nil {
+		c <- "error"
+		c <- "0"
+		c <- "0"
+		c <- "error"
 		return
 	}
 
 	// Receive data and writing the file
-	data, err := bufio.NewReader(con).ReadString('.')
-	out.Write([]byte(data))
+	data, err := bufio.NewReader(con).ReadString('`')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	c <- msg[0]
+	out.Write([]byte(msg[0]))
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
+	state := strings.TrimSpace(msg[3])
+	c <- mem1
+	c <- mem2
+	c <- state
+
 	out.Close()
 
 	// Rename temporary to acutal csv file
 	err = os.Rename(dir+"/"+since[0]+"-"+since[1]+".tmp", dir+"/"+since[0]+"-"+since[1]+".csv")
 	if err != nil {
+		c <- "error"
+		c <- mem1
+		c <- mem2
+		c <- state
 		return
 	}
 
@@ -221,7 +324,7 @@ func his(con net.Conn, com []string) {
 	return
 }
 
-func ana(con net.Conn, com []string) {
+func ana(con net.Conn, com []string, c chan string) {
 	if len(com) != 2 {
 		fmt.Println("Please input as the format.")
 		return
@@ -280,26 +383,44 @@ func ana(con net.Conn, com []string) {
 
 	con.Write([]byte(com[0] + ": " + since[0] + "-" + since[1] + "-" + since[2] + "\n"))
 	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('.')
+	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
+		c <- "error"
+		c <- "0"
+		c <- "0"
 		return
 	}
-	fmt.Println(data)
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	c <- msg[0]
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
+	c <- mem1
+	c <- mem2
+	// fmt.Println(msg[0])
+	fmt.Println("Server: Response sent")
 }
 
-func get(con net.Conn, com []string) {
-	_, err := strconv.Atoi(com[1])
-	if err != nil {
-		fmt.Println("Please enter the item ID as an integer!")
-		return
-	}
+func get(con net.Conn, com []string, c chan string) {
 	con.Write([]byte(com[0] + ": " + com[1] + "\n"))
 	fmt.Println("Waiting for respond...")
-	data, err := bufio.NewReader(con).ReadString('.')
+	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
+		c <- "error"
+		c <- "0"
+		c <- "0"
 		return
 	}
-	fmt.Println(data)
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	c <- msg[0]
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
+	c <- mem1
+	c <- mem2
+
+	// fmt.Println(msg[0])
+	fmt.Println("Server: Response sent")
 }
