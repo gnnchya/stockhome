@@ -148,6 +148,7 @@ func fb2(con net.Conn, ser2 net.Conn) {
 	fmt.Println("Forwarding response..")
 	fmt.Println()
 
+	// fmt.Println(msg)
 	// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
 	con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
 	con.Write([]byte("`"))

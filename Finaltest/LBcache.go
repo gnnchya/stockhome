@@ -20,14 +20,15 @@ func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 	correct := "yes"
 	rd := rand.Intn(15)
 	randate := inputdate[rd]
+	randate1 := "his " + randate
 
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------HISTORY-------------------")
 		start := time.Now()
 
-		fmt.Println("his " + randate)
-		c <- "his " + randate
+		fmt.Println(randate1)
+		c <- randate1
 
 		output = <-c
 		elapsed = time.Since(start)

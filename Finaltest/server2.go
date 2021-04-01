@@ -113,7 +113,7 @@ func analysis(year string, month string, day string) string {
 	}()
 
 	Wg.Wait()
-	return (aWith + "\n" + bWith + "\n" + cWith)
+	return (aWith + "\n" + bWith + "\n" + cWith + ".")
 }
 
 func MostWith(Wg *sync.WaitGroup) string {
@@ -130,18 +130,19 @@ func MostWith(Wg *sync.WaitGroup) string {
 		}
 	}
 
-	// Make slice for sorting
 	withSort := make([]int, 0, len(withMap))
 	for amount := range withMap {
 		withSort = append(withSort, amount)
 	}
 
 	sort.Slice(withSort, func(i, j int) bool {
-		return withMap[withSort[i]] > withMap[withSort[j]]
+		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
+			return a > b
+		}
+		return withSort[i] < withSort[j]
 	})
 
 	for _, amount := range withSort {
-		//fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
 		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
 	}
 
@@ -161,7 +162,6 @@ func WithTime(Wg *sync.WaitGroup) string {
 		}
 	}
 
-	// Make slice for sorting
 	withSort := make([]string, 0, len(withMap))
 	for time := range withMap {
 		withSort = append(withSort, time)
@@ -169,7 +169,6 @@ func WithTime(Wg *sync.WaitGroup) string {
 	sort.Strings(withSort)
 
 	for _, time := range withSort {
-		//fmt.Printf("%s - %s | %-4d\n", time+":00", time+":59", withMap[time])
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
 	return txt.String()
@@ -197,7 +196,6 @@ func WithDate(Wg *sync.WaitGroup) string {
 	sort.Strings(withSort)
 
 	for _, date := range withSort {
-		//fmt.Printf("%s | %-4d\n", date, withMap[date])
 		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
 
 	}
