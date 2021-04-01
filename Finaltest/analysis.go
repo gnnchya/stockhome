@@ -20,29 +20,26 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 	var elapsed time.Duration
 	correct := "yes"
 
-	randate := randomTimestamp()
+	randate := "ana " + randomTimestamp()
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------ANALYSIS-------------------")
 		start := time.Now()
 
-		fmt.Println("ana " + randate)
-		c <- "ana " + randate
+		fmt.Println(randate)
+		c <- randate
 
 		output = <-c
+		elapsed = time.Since(start)
 		mem1 = <-c
 		mem2 = <-c
 		done := <-c
 
 		if done == "done" {
-			elapsed = time.Since(start)
-			fmt.Println("Analysis time elapsed: ", elapsed)
 			if output == "error" {
 				output = "None"
 			}
 		} else {
-			elapsed = time.Since(start)
-			fmt.Println("Analysis time elapsed: ", elapsed)
 			output = "None"
 		}
 	}
@@ -50,9 +47,6 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 	if output != "None" {
 		com := strings.Split(randate, "-")
 		check := "Server: " + analysis1(com[0], com[1], com[2])
-		// fmt.Println(output)
-		// fmt.Println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=")
-		// fmt.Println(check)
 		if output == check {
 			fmt.Println("-->Correct output")
 		} else {
@@ -64,6 +58,7 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 		correct = "no"
 	}
 
+	fmt.Println("Analysis time elapsed: ", elapsed)
 	ctime <- elapsed
 	cmem <- mem1
 	cmem <- mem2

@@ -30,20 +30,17 @@ func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 		c <- "his " + randate
 
 		output = <-c
+		elapsed = time.Since(start)
 		mem1 = <-c
 		mem2 = <-c
 		state = <-c
 		done := <-c
 
 		if done == "done" {
-			elapsed = time.Since(start)
-			fmt.Println("History time elapsed: ", elapsed)
 			if output == "error" {
 				output = "None"
 			}
 		} else {
-			elapsed = time.Since(start)
-			fmt.Println("Histoey time elapsed: ", elapsed)
 			output = "None"
 		}
 	}
@@ -60,7 +57,7 @@ func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 		fmt.Println("## ERROR ##")
 		correct = "no"
 	}
-
+	fmt.Println("History time elapsed: ", elapsed)
 	ctime <- elapsed
 	cmem <- mem1
 	cmem <- mem2
