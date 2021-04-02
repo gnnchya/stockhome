@@ -182,11 +182,11 @@ func hc(port string) {
 
 func send1(con net.Conn, msg []byte, state string) {
 	temp := append(msg, []byte("*")...)
-	temp1 := append(temp, []byte(strconv.Itoa(mem1))...)
+	temp1 := append(temp, []byte(state)...)
 	temp2 := append(temp1, []byte("*")...)
-	temp3 := append(temp2, []byte(strconv.Itoa(mem2))...)
+	temp3 := append(temp2, []byte(strconv.Itoa(mem1))...)
 	temp4 := append(temp3, []byte("*")...)
-	temp5 := append(temp4, []byte(state)...)
+	temp5 := append(temp4, []byte(strconv.Itoa(mem2))...)
 	con.Write(temp5)
 	con.Write([]byte("`"))
 }

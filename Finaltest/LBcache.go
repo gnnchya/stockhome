@@ -10,24 +10,25 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var inputdate = [15]string{"2019-12", "2020-01", "2020-02", "2020-03", "2020-04",
+var inputdate = [16]string{"2019-12", "2020-01", "2020-02", "2020-03", "2020-04",
 	"2020-05", "2020-06", "2020-07", "2020-08", "2020-09", "2020-10", "2020-11",
-	"2020-12", "2021-01", "2021-02"} //, "2021-03", "2021-04", "2021-05"
+	"2020-12", "2021-01", "2021-02", "2021-03"} // "2021-04", "2021-05"
 
 func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 	var mem1, mem2, output, state string
 	var elapsed time.Duration
 	correct := "yes"
-	rd := rand.Intn(15)
+	rand.Seed(time.Now().UTC().UnixNano())
+	rd := rand.Intn(16)
 	randate := inputdate[rd]
 	randate1 := "his " + randate
 
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------HISTORY-------------------")
+		fmt.Println(randate1)
 		start := time.Now()
 
-		fmt.Println(randate1)
 		c <- randate1
 
 		output = <-c

@@ -54,9 +54,9 @@ func main() {
 
 	timeout := time.After(time.Duration(*allt*60) * time.Second)
 
-	var anaavg, missavg, hitavg time.Duration = 0, 0, 0
+	var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
 	var mem1, mem2, correct string
-	var count, countmiss, counthit, count2 int = 0, 0, 0, 0
+	var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 	for {
 		select {
@@ -67,9 +67,9 @@ func main() {
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
 			fmt.Println("Expected number of client(s) :", *cli)
 			fmt.Println("Total number of spawned client(s) :", cliCnt)
-			fmt.Println("Server 1 :", mem1, "user(s) / Server 2 : ", mem2, "user(s)") //[:len(mem2)-1])
-			// no, _ := strconv.Atoi(mem2[:len(mem2)-1])
-			no, _ := strconv.Atoi(mem2)
+			fmt.Println("Server 1 :", mem1, "user(s) / Server 2 : ", mem2[:len(mem2)-1], "user(s)") //[:len(mem2)-1])
+			no, _ := strconv.Atoi(mem2[:len(mem2)-1])
+			// no, _ := strconv.Atoi(mem2)
 			fmt.Println("Client distribution correct: ", cliCnt/2 == no)
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
@@ -80,8 +80,14 @@ func main() {
 			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
 			fmt.Println("Hit count:", counthit, ">>Average hit time : ", (float64(hitavg)/float64(time.Millisecond))/float64(counthit), "ms")
 			fmt.Println("++History Data correctness: ", (float64(counthit+countmiss)/float64(count2))*100, "%")
-
+			fmt.Println()
+			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
+			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
+			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
+			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
+			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%")
 			return
+
 		case ts := <-c:
 			log.Printf("Client No %d started", ts)
 			go func(t int) {
@@ -115,13 +121,46 @@ func main() {
 					count2++
 					if correct == "yes" {
 						switch state := <-cmem; state {
-						case "true`":
+						case "true":
 							hitavg = hitavg + elapsed
 							counthit++
-						case "false`":
+						case "false":
 							missavg = missavg + elapsed
 							countmiss++
 						}
+					}
+					wg2.Done()
+
+					//Add,WD,get test
+					wg2.Add(1)
+					go DBcache(c1, cmem, ctime)
+					elapsed = <-ctime
+					mem1 = <-cmem
+					mem2 = <-cmem
+					correct = <-cmem
+
+					count3++
+					if correct == "yes" {
+						switch rd := <-cmem; rd {
+						case "0":
+							countadd++
+						case "1":
+							countwd++
+						case "2":
+							countget++
+						}
+
+						switch state := <-cmem; state {
+						case "true\n.":
+							hitavg2 = hitavg2 + elapsed
+							counthit2++
+						case "false\n.":
+							missavg2 = missavg2 + elapsed
+							countmiss2++
+						default:
+							count3--
+						}
+
 					}
 					wg2.Done()
 					wg2.Wait()

@@ -348,20 +348,43 @@ func (l *LRU) InitLRU(capacity int) {
 	l.PageMap = make(map[int]*cache)
 }
 
-func (l *LRU) Read(itemID int) int {
+func (l *LRU) Read(itemID int) (int, string) {
 	if _, found := l.PageMap[itemID]; !found {
-		return GetAmount(itemID)
+		fmt.Println("Miss")
+		page := l.pageList.addFrontPage(itemID, GetAmount(itemID))
+		l.size++
+		l.PageMap[itemID] = page
+		return GetAmount(itemID), "false"
 	}
+	fmt.Println("HIT")
 	val := l.PageMap[itemID].currentAmount
 	l.pageList.bringToMostUsed(l.PageMap[itemID])
-	return val
+	return val, "true"
 }
 
-func (l *LRU) Input(itemID int, ItemAmount int) int {
-	if _, found := l.PageMap[itemID]; found {
-		l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
-		l.pageList.bringToMostUsed(l.PageMap[itemID])
-		return 0
+func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
+	fmt.Println(ItemAmount)
+	_, found := l.PageMap[itemID]
+
+	if found {
+		if ItemAmount < 0 {
+			if GetAmount(itemID)+ItemAmount < 0 {
+				fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
+				return -1, found
+			} else {
+				page := l.pageList.addFrontPage(itemID, l.PageMap[itemID].currentAmount+ItemAmount)
+				l.size++
+				l.PageMap[itemID] = page
+			}
+		} else {
+			l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
+			l.pageList.bringToMostUsed(l.PageMap[itemID])
+		}
+	}
+	if ItemAmount > 0 {
+		page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
+		l.size++
+		l.PageMap[itemID] = page
 	}
 	if l.size == l.capacity {
 		key := l.pageList.getRear().itemID
@@ -369,23 +392,8 @@ func (l *LRU) Input(itemID int, ItemAmount int) int {
 		l.size--
 		delete(l.PageMap, key)
 	}
-	if ItemAmount < 0 {
-		if GetAmount(itemID)+ItemAmount < 0 {
-			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-			return -1
-		} else {
-			page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
-			l.size++
-			l.PageMap[itemID] = page
-		}
-	}
 
-	if ItemAmount > 0 {
-		page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
-		l.size++
-		l.PageMap[itemID] = page
-	}
-	return 0
+	return 0, found
 }
 
 // func main() {
@@ -396,36 +404,36 @@ func (l *LRU) Input(itemID int, ItemAmount int) int {
 
 //getItemAmount จาก TCP request
 func getAmountbyItem(itemID int) string {
-	amount := myCache.Read(itemID)
+	amount, state := myCache.Read(itemID)
 	itemid := strconv.Itoa(itemID)
 	result := strconv.Itoa(amount)
-	fmt.Println(itemid + "-" + result + "\n")
-	return (itemid + "-" + result + "\n")
+	fmt.Println(itemid + "-" + result + "*" + state + "\n")
+	return (itemid + "-" + result + "*" + state + "\n")
 }
 
 // add() request
 func addToDB(itemID int, amount int, userID int) string {
-	myCache.Input(itemID, amount)
+	_, state := myCache.Input(itemID, amount)
 	statement := Main(itemID, amount, userID)
 	// itemid := strconv.Itoa(itemID)
 	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
-	return "Success\n"
+	return "Success*" + strconv.FormatBool(state) + "\n"
 }
 
 //withdraw() tcp
 //withdraw()database จาก server
 func withDrawToDB(itemID int, amount int, userID int) string {
-	err := myCache.Input(itemID, amount)
-	if err == -1 {
+	eir, state := myCache.Input(itemID, amount*-1)
+	if eir == -1 {
 		// return error ให้ users
-		return "cannot withdraw, Database got negative amount."
+		return "cannot withdraw, Database got negative amount \n"
 	}
 	statement := Main2(itemID, amount, userID)
 	// itemid := strconv.Itoa(itemID)
 	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
-	return "Success\n"
+	return "Success*" + strconv.FormatBool(state) + "\n"
 }
 
 //ถ้าจะรัน cache ใหม่ต่อวันต้อง while True init ใหม่

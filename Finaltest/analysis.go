@@ -24,9 +24,9 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------ANALYSIS-------------------")
+		fmt.Println(randate)
 		start := time.Now()
 
-		fmt.Println(randate)
 		c <- randate
 
 		output = <-c
