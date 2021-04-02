@@ -308,6 +308,7 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 
 func (c *Cache) get(q *Queue, itemId int, cn string) []byte {
 	mu.Lock()
+	defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
 		q.update(c.block[itemId])
 		fmt.Println("----HIT----")
@@ -320,7 +321,7 @@ func (c *Cache) get(q *Queue, itemId int, cn string) []byte {
 	// fmt.Println(Lfu)
 	// Cache_queue.printQ()
 	fmt.Println("Final", c.size, "bytes\n")
-	mu.Unlock()
+	wg.Done()
 	return c.block[itemId].value
 }
 
