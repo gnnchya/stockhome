@@ -15,6 +15,7 @@ import (
 
 var Db *sql.DB
 var myCache LRU
+var mutex = &sync.Mutex{}
 
 func main() {
 	//ยังไม่รู้ค่าจริงของ init
@@ -92,7 +93,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, withDrawToDB(iid, amt, uid))
+			send(con, withDrawToDB(iid, amt*(-1), uid))
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
 			iid, err := strconv.Atoi(msg[1])
@@ -141,11 +142,11 @@ func Main(itemID int, amount int, userID int) string {
 func Main2(itemID int, amount int, userID int) string {
 	// defer Db.Close()
 	var statement string
-	Wg := sync.WaitGroup{}
+	// Wg := sync.WaitGroup{}
 
 	Wg.Add(1)
 	go func() {
-		statement = withdraw(itemID, amount, userID, &Wg)
+		statement = withdraw(itemID, amount*(-1), userID, &Wg)
 	}()
 	Wg.Wait()
 	return statement
@@ -250,9 +251,8 @@ func addHis(itemID int, action bool, amount int, userID int) {
 	var datetime = time.Now()
 	date := datetime.Format("2006-01-02")
 	time := datetime.Format("15:04:05")
-	fmt.Println("hi", action, userID, itemID, amount, date, time)
+	// fmt.Println("hi", action, userID, itemID, amount, date, time)
 	add, err := Db.Query("INSERT INTO history (action, userID, itemID, amount, date, time) VALUES(?, ?, ?, ?, ?, ?)", action, userID, itemID, amount, date, time)
-
 	if err != nil {
 		fmt.Println("Error: Cannot be added to history")
 	}
@@ -365,27 +365,10 @@ func (l *LRU) Read(itemID int) int {
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) int {
-	fmt.Println(ItemAmount)
-
 	if _, found := l.PageMap[itemID]; found {
-		if ItemAmount < 0 {
-			if GetAmount(itemID)+ItemAmount < 0 {
-				fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-				return -1
-			} else {
-				page := l.pageList.addFrontPage(itemID, l.PageMap[itemID].currentAmount+ItemAmount)
-				l.size++
-				l.PageMap[itemID] = page
-			}
-		} else {
-			l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
-			l.pageList.bringToMostUsed(l.PageMap[itemID])
-		}
-	}
-	if ItemAmount > 0 {
-		page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
-		l.size++
-		l.PageMap[itemID] = page
+		l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
+		l.pageList.bringToMostUsed(l.PageMap[itemID])
+		return l.PageMap[itemID].currentAmount
 	}
 	if l.size == l.capacity {
 		key := l.pageList.getRear().itemID
@@ -393,8 +376,25 @@ func (l *LRU) Input(itemID int, ItemAmount int) int {
 		l.size--
 		delete(l.PageMap, key)
 	}
+	if ItemAmount < 0 {
+		if GetAmount(itemID)+ItemAmount < 0 {
+			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
+			return -1
+		} else {
+			page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
+			l.size++
+			l.PageMap[itemID] = page
+			return l.PageMap[itemID].currentAmount
+		}
+	}
 
-	return 0
+	if ItemAmount > 0 {
+		page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
+		l.size++
+		l.PageMap[itemID] = page
+	}
+	// return l.PageMap[itemID].currentAmount
+	return l.PageMap[itemID].currentAmount
 }
 
 // func main() {
@@ -414,27 +414,31 @@ func getAmountbyItem(itemID int) string {
 
 // add() request
 func addToDB(itemID int, amount int, userID int) string {
-	myCache.Input(itemID, amount)
+	defer mutex.Unlock()
+	mutex.Lock()
+	
 	statement := Main(itemID, amount, userID)
 	// itemid := strconv.Itoa(itemID)
 	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
-	return "Success\n"
+	return strconv.Itoa(myCache.Input(itemID, amount))+ "\n"
 }
 
 //withdraw() tcp
 //withdraw()database จาก server
 func withDrawToDB(itemID int, amount int, userID int) string {
-	eir := myCache.Input(itemID, amount*-1)
-	if eir == -1 {
+	defer mutex.Unlock()
+	mutex.Lock()
+	err := myCache.Input(itemID, amount)
+	if err == -1 {
 		// return error ให้ users
-		return "cannot withdraw, Database got negative amount \n"
+		return "cannot withdraw, Database got negative amount."
 	}
 	statement := Main2(itemID, amount, userID)
 	// itemid := strconv.Itoa(itemID)
 	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
-	return "Success\n"
+	return strconv.Itoa(err)+ "\n"
 }
 
 //ถ้าจะรัน cache ใหม่ต่อวันต้อง while True init ใหม่

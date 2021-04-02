@@ -189,6 +189,9 @@ func his(con net.Conn, com []string) {
 	} else if mm == immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the current month!")
 		return
+	} else if mm > 12 || mm < 1{
+		fmt.Println("Invalid Month")
+		return
 	}
 
 	con.Write([]byte(com[0] + ": " + since[0] + since[1] + "\n"))
@@ -289,6 +292,7 @@ func ana(con net.Conn, com []string) {
 }
 
 func get(con net.Conn, com []string) {
+	com[1] = strings.TrimSpace(com[1])
 	_, err := strconv.Atoi(com[1])
 	if err != nil {
 		fmt.Println("Please enter the item ID as an integer!")

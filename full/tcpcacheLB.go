@@ -68,6 +68,7 @@ func rec1(con net.Conn) {
 	if err != nil {
 		fmt.Println(err)
 		mem1--
+		con.Close()
 		return
 	}
 	for {
@@ -107,6 +108,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 		if err != nil {
 			fmt.Println(err)
 			mem1--
+			con.Close()
 			return
 		}
 		fmt.Println(msg)
@@ -119,6 +121,7 @@ func rec2(con net.Conn) {
 	if err != nil {
 		fmt.Println(err)
 		mem2--
+		con.Close()
 		return
 	}
 	for {
@@ -158,6 +161,7 @@ func fb2(con net.Conn, ser2 net.Conn) {
 		if err != nil {
 			fmt.Println(err)
 			mem2--
+			con.Close()
 			return
 		}
 		fmt.Println(msg)
