@@ -178,6 +178,7 @@ func main() {
 				}
 				wg2.Done()
 				wg2.Wait()
+
 				wg.Done()
 
 			}(ts)

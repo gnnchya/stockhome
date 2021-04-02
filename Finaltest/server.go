@@ -285,14 +285,14 @@ func add(userID string, itemID string, itemAmount string) string {
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil" + "*" + "false" + "\n"
+		return "nil" + "*" + "no" + "\n"
 	}
 	defer cs.Close()
 	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil" + "*" + "false" + "\n"
+		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
 	return val
@@ -303,14 +303,14 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil" + "*" + "false" + "\n"
+		return "nil" + "*" + "no" + "\n"
 	}
 	defer cs.Close()
 	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil" + "*" + "false" + "\n"
+		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
 	return val
@@ -321,14 +321,14 @@ func getItemAmount(itemID string) string {
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil" + "*" + "false" + "\n"
+		return "nil" + "*" + "no" + "\n"
 	}
 	defer cs.Close()
 	cs.Write([]byte("get:" + itemID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil" + "*" + "false" + "\n"
+		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
 	return val
