@@ -70,7 +70,8 @@ func (q *Queue) enQ(n *Node) {
 	} else {
 		n.next = q.Tail
 		q.Tail.prev = n
-		q.Tail = n
+		// q.Tail = n
+		q.Tail = q.Tail.prev
 	}
 }
 
