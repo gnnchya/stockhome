@@ -21,9 +21,11 @@ var mem2 int = 0
 var Lfu Cache = Cache{20, 0, make(map[int]*Node)}
 var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
+var mu sync.Mutex
 
 func main() {
-	connect, err := net.Listen("tcp", ":9999")
+	// connect, err := net.Listen("tcp", ":9999")
+	connect, err := net.Listen("tcp", "128.199.70.176:9999")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -48,6 +50,7 @@ func main() {
 			fmt.Println("server2", mem1, mem2)
 		}
 	}
+	wg.Wait()
 }
 
 // func rec(con net.Conn) {
@@ -64,7 +67,8 @@ func main() {
 // }
 
 func rec1(con net.Conn) {
-	ser1, err := net.Dial("tcp", ":5001")
+	// ser1, err := net.Dial("tcp", ":5001")
+	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
 		mem1--
@@ -88,7 +92,8 @@ func rec1(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, history(date, "5001"))
+			// send(con, history(date, "5001"))
+			send(con, history(date, "128.199.70.252:5001"))
 		} else {
 			ser1.Write([]byte(data))
 			go fb1(con, ser1)
@@ -111,7 +116,8 @@ func fb1(con net.Conn, ser1 net.Conn) {
 }
 
 func rec2(con net.Conn) {
-	ser2, err := net.Dial("tcp", ":5002")
+	// ser2, err := net.Dial("tcp", ":5002")
+	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println(err)
 		mem2--
@@ -135,7 +141,8 @@ func rec2(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, history(date, "5002"))
+			// send(con, history(date, "5002"))
+			send(con, history(date, "143.198.219.89:5002"))
 		} else {
 			ser2.Write([]byte(data))
 			go fb2(con, ser2)
@@ -293,6 +300,9 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 }
 
 func (c *Cache) get(q *Queue, itemId int, cn string) []byte {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if _, ok := c.block[itemId]; ok {
 		q.update(c.block[itemId])
 		fmt.Println("----HIT----")
@@ -305,13 +315,15 @@ func (c *Cache) get(q *Queue, itemId int, cn string) []byte {
 
 		fmt.Println("----MISS----")
 	}
+	wg.Done()
 	return c.block[itemId].value
 }
 
 var db *sql.DB
 
 func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	con, err := net.Dial("tcp", ":"+cn)
+	// con, err := net.Dial("tcp", ":"+cn)
+	con, err := net.Dial("tcp", cn)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -323,52 +335,6 @@ func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c
 	c.set(q, name, data)
 }
 
-func retrieve_go(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	buf1 := bytes.NewBuffer(make([]byte, 0))
-	buf2 := bytes.NewBuffer(make([]byte, 0))
-	col := []byte("userID,itemID,amount,date,time")
-	buf1.Write(col)
-	wg.Add(2)
-	go get_database(0, Date, buf1)
-	go get_database(1, Date, buf2)
-	wg.Wait()
-	buf1.Write(buf2.Bytes())
-	// fmt.Println(buf1)
-	name, _ := strconv.Atoi(filename)
-	c.set(q, name, buf1.Bytes())
-}
-
-func get_database(halfmonth int, Date string, buf *bytes.Buffer) {
-	// Get data from startDate to endDate
-	var startDate, endDate string
-	if halfmonth == 0 {
-		startDate = Date + "-01" //2021-02-01
-		endDate = Date + "-15"   //2021-02-15
-	} else {
-		startDate = Date + "-16" //2021-02-16
-		endDate = Date + "-31"   //2021-02-31
-	}
-	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	// Slice each row
-	for row.Next() {
-		var userID, itemID, amount int
-		var date, time string
-		err = row.Scan(&userID, &itemID, &amount, &date, &time)
-		if err != nil {
-			fmt.Print(err)
-		}
-		// Write each line
-		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-		// str += ("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-		buf.Write(line)
-	}
-	wg.Done()
-	return
-}
 func read(c *Cache, q *Queue, filename string) {
 	file, err := os.Open("c:/Users/fluke/Desktop/" + filename + ".csv")
 	if err != nil {
@@ -458,6 +424,6 @@ func history(daterequest int, cn string) []byte {
 	// hit_start := time.Now()
 	// Lfu.get(&Cache_queue, daterequest)
 	// fmt.Println("Time elapsed: ", time.Since(hit_start))
-
+	wg.Add(1)
 	return Lfu.get(&Cache_queue, daterequest, cn)
 }
