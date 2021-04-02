@@ -419,7 +419,7 @@ func addToDB(itemID int, amount int, userID int) string {
 	// itemid := strconv.Itoa(itemID)
 	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
-	return strconv.Itoa(myCache.Input(itemID, amount))+ "\n"
+	return strconv.Itoa(itemID)+"-"+strconv.Itoa(myCache.Input(itemID, amount))+ "\n"
 }
 
 //withdraw() tcp
@@ -436,7 +436,7 @@ func withDrawToDB(itemID int, amount int, userID int) string {
 	// itemid := strconv.Itoa(itemID)
 	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
-	return strconv.Itoa(err)+ "\n"
+	return strconv.Itoa(itemID)+"-"+strconv.Itoa(err)+ "\n"
 }
 
 //ถ้าจะรัน cache ใหม่ต่อวันต้อง while True init ใหม่
