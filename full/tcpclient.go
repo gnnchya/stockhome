@@ -289,6 +289,7 @@ func ana(con net.Conn, com []string) {
 }
 
 func get(con net.Conn, com []string) {
+	com[1] = strings.TrimSpace(com[1])
 	_, err := strconv.Atoi(com[1])
 	if err != nil {
 		fmt.Println("Please enter the item ID as an integer!")
