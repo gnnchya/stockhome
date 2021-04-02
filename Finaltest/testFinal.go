@@ -29,32 +29,41 @@ func main() {
 		return
 	}
 
-	delay := *rut / *cli
+	delay := float64(*rut) / float64(*cli)
 	fmt.Printf("************************************\nClient : %d\nRamp up time : %d seconds\nTotal run time : %d minutes\n", *cli, *rut, *allt)
 	fmt.Println("************************************")
 
 	c := make(chan int)
 	cc := make(chan chan string)
-	wg := sync.WaitGroup{}
+	c3 := make(chan chan sync.WaitGroup)
+
 	var cliCnt int = 0
 	go func(c chan<- int) {
+		wg1 := sync.WaitGroup{}
 		for ti := 1; ti <= *cli; ti++ {
+			wg1.Add(1)
+			wg := sync.WaitGroup{}
 			wg.Add(1)
 			c1 := make(chan string)
+			c2 := make(chan sync.WaitGroup)
 			fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 			log.Printf("Initiate client no. %d", ti)
-			go Client(c1)
+			go Client(c1, &wg)
 			c <- ti
 			cc <- c1
+			c3 <- c2
+			c2 <- wg
 			time.Sleep(time.Duration(delay) * time.Second)
 			cliCnt++
+			wg.Wait()
+			wg1.Done()
 		}
-		wg.Wait()
+		wg1.Wait()
 	}(c)
 
 	timeout := time.After(time.Duration(*allt*60) * time.Second)
 
-	var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
+	var anaavg, missavg, hitavg, missavg2, hitavg2, countall time.Duration = 0, 0, 0, 0, 0, 0
 	var mem1, mem2, correct string
 	var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
@@ -74,7 +83,7 @@ func main() {
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
 			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(cliCnt), "ms")
-			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(*cli))*100, "%")
+			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
 			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
@@ -89,83 +98,88 @@ func main() {
 			return
 
 		case ts := <-c:
-			log.Printf("Client No %d started", ts)
-			go func(t int) {
-				for {
-					ctime := make(chan time.Duration)
-					cmem := make(chan string)
-					wg2 := sync.WaitGroup{}
-					//Analysis test
-					c1 := <-cc
-					wg2.Add(1)
-					go Analysis(c1, cmem, ctime)
-					elapsed := <-ctime
-					mem1 = <-cmem
-					mem2 = <-cmem
-					correct = <-cmem
+			go func(ts int) {
+				c1 := <-cc
+				c2 := <-c3
+				wg := <-c2
+				wg.Add(1)
+				log.Printf("Client No %d started", ts)
 
-					anaavg = anaavg + elapsed
-					if correct == "yes" {
-						count++
-					}
-					wg2.Done()
+				ctime := make(chan time.Duration)
+				cmem := make(chan string)
+				wg2 := sync.WaitGroup{}
+				//Analysis test
 
-					//history test
-					wg2.Add(1)
-					go LBcache(c1, cmem, ctime)
-					elapsed = <-ctime
-					mem1 = <-cmem
-					mem2 = <-cmem
-					correct = <-cmem
+				wg2.Add(1)
+				go Analysis(c1, cmem, ctime)
+				elapsed := <-ctime
+				mem1 = <-cmem
+				mem2 = <-cmem
+				correct = <-cmem
 
-					count2++
-					if correct == "yes" {
-						switch state := <-cmem; state {
-						case "true":
-							hitavg = hitavg + elapsed
-							counthit++
-						case "false":
-							missavg = missavg + elapsed
-							countmiss++
-						}
-					}
-					wg2.Done()
-
-					//Add,WD,get test
-					wg2.Add(1)
-					go DBcache(c1, cmem, ctime)
-					elapsed = <-ctime
-					mem1 = <-cmem
-					mem2 = <-cmem
-					correct = <-cmem
-
-					count3++
-					if correct == "yes" {
-						switch rd := <-cmem; rd {
-						case "0":
-							countadd++
-						case "1":
-							countwd++
-						case "2":
-							countget++
-						}
-
-						switch state := <-cmem; state {
-						case "true\n.":
-							hitavg2 = hitavg2 + elapsed
-							counthit2++
-						case "false\n.":
-							missavg2 = missavg2 + elapsed
-							countmiss2++
-						default:
-							count3--
-						}
-
-					}
-					wg2.Done()
-					wg2.Wait()
-					wg.Done()
+				anaavg = anaavg + elapsed
+				countall++
+				if correct == "yes" {
+					count++
 				}
+				wg2.Done()
+
+				//history test
+				wg2.Add(1)
+				go LBcache(c1, cmem, ctime)
+				elapsed = <-ctime
+				mem1 = <-cmem
+				mem2 = <-cmem
+				correct = <-cmem
+
+				count2++
+				if correct == "yes" {
+					switch state := <-cmem; state {
+					case "true":
+						hitavg = hitavg + elapsed
+						counthit++
+					case "false":
+						missavg = missavg + elapsed
+						countmiss++
+					}
+				}
+				wg2.Done()
+
+				//Add,WD,get test
+				wg2.Add(1)
+				go DBcache(c1, cmem, ctime)
+				elapsed = <-ctime
+				mem1 = <-cmem
+				mem2 = <-cmem
+				correct = <-cmem
+
+				count3++
+				if correct == "yes" {
+					switch rd := <-cmem; rd {
+					case "0":
+						countadd++
+					case "1":
+						countwd++
+					case "2":
+						countget++
+					}
+
+					switch state := <-cmem; state {
+					case "true\n.":
+						hitavg2 = hitavg2 + elapsed
+						counthit2++
+					case "false\n.":
+						missavg2 = missavg2 + elapsed
+						countmiss2++
+					default:
+						count3--
+					}
+
+				}
+				wg2.Done()
+				wg2.Wait()
+				wg.Done()
+
 			}(ts)
 		}
 	}

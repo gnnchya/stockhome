@@ -7,10 +7,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
-func Client(c chan string) {
+func Client(c chan string, wg *sync.WaitGroup) {
 	var try int = 0
 	var con net.Conn
 	var err error
@@ -40,9 +41,11 @@ func Client(c chan string) {
 		case "add":
 			add(con, com, c)
 			c <- "done"
+			wg.Done()
 		case "wd":
 			wd(con, com, c)
 			c <- "done"
+			wg.Done()
 		case "his":
 			his(con, com, c)
 			c <- "done"
@@ -54,6 +57,7 @@ func Client(c chan string) {
 		case "get":
 			get(con, com, c)
 			c <- "done"
+			wg.Done()
 		case "exit":
 			con.Close()
 			return
