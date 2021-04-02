@@ -39,6 +39,7 @@ func main() {
 			help()
 		case "exit":
 			con.Write([]byte("exit:\n"))
+			con.Close()
 			return
 		case "get":
 			get(con, com)
@@ -189,7 +190,7 @@ func his(con net.Conn, com []string) {
 	} else if mm == immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the current month!")
 		return
-	} else if mm > 12 || mm < 1{
+	} else if mm > 12 || mm < 1 {
 		fmt.Println("Invalid Month")
 		return
 	}
