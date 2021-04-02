@@ -18,7 +18,7 @@ import (
 
 var mem1 int = 0
 var mem2 int = 0
-var Lfu Cache = Cache{20, 0, make(map[int]*Node)}
+var Lfu Cache = Cache{8000000, 0, make(map[int]*Node)} //7200000
 var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
 var mu sync.Mutex
@@ -195,12 +195,13 @@ func send(con net.Conn, msg []byte) {
 }
 
 type Cache struct {
-	capacity int
-	size     int
+	capacity int //bytes unit
+	size     int //bytes unit
 	block    map[int]*Node
 }
 
 type Node struct {
+	key   int
 	value []byte
 	count int
 	next  *Node
@@ -223,11 +224,11 @@ func (q *Queue) isEmpty() bool {
 func (q *Queue) enQ(n *Node) {
 	if q.Head == nil {
 		q.Head = n
-		q.Tail = n
+		q.Tail = q.Head
 	} else {
 		n.next = q.Tail
 		q.Tail.prev = n
-		q.Tail = n
+		q.Tail = q.Tail.prev
 	}
 }
 
@@ -235,15 +236,16 @@ func (q *Queue) deQ() {
 	if q.Head == nil {
 		return
 	} else if q.Head == q.Tail {
+		delete(Lfu.block, q.Tail.key)
+		Lfu.size -= len(q.Tail.value)
 		q.Head = q.Head.next
 		q.Tail = q.Head
 		return
 	} else {
+		delete(Lfu.block, q.Tail.key)
+		Lfu.size -= len(q.Tail.value)
 		q.Tail = q.Tail.next
 		q.Tail.prev = nil
-		if q.Tail == nil {
-			q.Head = q.Tail
-		}
 		return
 	}
 }
@@ -276,7 +278,7 @@ func (q *Queue) printQ() {
 		return
 	}
 	for c != nil {
-		fmt.Print(c.value, c.count, "\n")
+		fmt.Print(c.key, c.count, "\n")
 		c = c.prev
 	}
 	print("\n")
@@ -284,37 +286,41 @@ func (q *Queue) printQ() {
 }
 
 func (c *Cache) set(q *Queue, itemId int, value []byte) {
+	valSize := len(value)
 	if _, ok := c.block[itemId]; ok {
 		c.block[itemId].value = value
 		q.update(c.block[itemId])
-	} else if c.size < c.capacity {
-		c.block[itemId] = &Node{value, 1, nil, nil}
+		return
+	} else if c.size+valSize < c.capacity {
+		c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
 		q.enQ(c.block[itemId])
-		c.size++
-	} else {
-		q.deQ()
-		c.block[itemId] = &Node{value, 1, nil, nil}
-		q.enQ(c.block[itemId])
+		c.size += valSize
+		return
 	}
+	for c.size+valSize > c.capacity {
+		q.deQ()
+	}
+	c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
+	q.enQ(c.block[itemId])
+	c.size += valSize
 	return
 }
 
 func (c *Cache) get(q *Queue, itemId int, cn string) []byte {
 	mu.Lock()
 	defer mu.Unlock()
-
 	if _, ok := c.block[itemId]; ok {
 		q.update(c.block[itemId])
 		fmt.Println("----HIT----")
 	} else {
-		// read(c, q, strconv.Itoa(itemId))
 		filename := strconv.Itoa(itemId)
-		// a := time.Now()
 		retrieve(c, q, filename[0:4]+"-"+filename[4:6], filename, cn)
-		// fmt.Println(time.Since(a))
-
+		fmt.Println("CS:", len(c.block))
 		fmt.Println("----MISS----")
 	}
+	// fmt.Println(Lfu)
+	// Cache_queue.printQ()
+	fmt.Println("Final", c.size, "bytes\n")
 	wg.Done()
 	return c.block[itemId].value
 }
@@ -411,19 +417,6 @@ func Save(startDate string, endDate string, filename string) {
 }
 
 func history(daterequest int, cn string) []byte {
-	// var err error
-	// db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-
-	// miss_start := time.Now()
-	// Lfu.get(&Cache_queue, daterequest)
-	// fmt.Println("Time elapsed: ", time.Since(miss_start))
-
-	// hit_start := time.Now()
-	// Lfu.get(&Cache_queue, daterequest)
-	// fmt.Println("Time elapsed: ", time.Since(hit_start))
 	wg.Add(1)
 	return Lfu.get(&Cache_queue, daterequest, cn)
 }
