@@ -89,6 +89,10 @@ func rec1(con net.Conn) {
 				return
 			}
 			send(con, history(date, "128.199.70.252:5001"))
+		} else if msg[0] == "exit" {
+			con.Close()
+			ser1.Close()
+			return
 		} else {
 			ser1.Write([]byte(data))
 			go fb1(con, ser1)
@@ -136,6 +140,10 @@ func rec2(con net.Conn) {
 				return
 			}
 			send(con, history(date, "143.198.219.89:5002"))
+		} else if msg[0] == "exit" {
+			con.Close()
+			ser2.Close()
+			return
 		} else {
 			ser2.Write([]byte(data))
 			go fb2(con, ser2)

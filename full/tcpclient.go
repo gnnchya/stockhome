@@ -38,7 +38,7 @@ func main() {
 		case "help":
 			help()
 		case "exit":
-			con.Close()
+			con.Write([]byte("exit:\n"))
 			return
 		case "get":
 			get(con, com)
