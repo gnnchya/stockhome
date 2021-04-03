@@ -175,12 +175,13 @@ func main() {
 						count3--
 					}
 
+				} else if correct == "nil" {
+					count3--
 				}
-				c1 <- "exit"
 				wg2.Done()
-				wg2.Wait()
 
 				wg.Done()
+				wg2.Wait()
 
 			}(ts)
 		}

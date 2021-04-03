@@ -15,7 +15,7 @@ var inputdate = [16]string{"2019-12", "2020-01", "2020-02", "2020-03", "2020-04"
 	"2020-12", "2021-01", "2021-02", "2021-03"} // "2021-04", "2021-05"
 
 func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
-	var mem1, mem2, output, state, fnoutput string
+	var mem1, mem2, output, state string
 	var elapsed time.Duration
 	correct := "yes"
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -25,10 +25,8 @@ func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 
 	begin := <-c
 	if begin == "begin" {
-		// fmt.Println("-------------------HISTORY-------------------")
-		fnoutput = "-------------------HISTORY-------------------\n"
-		// fmt.Println(randate1)
-		fnoutput = fnoutput + randate1 + "\n"
+		fmt.Println("-------------------HISTORY-------------------")
+		fmt.Println(randate1)
 		start := time.Now()
 
 		c <- randate1
@@ -52,26 +50,22 @@ func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 	if output != "None" {
 		check := retrieve(randate) + "."
 		if output == check {
-			fnoutput = fnoutput + "-->Correct output\n"
-			// fmt.Println("-->Correct output")
+			fmt.Println("-->Correct output")
 		} else {
-			fnoutput = fnoutput + "-->Incorrect output\n"
-			// fmt.Println("-->Incorrect output")
+			fmt.Println("-->Incorrect output")
 			correct = "no"
 		}
 	} else {
-		// fmt.Println("## ERROR ##")
-		fnoutput = fnoutput + "## ERROR ##\n"
+		fmt.Println("## ERROR ##")
 		correct = "no"
 	}
-	// fmt.Println("History time elapsed: ", elapsed)
-	fnoutput = fnoutput + "History time elapsed: " + elapsed.String() + "\n"
+	fmt.Println("History time elapsed: ", elapsed)
 	ctime <- elapsed
 	cmem <- mem1
 	cmem <- mem2
 	cmem <- correct
 	cmem <- state
-	fmt.Println(fnoutput)
+
 }
 
 func retrieve(Date string) string {

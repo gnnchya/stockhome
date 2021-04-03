@@ -59,6 +59,7 @@ func Client(c chan string, wg *sync.WaitGroup) {
 			c <- "done"
 			wg.Done()
 		case "exit":
+			fmt.Println("Client disconnected")
 			con.Close()
 			return
 		default:
