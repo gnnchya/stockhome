@@ -78,6 +78,11 @@ func rec1(con net.Conn) {
 			}
 			a, b := Lfu.get(&Cache_queue, date, "5001")
 			send1(con, a, b)
+		} else if msg[0] == "exit" {
+			con.Close()
+			ser1.Close()
+			mem1--
+			return
 		} else {
 			ser1.Write([]byte(data))
 			go fb1(con, ser1)
