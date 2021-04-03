@@ -67,7 +67,7 @@ func rec1(con net.Conn) {
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
-		// mem1--
+		mem1--
 		con.Close()
 		return
 	}
