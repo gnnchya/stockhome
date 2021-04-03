@@ -75,7 +75,7 @@ func rec1(con net.Conn) {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
-			mem1--
+			// mem1--
 			return
 		}
 		fmt.Println()
@@ -110,7 +110,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 		msg, err := bufio.NewReader(ser1).ReadString('.')
 		if err != nil {
 			fmt.Println(err)
-			mem1--
+			// mem1--
 			con.Close()
 			return
 		}
@@ -135,7 +135,7 @@ func rec2(con net.Conn) {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
-			mem2--
+			// mem2--
 			return
 		}
 		fmt.Println()
@@ -170,7 +170,7 @@ func fb2(con net.Conn, ser2 net.Conn) {
 		msg, err := bufio.NewReader(ser2).ReadString('.')
 		if err != nil {
 			fmt.Println(err)
-			mem2--
+			// mem2--
 			con.Close()
 			return
 		}
