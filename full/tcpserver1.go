@@ -68,9 +68,6 @@ func rec(con net.Conn) {
 			pulldb(con, msg[1])
 		case "get":
 			send(con, getItemAmount(msg[1]))
-		case "exit":
-			con.Close()
-			return
 		default:
 			send(con, "Some How Error!")
 		}
@@ -326,54 +323,54 @@ func pulldb(con net.Conn, date string) {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil"
+		return "nil" + "*" + "no" + "\n"
 	}
 	defer cs.Close()
 	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil"
+		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil"
+		return "nil" + "*" + "no" + "\n"
 	}
 	defer cs.Close()
 	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil"
+		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil"
+		return "nil" + "*" + "no" + "\n"
 	}
 	defer cs.Close()
 	cs.Write([]byte("get:" + itemID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil"
+		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
 	return val

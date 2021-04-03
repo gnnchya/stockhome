@@ -20,7 +20,7 @@ var mutex = &sync.Mutex{}
 func main() {
 	//ยังไม่รู้ค่าจริงของ init
 	myCache.InitLRU(1000)
-	connect, err := net.Listen("tcp", "143.198.195.15:5003")
+	connect, err := net.Listen("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -115,7 +115,7 @@ func send(con net.Conn, msg string) {
 
 func init() {
 	var err error
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -364,6 +364,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 	_, found := l.PageMap[itemID]
+
 	if found {
 		l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
 		l.pageList.bringToMostUsed(l.PageMap[itemID])
@@ -392,7 +393,6 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		l.size++
 		l.PageMap[itemID] = page
 	}
-	// return l.PageMap[itemID].currentAmount
 	return l.PageMap[itemID].currentAmount, found
 }
 
