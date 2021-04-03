@@ -203,7 +203,10 @@ func MostWithDate(start string, Wg *sync.WaitGroup) string {
 	}
 
 	sort.Slice(withSort, func(i, j int) bool {
-		return withMap[withSort[i]] > withMap[withSort[j]]
+		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
+			return a > b
+		}
+		return withSort[i] < withSort[j]
 	})
 
 	for _, amount := range withSort {
