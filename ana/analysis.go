@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	connect, err := net.Listen("tcp", "143.198.219.89:5002")
+	connect, err := net.Listen("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -86,7 +86,7 @@ var db *sql.DB
 
 func analysis(year string, month string, day string) string {
 	var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
@@ -177,6 +177,7 @@ func MostWithDate(start string, Wg *sync.WaitGroup) string {
 
 	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
 	defer row.Close()
+
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -220,6 +221,7 @@ func WithTime(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
 	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
+
 	defer row.Close()
 	if err != nil {
 		fmt.Print(err)
@@ -248,7 +250,6 @@ func WithTime(Wg *sync.WaitGroup) string {
 	sort.Strings(withSort)
 
 	for _, time := range withSort {
-		//fmt.Printf("%s - %s | %-4d\n", time+":00", time+":59", withMap[time])
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
 	return txt.String()
@@ -286,7 +287,6 @@ func WithDate(Wg *sync.WaitGroup) string {
 	sort.Strings(withSort)
 
 	for _, date := range withSort {
-		//fmt.Printf("%s | %-4d\n", date, withMap[date])
 		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
 
 	}
@@ -335,54 +335,54 @@ func pulldb(con net.Conn, date string) {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil" + "*" + "no" + "\n"
+		return "nil"
 	}
 	defer cs.Close()
 	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
+		return "nil"
 	}
 	fmt.Println(val)
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil" + "*" + "no" + "\n"
+		return "nil"
 	}
 	defer cs.Close()
 	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
+		return "nil"
 	}
 	fmt.Println(val)
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil" + "*" + "no" + "\n"
+		return "nil"
 	}
 	defer cs.Close()
 	cs.Write([]byte("get:" + itemID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
+		return "nil"
 	}
 	fmt.Println(val)
 	return val
