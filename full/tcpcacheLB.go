@@ -64,8 +64,7 @@ func main() {
 // }
 
 func rec1(con net.Conn) {
-	mem1++
-	fmt.Println("server1", mem1, mem2)
+
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
@@ -73,6 +72,8 @@ func rec1(con net.Conn) {
 		con.Close()
 		return
 	}
+	mem1++
+	fmt.Println("server1", mem1, mem2)
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
@@ -127,8 +128,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 }
 
 func rec2(con net.Conn) {
-	mem2++
-	fmt.Println("server2", mem1, mem2)
+
 	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println(err)
@@ -136,6 +136,8 @@ func rec2(con net.Conn) {
 		con.Close()
 		return
 	}
+	mem2++
+	fmt.Println("server2", mem1, mem2)
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
@@ -182,7 +184,6 @@ func fb2(con net.Conn, ser2 net.Conn) {
 		}
 		fmt.Println("Forwarding response..")
 		fmt.Println()
-
 		// fmt.Println(msg)
 		// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
 		con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
