@@ -110,7 +110,7 @@ func main() {
 				wg2 := sync.WaitGroup{}
 				//Analysis test
 
-				wg2.Add(1)
+				wg2.Add(3)
 				go Analysis(c1, cmem, ctime)
 				elapsed := <-ctime
 				mem1 = <-cmem
@@ -125,7 +125,7 @@ func main() {
 				wg2.Done()
 
 				//history test
-				wg2.Add(1)
+				// wg2.Add(1)
 				go LBcache(c1, cmem, ctime)
 				elapsed = <-ctime
 				mem1 = <-cmem
@@ -146,7 +146,7 @@ func main() {
 				wg2.Done()
 
 				//Add,WD,get test
-				wg2.Add(1)
+				// wg2.Add(1)
 				go DBcache(c1, cmem, ctime)
 				elapsed = <-ctime
 				mem1 = <-cmem
@@ -176,6 +176,7 @@ func main() {
 					}
 
 				}
+				c1 <- "exit"
 				wg2.Done()
 				wg2.Wait()
 

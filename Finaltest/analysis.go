@@ -16,15 +16,17 @@ import (
 func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 	// defer db.Close()
 
-	var mem1, mem2, output string
+	var mem1, mem2, output, fnoutput string
 	var elapsed time.Duration
 	correct := "yes"
 
 	randate := "ana " + randomTimestamp()
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println("-------------------ANALYSIS-------------------")
-		fmt.Println(randate)
+		// fmt.Println("-------------------ANALYSIS-------------------")
+		fnoutput = "-------------------ANALYSIS-------------------\n"
+		// fmt.Println(randate)
+		fnoutput = fnoutput + randate + "\n"
 		start := time.Now()
 
 		c <- randate
@@ -49,21 +51,26 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 		check := "Server: " + analysis1(com[0], com[1], com[2])
 		// fmt.Println(check)
 		if output == check {
-			fmt.Println("-->Correct output")
+			fnoutput = fnoutput + "-->Correct output\n"
+			// fmt.Println("-->Correct output")
 		} else {
-			fmt.Println("-->Incorrect output")
+			fnoutput = fnoutput + "-->Incorrect output\n"
+			// fmt.Println("-->Incorrect output")
 			correct = "no"
 		}
 	} else {
-		fmt.Println("## ERROR ##")
+		fnoutput = fnoutput + "## ERROR ##\n"
+		// fmt.Println("## ERROR ##")
 		correct = "no"
 	}
 
-	fmt.Println("Analysis time elapsed: ", elapsed)
+	// fmt.Println("Analysis time elapsed: ", elapsed)
+	fnoutput = fnoutput + "Analysis time elapsed: " + elapsed.String() + "\n"
 	ctime <- elapsed
 	cmem <- mem1
 	cmem <- mem2
 	cmem <- correct
+	fmt.Println(fnoutput)
 }
 
 // ref: https://stackoverflow.com/questions/40944233/generating-random-timestamps-in-go

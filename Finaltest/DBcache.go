@@ -10,31 +10,35 @@ import (
 )
 
 func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
-	var mem1, mem2, output, state, rdact string
+	var mem1, mem2, output, state, rdact, fnoutput string
 	var ran int
 	var elapsed time.Duration
 	correct := "yes"
 
 	rand.Seed(time.Now().UTC().UnixNano())
-	ran = rand.Intn(10000)
+	ran = rand.Intn(10000) //10000
 	rdact = strconv.Itoa(ran)
 	rd := rand.Intn(3)
 	switch rd {
 	case 0:
 		rdact = "add " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(10-5)+5)
-		fmt.Println("---------------------ADD---------------------")
+		fnoutput = "---------------------ADD---------------------\n"
+		// fmt.Println("---------------------ADD---------------------")
 	case 1:
 		rdact = "wd " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(5-1)+1)
-		fmt.Println("-------------------WITHDRAW------------------")
+		fnoutput = "-------------------WITHDRAW------------------\n"
+		// fmt.Println("-------------------WITHDRAW------------------")
 	case 2:
 		rdact = "get " + rdact
-		fmt.Println("-------------------ACQUIRE-------------------")
+		fnoutput = "-------------------ACQUIRE-------------------\n"
+		// fmt.Println("-------------------ACQUIRE-------------------")
 
 	}
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println(rdact)
+		// fmt.Println(rdact)
+		fnoutput = fnoutput + rdact + "\n"
 		start := time.Now()
 
 		c <- rdact
@@ -58,22 +62,27 @@ func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 	if output != "None" {
 		check := show(ran)
 		if output == check || output == "Server: Database: Success" {
-			fmt.Println("-->Correct output")
+			// fmt.Println("-->Correct output")
+			fnoutput = fnoutput + "-->Correct output\n"
 		} else {
-			fmt.Println("-->Incorrect output")
+			// fmt.Println("-->Incorrect output")
+			fnoutput = fnoutput + "-->Incorrect output\n"
 			correct = "no"
 		}
 	} else {
-		fmt.Println("## ERROR ##")
+		// fmt.Println("## ERROR ##")
+		fnoutput = fnoutput + "## ERROR ##\n"
 		correct = "no"
 	}
-	fmt.Println("Time elapsed: ", elapsed)
+	// fmt.Println("Time elapsed: ", elapsed)
+	fnoutput = fnoutput + "Time elapsed: " + elapsed.String() + "\n"
 	ctime <- elapsed
 	cmem <- mem1
 	cmem <- mem2
 	cmem <- correct
 	cmem <- strconv.Itoa(rd)
 	cmem <- state
+	fmt.Println(fnoutput)
 
 }
 
