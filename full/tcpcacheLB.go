@@ -67,7 +67,7 @@ func rec1(con net.Conn) {
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
-		mem1--
+		// mem1--
 		con.Close()
 		return
 	}
@@ -75,7 +75,7 @@ func rec1(con net.Conn) {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
-			// mem1--
+			mem1--
 			return
 		}
 		fmt.Println()
@@ -128,14 +128,14 @@ func rec2(con net.Conn) {
 	if err != nil {
 		fmt.Println(err)
 		mem2--
-		con.Close()
+		// con.Close()
 		return
 	}
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
-			// mem2--
+			mem2--
 			return
 		}
 		fmt.Println()
