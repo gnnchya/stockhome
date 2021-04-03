@@ -22,6 +22,7 @@ func main() {
 		fmt.Println("Command: ")
 		msg, err := bufio.NewReader(os.Stdin).ReadString('\n')
 		if err != nil {
+			fmt.Println(err)
 			return
 		}
 		com := strings.Split(msg, " ")
@@ -39,6 +40,7 @@ func main() {
 			help()
 		case "exit":
 			con.Write([]byte("exit:\n"))
+			con.Close()
 			return
 		case "get":
 			get(con, com)
