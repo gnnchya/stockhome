@@ -222,8 +222,8 @@ func send1(con net.Conn, msg []byte, state string) {
 	temp3 := append(temp2, []byte(strconv.Itoa(mem1))...)
 	temp4 := append(temp3, []byte("*")...)
 	temp5 := append(temp4, []byte(strconv.Itoa(mem2))...)
-	con.Write(temp5)
-	con.Write([]byte("`"))
+	con.Write(temp5 + []byte("`"))
+	// con.Write([]byte("`"))
 }
 
 type Cache struct {
