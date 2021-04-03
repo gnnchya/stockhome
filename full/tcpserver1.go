@@ -70,6 +70,7 @@ func rec(con net.Conn) {
 			send(con, getItemAmount(msg[1]))
 		case "exit":
 			con.Close()
+			fmt.Println("EOF")
 			return
 		default:
 			send(con, "Some How Error!")

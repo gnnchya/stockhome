@@ -95,7 +95,7 @@ func rec1(con net.Conn) {
 			ser1.Write([]byte("exit:\n"))
 			ser1.Close()
 			mem1--
-			fmt.Println("eof")
+			fmt.Println("EOF")
 			return
 		} else {
 			ser1.Write([]byte(data))
@@ -154,6 +154,8 @@ func rec2(con net.Conn) {
 		} else if msg[0] == "exit" {
 			con.Close()
 			ser2.Close()
+			mem2--
+			fmt.Println("EOF")
 			return
 		} else {
 			ser2.Write([]byte(data))
