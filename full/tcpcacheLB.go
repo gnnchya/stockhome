@@ -39,13 +39,13 @@ func main() {
 		}
 		fmt.Println(con.RemoteAddr())
 		if mem1 <= mem2 {
-
 			go rec1(con)
-			fmt.Println("server1", mem1, mem2)
+			mem1++
+			// fmt.Println("server1", mem1, mem2)
 		} else if mem2 < mem1 {
-
+			mem2++
 			go rec2(con)
-			fmt.Println("server2", mem1, mem2)
+			// fmt.Println("server2", mem1, mem2)
 		}
 	}
 }
@@ -65,6 +65,7 @@ func main() {
 
 func rec1(con net.Conn) {
 	mem1++
+	fmt.Println("server1", mem1, mem2)
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
@@ -126,6 +127,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 
 func rec2(con net.Conn) {
 	mem2++
+	fmt.Println("server2", mem1, mem2)
 	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println(err)
