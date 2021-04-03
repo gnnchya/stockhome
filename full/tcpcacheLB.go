@@ -98,6 +98,7 @@ func rec1(con net.Conn) {
 			ser1.Close()
 			mem1--
 			fmt.Println("EOF")
+			con.Close()
 			return
 		} else {
 			ser1.Write([]byte(data))
@@ -156,9 +157,10 @@ func rec2(con net.Conn) {
 			a, b := Lfu.get(&Cache_queue, date, "143.198.219.89:5002")
 			send1(con, a, b)
 		} else if msg[0] == "exit" {
-			con.Close()
+			ser2.Write([]byte("exit:\n"))
 			ser2.Close()
 			mem2--
+			con.Close()
 			fmt.Println("EOF")
 			return
 		} else {
