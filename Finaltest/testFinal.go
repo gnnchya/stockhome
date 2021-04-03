@@ -13,8 +13,13 @@ import (
 )
 
 var db *sql.DB
+var eir error
 
 func main() {
+	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if eir != nil {
+		fmt.Println("Error: Cannot open database")
+	}
 
 	//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 	cli := flag.Int("cli", 10, "Number of clients")
