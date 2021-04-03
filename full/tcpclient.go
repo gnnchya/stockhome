@@ -10,18 +10,6 @@ import (
 	"time"
 )
 
-package main
-
-import (
-	"bufio"
-	"fmt"
-	"net"
-	"os"
-	"strconv"
-	"strings"
-	"time"
-)
-
 func main() {
 	con, err := net.Dial("tcp", "128.199.70.176:9999")
 	if err != nil {
