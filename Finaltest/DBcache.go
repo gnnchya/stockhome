@@ -16,7 +16,7 @@ func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 	correct := "yes"
 
 	rand.Seed(time.Now().UTC().UnixNano())
-	ran = rand.Intn(10000) //10000
+	ran = rand.Intn(10-1) + 1 //10000
 	rdact = strconv.Itoa(ran)
 	rd := rand.Intn(3)
 	switch rd {
@@ -45,7 +45,7 @@ func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 		mem2 = <-c
 		state = <-c
 
-		if output == "error" {
+		if output == "Server: error" || output == "Server: nil" {
 			output = "None"
 		}
 

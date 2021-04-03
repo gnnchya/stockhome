@@ -75,11 +75,9 @@ func randomTimestamp() string {
 }
 
 // analysis code ****************************************************
-var dbHistory = map[int]*hisDB{}
-
 func analysis1(year string, month string, day string) string {
 	var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
@@ -87,45 +85,109 @@ func analysis1(year string, month string, day string) string {
 	//defer db.Close()
 
 	var start string = year + "-" + month + "-" + day
-	lookupDB(start)
-
-	var aWith, bWith, cWith string
+	var aWith, bWith, cWith, dWith string
 
 	Wg := sync.WaitGroup{}
 
 	Wg.Add(1)
 	go func() {
-		aWith = MostWith(&Wg)
+		aWith = MostWithA(&Wg)
 	}()
 
 	Wg.Add(1)
 	go func() {
-		bWith = WithTime(&Wg)
+		bWith = MostWithDate(start, &Wg)
 	}()
 
 	Wg.Add(1)
 	go func() {
-		cWith = WithDate(&Wg)
+		cWith = WithTime(&Wg)
+	}()
+
+	Wg.Add(1)
+	go func() {
+		dWith = WithDate(&Wg)
 	}()
 
 	Wg.Wait()
-	return (aWith + "\n" + bWith + "\n" + cWith + ".")
+	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWith(Wg *sync.WaitGroup) string {
+func MostWithA(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
+	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0")
+	defer row.Close()
 
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Make map for keeping
 	withMap := make(map[int]int)
 
-	for k := range dbHistory {
-		if val, ok := withMap[dbHistory[k].itemID]; ok {
-			withMap[dbHistory[k].itemID] = dbHistory[k].amount + val
+	for row.Next() {
+		var itemID, amount int
+		err = row.Scan(&itemID, &amount)
+
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[itemID]; ok {
+			withMap[itemID] = amount + val
 		} else {
-			withMap[dbHistory[k].itemID] = dbHistory[k].amount
+			withMap[itemID] = amount
 		}
 	}
 
+	// Make slice for sorting
+	withSort := make([]int, 0, len(withMap))
+
+	for amount := range withMap {
+		withSort = append(withSort, amount)
+	}
+
+	sort.Slice(withSort, func(i, j int) bool {
+		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
+			return a > b
+		}
+		return withSort[i] < withSort[j]
+	})
+
+	for _, amount := range withSort {
+		//fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
+		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
+	}
+	return txt.String()
+}
+
+func MostWithDate(start string, Wg *sync.WaitGroup) string {
+	defer Wg.Done()
+	var txt strings.Builder
+	startDate, _ := time.Parse("2006-01-02", start)
+	var end = time.Now()
+	endDate := end.Format("2006-01-02")
+
+	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
+	defer row.Close()
+
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Make map for keeping
+	withMap := make(map[int]int)
+	for row.Next() {
+		var itemID, amount int
+		err = row.Scan(&itemID, &amount)
+
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[itemID]; ok {
+			withMap[itemID] = amount + val
+		} else {
+			withMap[itemID] = amount
+		}
+	}
+
+	// Make slice for sorting
 	withSort := make([]int, 0, len(withMap))
 	for amount := range withMap {
 		withSort = append(withSort, amount)
@@ -139,6 +201,7 @@ func MostWith(Wg *sync.WaitGroup) string {
 	})
 
 	for _, amount := range withSort {
+		//fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
 		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
 	}
 
@@ -148,16 +211,29 @@ func MostWith(Wg *sync.WaitGroup) string {
 func WithTime(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
-	withMap := make(map[string]int)
+	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
 
-	for k := range dbHistory {
-		if val, ok := withMap[dbHistory[k].time]; ok {
-			withMap[dbHistory[k].time] = dbHistory[k].amount + val
+	defer row.Close()
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Make map for keeping
+	withMap := make(map[string]int)
+	for row.Next() {
+		var amount int
+		var time string
+		err = row.Scan(&time, &amount)
+
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[time[0:2]]; ok {
+			withMap[time[0:2]] = amount + val
 		} else {
-			withMap[dbHistory[k].time] = dbHistory[k].amount
+			withMap[time[0:2]] = amount
 		}
 	}
 
+	// Make slice for sorting
 	withSort := make([]string, 0, len(withMap))
 	for time := range withMap {
 		withSort = append(withSort, time)
@@ -173,17 +249,28 @@ func WithTime(Wg *sync.WaitGroup) string {
 func WithDate(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
+	row, err := db.Query("SELECT date, amount FROM history WHERE action = 0")
 
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Make map for keeping
 	withMap := make(map[string]int)
+	for row.Next() {
+		var amount int
+		var date string
+		err = row.Scan(&date, &amount)
 
-	for k := range dbHistory {
-		if val, ok := withMap[dbHistory[k].date]; ok {
-			withMap[dbHistory[k].date] = dbHistory[k].amount + val
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[date]; ok {
+			withMap[date] = amount + val
 		} else {
-			withMap[dbHistory[k].date] = dbHistory[k].amount
+			withMap[date] = amount
 		}
 	}
 
+	// Make slice for sorting
 	withSort := make([]string, 0, len(withMap))
 	for date := range withMap {
 		withSort = append(withSort, date)
@@ -194,43 +281,6 @@ func WithDate(Wg *sync.WaitGroup) string {
 		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
 
 	}
+	defer row.Close()
 	return txt.String()
-}
-
-type hisDB struct {
-	hisID  int
-	itemID int
-	amount int
-	date   string
-	time   string
-}
-
-func lookupDB(date string) {
-	startDate, _ := time.Parse("2006-01-02", date)
-	var end = time.Now()
-	endDate := end.Format("2006-01-02")
-
-	row, err := db.Query("SELECT historyID, itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
-
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	for row.Next() {
-		var hist, id, amounts int
-		var dates, times string
-
-		err = row.Scan(&hist, &id, &amounts, &dates, &times)
-
-		d := dbHistory[hist]
-		if d == nil {
-			d = &hisDB{hisID: hist}
-			dbHistory[hist] = d
-		}
-
-		d.itemID = id
-		d.amount = amounts
-		d.date = dates
-		d.time = times[0:2]
-	}
 }

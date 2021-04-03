@@ -64,7 +64,7 @@ func main() {
 	timeout := time.After(time.Duration(*allt*60) * time.Second)
 
 	var anaavg, missavg, hitavg, missavg2, hitavg2, countall time.Duration = 0, 0, 0, 0, 0, 0
-	var mem1, mem2, correct string
+	var mem1, mem2, correct, temp1, temp2 string
 	var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 	for {
@@ -75,11 +75,11 @@ func main() {
 			fmt.Println("-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
 			fmt.Println("Expected number of client(s) :", *cli)
-			fmt.Println("Total number of spawned client(s) :", cliCnt)
+			fmt.Println("Total number of spawned client(s) :", (cliCnt - 1))
 			fmt.Println("Server 1 :", mem1, "user(s) / Server 2 : ", mem2[:len(mem2)-1], "user(s)") //[:len(mem2)-1])
 			no, _ := strconv.Atoi(mem2[:len(mem2)-1])
 			// no, _ := strconv.Atoi(mem2)
-			fmt.Println("Client distribution correct: ", cliCnt/2 == no)
+			fmt.Println("Client distribution correct: ", (cliCnt-1)/2 == no)
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
 			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(cliCnt), "ms")
@@ -113,8 +113,11 @@ func main() {
 				wg2.Add(3)
 				go Analysis(c1, cmem, ctime)
 				elapsed := <-ctime
-				mem1 = <-cmem
-				mem2 = <-cmem
+				temp1 = <-cmem
+				temp2 = <-cmem
+				if temp1 != "error" {
+					mem1, mem2 = temp1, temp2
+				}
 				correct = <-cmem
 
 				anaavg = anaavg + elapsed
@@ -128,8 +131,11 @@ func main() {
 				// wg2.Add(1)
 				go LBcache(c1, cmem, ctime)
 				elapsed = <-ctime
-				mem1 = <-cmem
-				mem2 = <-cmem
+				temp1 = <-cmem
+				temp2 = <-cmem
+				if temp1 != "error" {
+					mem1, mem2 = temp1, temp2
+				}
 				correct = <-cmem
 
 				count2++
@@ -149,8 +155,11 @@ func main() {
 				// wg2.Add(1)
 				go DBcache(c1, cmem, ctime)
 				elapsed = <-ctime
-				mem1 = <-cmem
-				mem2 = <-cmem
+				temp1 = <-cmem
+				temp2 = <-cmem
+				if temp1 != "error" {
+					mem1, mem2 = temp1, temp2
+				}
 				correct = <-cmem
 
 				count3++

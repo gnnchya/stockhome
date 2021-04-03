@@ -18,7 +18,7 @@ func Client(c chan string, wg *sync.WaitGroup) {
 
 	for {
 		// time.Sleep(1 * time.Millisecond)
-		con, err = net.Dial("tcp", ":9999")
+		con, err = net.Dial("tcp", "128.199.70.176:9999")
 		if err != nil && try >= 3 {
 			fmt.Println("error: ", err)
 			error3(c)
@@ -420,13 +420,13 @@ func get(con net.Conn, com []string, c chan string) {
 
 func error3(c chan string) {
 	c <- "error"
-	c <- "0"
-	c <- "0"
+	c <- "error"
+	c <- "error"
 }
 
 func error4(c chan string) {
 	c <- "error"
-	c <- "0"
-	c <- "0"
+	c <- "error"
+	c <- "error"
 	c <- "error"
 }
