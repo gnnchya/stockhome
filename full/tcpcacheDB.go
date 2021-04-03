@@ -302,7 +302,7 @@ func (q *queue) addFrontPage(itemID int, ItemAmount int) *cache {
 	if q.front == nil && q.rear == nil {
 		q.front, q.rear = page, page
 	} else {
-		page.next = q.front.next
+		page.next = q.front
 		q.front.prev = page
 		q.front = page
 	}
