@@ -39,11 +39,11 @@ func main() {
 		}
 		fmt.Println(con.RemoteAddr())
 		if mem1 <= mem2 {
+			// mem1++
 			go rec1(con)
-			mem1++
 			// fmt.Println("server1", mem1, mem2)
 		} else if mem2 < mem1 {
-			mem2++
+			// mem2++
 			go rec2(con)
 			// fmt.Println("server2", mem1, mem2)
 		}
