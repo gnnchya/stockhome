@@ -10,7 +10,7 @@ import (
 )
 
 func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
-	var mem1, mem2, output, state, rdact, fnoutput string
+	var mem1, mem2, output, state, rdact string
 	var ran int
 	var elapsed time.Duration
 	correct := "yes"
@@ -22,23 +22,19 @@ func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 	switch rd {
 	case 0:
 		rdact = "add " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(10-5)+5)
-		fnoutput = "---------------------ADD---------------------\n"
-		// fmt.Println("---------------------ADD---------------------")
+		fmt.Println("---------------------ADD---------------------")
 	case 1:
 		rdact = "wd " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(5-1)+1)
-		fnoutput = "-------------------WITHDRAW------------------\n"
-		// fmt.Println("-------------------WITHDRAW------------------")
+		fmt.Println("-------------------WITHDRAW------------------")
 	case 2:
 		rdact = "get " + rdact
-		fnoutput = "-------------------ACQUIRE-------------------\n"
-		// fmt.Println("-------------------ACQUIRE-------------------")
+		fmt.Println("-------------------ACQUIRE-------------------")
 
 	}
 
 	begin := <-c
 	if begin == "begin" {
-		// fmt.Println(rdact)
-		fnoutput = fnoutput + rdact + "\n"
+		fmt.Println(rdact)
 		start := time.Now()
 
 		c <- rdact
@@ -48,42 +44,35 @@ func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 		mem1 = <-c
 		mem2 = <-c
 		state = <-c
-		done := <-c
 
-		if done == "done" {
-			if output == "error" {
-				output = "None"
-			}
-		} else {
+		if output == "error" {
 			output = "None"
 		}
+
 	}
 
 	if output != "None" {
 		check := show(ran)
-		if output == check || output == "Server: Database: Success" {
-			// fmt.Println("-->Correct output")
-			fnoutput = fnoutput + "-->Correct output\n"
+		if output == check {
+			fmt.Println("-->Correct output")
 		} else {
-			// fmt.Println("-->Incorrect output")
-			fnoutput = fnoutput + "-->Incorrect output\n"
+			fmt.Println("-->Incorrect output")
 			correct = "no"
 		}
 	} else {
-		// fmt.Println("## ERROR ##")
-		fnoutput = fnoutput + "## ERROR ##\n"
-		correct = "no"
+		fmt.Println("## ERROR ##")
+		correct = "nil"
 	}
-	// fmt.Println("Time elapsed: ", elapsed)
-	fnoutput = fnoutput + "Time elapsed: " + elapsed.String() + "\n"
-	ctime <- elapsed
-	cmem <- mem1
-	cmem <- mem2
-	cmem <- correct
-	cmem <- strconv.Itoa(rd)
-	cmem <- state
-	fmt.Println(fnoutput)
-
+	fmt.Println("Time elapsed: ", elapsed)
+	done := <-c
+	if done == "done" {
+		ctime <- elapsed
+		cmem <- mem1
+		cmem <- mem2
+		cmem <- correct
+		cmem <- strconv.Itoa(rd)
+		cmem <- state
+	}
 }
 
 func show(itemID int) string {

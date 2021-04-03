@@ -327,7 +327,7 @@ func pulldb(con net.Conn, date string) {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	cs, err := net.Dial("tcp", ":5003")
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
@@ -345,7 +345,7 @@ func add(userID string, itemID string, itemAmount string) string {
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	cs, err := net.Dial("tcp", ":5003")
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
@@ -363,7 +363,7 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 }
 
 func getItemAmount(itemID string) string {
-	cs, err := net.Dial("tcp", ":5003")
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
