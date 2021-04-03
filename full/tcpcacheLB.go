@@ -70,7 +70,7 @@ func rec1(con net.Conn) {
 	if err != nil {
 		fmt.Println(err)
 		mem1--
-		// con.Close()
+		con.Close()
 		return
 	}
 	for {
@@ -132,7 +132,7 @@ func rec2(con net.Conn) {
 	if err != nil {
 		fmt.Println(err)
 		mem2--
-		// con.Close()
+		con.Close()
 		return
 	}
 	for {
