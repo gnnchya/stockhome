@@ -93,6 +93,7 @@ func rec1(con net.Conn) {
 			send1(con, a, b)
 		} else if msg[0] == "exit" {
 			con.Close()
+			ser1.Write([]byte("exit:\n"))
 			ser1.Close()
 			mem1--
 			return
