@@ -23,7 +23,7 @@ var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
 
 func main() {
-	connect, err := net.Listen("tcp", "128.199.70.176:9999")
+	connect, err := net.Listen("tcp", ":9999")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -50,21 +50,8 @@ func main() {
 	}
 }
 
-// func rec(con net.Conn) {
-// 	if mem1 <= mem2 {
-// 		mem1++
-// 		go rec1(con)
-// 		fmt.Println("server1", mem1, mem2)
-// 	} else if mem2 < mem1 {
-// 		mem2++
-// 		go rec2(con)
-// 		fmt.Println("server2", mem1, mem2)
-// 	}
-
-// }
-
 func rec1(con net.Conn) {
-	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
+	ser1, err := net.Dial("tcp", ":5001")
 	if err != nil {
 		fmt.Println(err)
 		mem1--
@@ -89,13 +76,12 @@ func rec1(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			a, b := Lfu.get(&Cache_queue, date, "128.199.70.252:5001")
+			a, b := Lfu.get(&Cache_queue, date, "5001")
 			send1(con, a, b)
 		} else if msg[0] == "exit" {
-			ser1.Write([]byte("exit:\n"))
+			con.Close()
 			ser1.Close()
 			mem1--
-			fmt.Println("EOF")
 			return
 		} else {
 			ser1.Write([]byte(data))
@@ -120,11 +106,12 @@ func fb1(con net.Conn, ser1 net.Conn) {
 		// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
 		con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
 		con.Write([]byte("`"))
+
 	}
 }
 
 func rec2(con net.Conn) {
-	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
+	ser2, err := net.Dial("tcp", ":5002")
 	if err != nil {
 		fmt.Println(err)
 		mem2--
@@ -149,39 +136,33 @@ func rec2(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			a, b := Lfu.get(&Cache_queue, date, "143.198.219.89:5002")
+			a, b := Lfu.get(&Cache_queue, date, "5002")
 			send1(con, a, b)
-		} else if msg[0] == "exit" {
-			con.Close()
-			ser2.Close()
-			mem2--
-			fmt.Println("EOF")
-			return
 		} else {
 			ser2.Write([]byte(data))
 			go fb2(con, ser2)
 		}
+		// mem1--
 	}
-	// mem1--
 }
 
 func fb2(con net.Conn, ser2 net.Conn) {
-	for {
-		msg, err := bufio.NewReader(ser2).ReadString('.')
-		if err != nil {
-			fmt.Println(err)
-			mem2--
-			con.Close()
-			return
-		}
-		fmt.Println("Forwarding response..")
-		fmt.Println()
-
-		// fmt.Println(msg)
-		// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
-		con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
-		con.Write([]byte("`"))
+	// for {
+	msg, err := bufio.NewReader(ser2).ReadString('.')
+	if err != nil {
+		fmt.Println(err)
+		mem2--
+		con.Close()
+		return
 	}
+	fmt.Println("Forwarding response..")
+	fmt.Println()
+
+	// fmt.Println(msg)
+	// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
+	con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
+	con.Write([]byte("`"))
+	// }
 }
 
 func checkconnect(port string) {
@@ -348,7 +329,7 @@ func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
 var db *sql.DB
 
 func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	con, err := net.Dial("tcp", cn)
+	con, err := net.Dial("tcp", ":"+cn)
 	if err != nil {
 		fmt.Println(err)
 		return

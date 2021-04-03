@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	connect, err := net.Listen("tcp", ":5002")
+	connect, err := net.Listen("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -68,6 +68,10 @@ func rec(con net.Conn) {
 			pulldb(con, msg[1])
 		case "get":
 			send(con, getItemAmount(msg[1]))
+		case "exit":
+			con.Close()
+			fmt.Println("EOF")
+			return
 		default:
 			send(con, "Some How Error!")
 		}
@@ -122,6 +126,7 @@ func MostWithA(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
 	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0")
+	defer row.Close()
 
 	if err != nil {
 		fmt.Print(err)
@@ -150,7 +155,10 @@ func MostWithA(Wg *sync.WaitGroup) string {
 	}
 
 	sort.Slice(withSort, func(i, j int) bool {
-		return withMap[withSort[i]] > withMap[withSort[j]]
+		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
+			return a > b
+		}
+		return withSort[i] < withSort[j]
 	})
 
 	for _, amount := range withSort {
@@ -168,6 +176,7 @@ func MostWithDate(start string, Wg *sync.WaitGroup) string {
 	endDate := end.Format("2006-01-02")
 
 	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
+	defer row.Close()
 
 	if err != nil {
 		fmt.Print(err)
@@ -210,6 +219,7 @@ func WithTime(Wg *sync.WaitGroup) string {
 	var txt strings.Builder
 	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
 
+	defer row.Close()
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -237,7 +247,6 @@ func WithTime(Wg *sync.WaitGroup) string {
 	sort.Strings(withSort)
 
 	for _, time := range withSort {
-		//fmt.Printf("%s - %s | %-4d\n", time+":00", time+":59", withMap[time])
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
 	return txt.String()
@@ -275,16 +284,16 @@ func WithDate(Wg *sync.WaitGroup) string {
 	sort.Strings(withSort)
 
 	for _, date := range withSort {
-		//fmt.Printf("%s | %-4d\n", date, withMap[date])
 		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
 
 	}
+	defer row.Close()
 	return txt.String()
 }
 
 func pulldb(con net.Conn, date string) {
 	var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
