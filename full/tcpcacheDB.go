@@ -102,6 +102,8 @@ func rec(con net.Conn) {
 				return
 			}
 			send(con, getAmountbyItem(iid))
+		case "exit":
+			con.Close()
 		default:
 			send(con, "DB Error!")
 		}
@@ -364,6 +366,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 	_, found := l.PageMap[itemID]
+
 	if found {
 		l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
 		l.pageList.bringToMostUsed(l.PageMap[itemID])
@@ -392,7 +395,6 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		l.size++
 		l.PageMap[itemID] = page
 	}
-	// return l.PageMap[itemID].currentAmount
 	return l.PageMap[itemID].currentAmount, found
 }
 

@@ -68,6 +68,9 @@ func rec(con net.Conn) {
 			pulldb(con, msg[1])
 		case "get":
 			send(con, getItemAmount(msg[1]))
+		case "exit":
+			con.Close()
+			return
 		default:
 			send(con, "Some How Error!")
 		}

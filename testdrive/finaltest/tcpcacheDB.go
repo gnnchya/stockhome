@@ -102,6 +102,8 @@ func rec(con net.Conn) {
 				return
 			}
 			send(con, getAmountbyItem(iid))
+		case "exit":
+			con.Close()
 		default:
 			send(con, "DB Error!")
 		}
