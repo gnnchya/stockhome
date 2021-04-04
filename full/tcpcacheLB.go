@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"net"
@@ -18,14 +17,15 @@ import (
 
 var mem1 int = 0
 var mem2 int = 0
-var Lfu Cache = Cache{20, 0, make(map[int]*Node)}
+var Lfu Cache = Cache{7500000, 0, make(map[int]*Node)}
 var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
+var mu sync.Mutex
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.176:9999")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err1", err)
 		return
 	}
 	defer connect.Close()
@@ -34,7 +34,7 @@ func main() {
 	for {
 		con, err := connect.Accept()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("err2", err)
 			return
 		}
 		fmt.Println(con.RemoteAddr())
@@ -48,6 +48,7 @@ func main() {
 			// fmt.Println("server2", mem1, mem2)
 		}
 	}
+	wg.Wait()
 }
 
 // func rec(con net.Conn) {
@@ -67,7 +68,7 @@ func rec1(con net.Conn) {
 
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err3", err)
 		mem1--
 		con.Close()
 		return
@@ -77,7 +78,7 @@ func rec1(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("err4", err)
 			mem1--
 			return
 		}
@@ -89,7 +90,7 @@ func rec1(con net.Conn) {
 			msg[1] = strings.TrimSpace(msg[1])
 			date, err := strconv.Atoi(msg[1])
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("err5", err)
 				return
 			}
 			a, b := Lfu.get(&Cache_queue, date, "128.199.70.252:5001")
@@ -113,7 +114,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser1).ReadString('.')
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("err6", err)
 			// mem1--
 			con.Close()
 			return
@@ -131,7 +132,7 @@ func rec2(con net.Conn) {
 
 	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err7", err)
 		mem2--
 		con.Close()
 		return
@@ -141,7 +142,7 @@ func rec2(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("err8", err)
 			mem2--
 			return
 		}
@@ -153,7 +154,7 @@ func rec2(con net.Conn) {
 			msg[1] = strings.TrimSpace(msg[1])
 			date, err := strconv.Atoi(msg[1])
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("err9", err)
 				return
 			}
 			a, b := Lfu.get(&Cache_queue, date, "143.198.219.89:5002")
@@ -177,7 +178,7 @@ func fb2(con net.Conn, ser2 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser2).ReadString('.')
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("err10", err)
 			// mem2--
 			con.Close()
 			return
@@ -196,7 +197,7 @@ func checkconnect(port string) {
 	con, err := net.DialTimeout("tcp", ":"+port, t)
 	if err != nil {
 		fmt.Println("Unhealthy: Server is Down")
-		fmt.Println(err)
+		fmt.Println("err11", err)
 		return
 	}
 	fmt.Println("Healthy: Server is Up")
@@ -204,6 +205,7 @@ func checkconnect(port string) {
 }
 
 func hc(port string) {
+	// reference code "https://kasvith.me/posts/lets-create-a-simple-lb-go/"
 	ticker := time.NewTicker(5 * time.Second)
 	done := make(chan bool)
 	for {
@@ -228,12 +230,13 @@ func send1(con net.Conn, msg []byte, state string) {
 }
 
 type Cache struct {
-	capacity int
-	size     int
+	capacity int //bytes unit
+	size     int //bytes unit
 	block    map[int]*Node
 }
 
 type Node struct {
+	key   int
 	value []byte
 	count int
 	next  *Node
@@ -256,7 +259,7 @@ func (q *Queue) isEmpty() bool {
 func (q *Queue) enQ(n *Node) {
 	if q.Head == nil {
 		q.Head = n
-		q.Tail = n
+		q.Tail = q.Head
 	} else {
 		n.next = q.Tail
 		q.Tail.prev = n
@@ -268,15 +271,16 @@ func (q *Queue) deQ() {
 	if q.Head == nil {
 		return
 	} else if q.Head == q.Tail {
+		delete(Lfu.block, q.Tail.key)
+		Lfu.size -= len(q.Tail.value)
 		q.Head = q.Head.next
 		q.Tail = q.Head
 		return
 	} else {
+		delete(Lfu.block, q.Tail.key)
+		Lfu.size -= len(q.Tail.value)
 		q.Tail = q.Tail.next
 		q.Tail.prev = nil
-		if q.Tail == nil {
-			q.Head = q.Tail
-		}
 		return
 	}
 }
@@ -309,7 +313,7 @@ func (q *Queue) printQ() {
 		return
 	}
 	for c != nil {
-		fmt.Print(c.value, c.count, "\n")
+		fmt.Print(c.key, c.count, "\n")
 		c = c.prev
 	}
 	print("\n")
@@ -317,23 +321,31 @@ func (q *Queue) printQ() {
 }
 
 func (c *Cache) set(q *Queue, itemId int, value []byte) {
+	valSize := len(value)
 	if _, ok := c.block[itemId]; ok {
 		c.block[itemId].value = value
 		q.update(c.block[itemId])
-	} else if c.size < c.capacity {
-		c.block[itemId] = &Node{value, 1, nil, nil}
+		return
+	} else if c.size+valSize < c.capacity {
+		c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
 		q.enQ(c.block[itemId])
-		c.size++
-	} else {
-		q.deQ()
-		c.block[itemId] = &Node{value, 1, nil, nil}
-		q.enQ(c.block[itemId])
+		c.size += valSize
+		return
 	}
+	for c.size+valSize > c.capacity {
+		q.deQ()
+	}
+	c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
+	q.enQ(c.block[itemId])
+	c.size += valSize
 	return
 }
 
 func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
+	wg.Add(1)
 	state := "true"
+	mu.Lock()
+	defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
 		q.update(c.block[itemId])
 		fmt.Println("----HIT----")
@@ -349,15 +361,17 @@ func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
 		fmt.Println()
 		state = "false"
 	}
+	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
+	wg.Done()
 	return c.block[itemId].value, state
 }
 
-var db *sql.DB
+// var db *sql.DB
 
 func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	con, err := net.Dial("tcp", cn)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err12", err)
 		return
 	}
 	defer con.Close()
@@ -414,13 +428,20 @@ func get_database(halfmonth int, Date string, buf *bytes.Buffer) {
 	return
 }
 func read(c *Cache, q *Queue, filename string) {
-	file, err := os.Open("c:/Users/fluke/Desktop/" + filename + ".csv")
+	// ref - https://webdamn.com/write-data-to-csv-file-using-golang/
+	// Get current directory
+	dir, err := os.Getwd()
 	if err != nil {
-		Save("20"+filename[0:2]+"-"+filename[2:4]+"-"+filename[4:6], "20"+filename[6:8]+"-"+filename[8:10]+"-"+filename[10:12], filename)
-		file, err = os.Open("c:/Users/fluke/Desktop/" + filename + ".csv")
-		if err != nil {
-			fmt.Println(err)
-		}
+		fmt.Println("err13", err)
+	}
+	// Open file from same directory
+	file, err := os.Open(dir + filename + ".csv")
+	if err != nil {
+		// Save("20"+filename[0:2]+"-"+filename[2:4]+"-"+filename[4:6], "20"+filename[6:8]+"-"+filename[8:10]+"-"+filename[10:12], filename)
+		// file, err = os.Open("c:/Users/fluke/Desktop/" + filename + ".csv")
+		// if err != nil {
+		fmt.Println("err14", err)
+		// }
 	}
 	defer file.Close()
 	size := 512
@@ -444,13 +465,13 @@ func Save(startDate string, endDate string, filename string) {
 
 	// ref - https://webdamn.com/write-data-to-csv-file-using-golang/
 	// Get current directory
-	// dir, err := os.Getwd()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("err15", err)
+	}
 
-	// Create file
-	recordFile, err := os.Create("c:/Users/fluke/Desktop/" + filename + ".csv") // dir
+	// Create file at the same directory
+	recordFile, err := os.Create(dir + filename + ".csv")
 	if err != nil {
 		fmt.Println("An error encountered ::", err)
 	}
@@ -462,7 +483,7 @@ func Save(startDate string, endDate string, filename string) {
 	col := []string{"userID", "itemID", "amount", "date", "time"}
 	err = writer.Write(col)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err16", err)
 	}
 
 	// Get data from startDate to endDate
@@ -483,7 +504,7 @@ func Save(startDate string, endDate string, filename string) {
 		line := []string{strconv.Itoa(userID), strconv.Itoa(itemID), strconv.Itoa(amount), date, time}
 		err = writer.Write(line)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("err17", err)
 		}
 	}
 }
