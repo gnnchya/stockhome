@@ -325,11 +325,11 @@ func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c
 		fmt.Println(err)
 		return
 	}
-	defer con.Close()
 	con.Write([]byte("db :" + Date + "\n"))
 	data, err := bufio.NewReader(con).ReadBytes('.')
 	name, _ := strconv.Atoi(filename)
 	c.set(q, name, data)
+	con.Close()
 }
 
 func retrieve_go(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
