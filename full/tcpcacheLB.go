@@ -2,12 +2,8 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"net"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,7 +14,7 @@ import (
 
 var mem1 int = 0
 var mem2 int = 0
-var Lfu Cache = Cache{20, 0, make(map[int]*Node)}
+var Lfu Cache = Cache{4000000, 0, make(map[int]*Node)}
 var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
 
@@ -57,6 +53,7 @@ func main() {
 		}
 
 	}
+	wg.Wait()
 }
 
 // func rec(con net.Conn) {
@@ -240,12 +237,13 @@ func send1(con net.Conn, msg []byte, state string) {
 }
 
 type Cache struct {
-	capacity int
-	size     int
+	capacity int //bytes unit
+	size     int //bytes unit
 	block    map[int]*Node
 }
 
 type Node struct {
+	key   int
 	value []byte
 	count int
 	next  *Node
@@ -268,7 +266,7 @@ func (q *Queue) isEmpty() bool {
 func (q *Queue) enQ(n *Node) {
 	if q.Head == nil {
 		q.Head = n
-		q.Tail = n
+		q.Tail = q.Head
 	} else {
 		n.next = q.Tail
 		q.Tail.prev = n
@@ -280,15 +278,16 @@ func (q *Queue) deQ() {
 	if q.Head == nil {
 		return
 	} else if q.Head == q.Tail {
+		delete(Lfu.block, q.Tail.key)
+		Lfu.size -= len(q.Tail.value)
 		q.Head = q.Head.next
 		q.Tail = q.Head
 		return
 	} else {
+		delete(Lfu.block, q.Tail.key)
+		Lfu.size -= len(q.Tail.value)
 		q.Tail = q.Tail.next
 		q.Tail.prev = nil
-		if q.Tail == nil {
-			q.Head = q.Tail
-		}
 		return
 	}
 }
@@ -321,7 +320,7 @@ func (q *Queue) printQ() {
 		return
 	}
 	for c != nil {
-		fmt.Print(c.value, c.count, "\n")
+		fmt.Print(c.key, c.count, "\n")
 		c = c.prev
 	}
 	print("\n")
@@ -329,23 +328,31 @@ func (q *Queue) printQ() {
 }
 
 func (c *Cache) set(q *Queue, itemId int, value []byte) {
+	valSize := len(value)
 	if _, ok := c.block[itemId]; ok {
 		c.block[itemId].value = value
 		q.update(c.block[itemId])
-	} else if c.size < c.capacity {
-		c.block[itemId] = &Node{value, 1, nil, nil}
+		return
+	} else if c.size+valSize < c.capacity {
+		c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
 		q.enQ(c.block[itemId])
-		c.size++
-	} else {
-		q.deQ()
-		c.block[itemId] = &Node{value, 1, nil, nil}
-		q.enQ(c.block[itemId])
+		c.size += valSize
+		return
 	}
+	for c.size+valSize > c.capacity {
+		q.deQ()
+	}
+	c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
+	q.enQ(c.block[itemId])
+	c.size += valSize
 	return
 }
 
 func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
+	wg.Add(1)
 	state := "true"
+	mu.Lock()
+	defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
 		q.update(c.block[itemId])
 		fmt.Println("----HIT----")
@@ -361,15 +368,17 @@ func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
 		fmt.Println()
 		state = "false"
 	}
+	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
+	wg.Done()
 	return c.block[itemId].value, state
 }
 
-var db *sql.DB
+// var db *sql.DB
 
 func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	con, err := net.Dial("tcp", cn)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err12", err)
 		return
 	}
 	defer con.Close()
@@ -377,125 +386,4 @@ func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c
 	data, err := bufio.NewReader(con).ReadBytes('.')
 	name, _ := strconv.Atoi(filename)
 	c.set(q, name, data)
-}
-
-func retrieve_go(c *Cache, q *Queue, Date string, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	buf1 := bytes.NewBuffer(make([]byte, 0))
-	buf2 := bytes.NewBuffer(make([]byte, 0))
-	col := []byte("userID,itemID,amount,date,time")
-	buf1.Write(col)
-	wg.Add(2)
-	go get_database(0, Date, buf1)
-	go get_database(1, Date, buf2)
-	wg.Wait()
-	buf1.Write(buf2.Bytes())
-	// fmt.Println(buf1)
-	name, _ := strconv.Atoi(filename)
-	c.set(q, name, buf1.Bytes())
-}
-
-func get_database(halfmonth int, Date string, buf *bytes.Buffer) {
-	// Get data from startDate to endDate
-	var startDate, endDate string
-	if halfmonth == 0 {
-		startDate = Date + "-01" //2021-02-01
-		endDate = Date + "-15"   //2021-02-15
-	} else {
-		startDate = Date + "-16" //2021-02-16
-		endDate = Date + "-31"   //2021-02-31
-	}
-	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	// Slice each row
-	for row.Next() {
-		var userID, itemID, amount int
-		var date, time string
-		err = row.Scan(&userID, &itemID, &amount, &date, &time)
-		if err != nil {
-			fmt.Print(err)
-		}
-		// Write each line
-		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-		// str += ("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-		buf.Write(line)
-	}
-	wg.Done()
-	return
-}
-func read(c *Cache, q *Queue, filename string) {
-	file, err := os.Open("c:/Users/fluke/Desktop/" + filename + ".csv")
-	if err != nil {
-		Save("20"+filename[0:2]+"-"+filename[2:4]+"-"+filename[4:6], "20"+filename[6:8]+"-"+filename[8:10]+"-"+filename[10:12], filename)
-		file, err = os.Open("c:/Users/fluke/Desktop/" + filename + ".csv")
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-	defer file.Close()
-	size := 512
-	reader := bufio.NewReader(file)
-	chunk := make([]byte, size)
-	buf := bytes.NewBuffer(make([]byte, 0))
-	for {
-		n, err := reader.Read(chunk)
-		if err != nil {
-			break
-		}
-		buf.Write(chunk[:n])
-	}
-	// fmt.Println(buf)
-	name, _ := strconv.Atoi(filename)
-	c.set(q, name, buf.Bytes())
-}
-
-// "year-month-date"
-func Save(startDate string, endDate string, filename string) {
-
-	// ref - https://webdamn.com/write-data-to-csv-file-using-golang/
-	// Get current directory
-	// dir, err := os.Getwd()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// Create file
-	recordFile, err := os.Create("c:/Users/fluke/Desktop/" + filename + ".csv") // dir
-	if err != nil {
-		fmt.Println("An error encountered ::", err)
-	}
-	defer recordFile.Close()
-
-	// Create writer
-	writer := csv.NewWriter(recordFile)
-	defer writer.Flush()
-	col := []string{"userID", "itemID", "amount", "date", "time"}
-	err = writer.Write(col)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Get data from startDate to endDate
-	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?)", startDate, endDate)
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	// Slice each row
-	for row.Next() {
-		var userID, itemID, amount int
-		var date, time string
-		err = row.Scan(&userID, &itemID, &amount, &date, &time)
-		if err != nil {
-			fmt.Print(err)
-		}
-		// Write each line
-		line := []string{strconv.Itoa(userID), strconv.Itoa(itemID), strconv.Itoa(amount), date, time}
-		err = writer.Write(line)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
 }
