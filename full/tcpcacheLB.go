@@ -208,7 +208,7 @@ func checkconnect(port string) bool {
 		fmt.Println(err)
 		return false
 	}
-	fmt.Println("Healthy: Server " + poort + "is Up")
+	fmt.Println("Healthy: Server " + port + "is Up")
 	con.Close()
 	return true
 }
