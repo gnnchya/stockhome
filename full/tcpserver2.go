@@ -32,6 +32,7 @@ func main() {
 		fmt.Println(con.RemoteAddr())
 		// go send(con, rec(con))
 	}
+	defer db.Close()
 }
 func rec(con net.Conn) {
 	for {
@@ -91,7 +92,7 @@ func analysis(year string, month string, day string) string {
 		fmt.Println("Error: Cannot open database")
 	}
 
-	defer db.Close()
+	// defer db.Close()
 
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
@@ -312,7 +313,7 @@ func pulldb(con net.Conn, date string) {
 	// if err != nil {
 	// 	fmt.Println("Error: Cannot open database")
 	// }
-
+	// defer db.Close()
 	// buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	// buf.Write(col)

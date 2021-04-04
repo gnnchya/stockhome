@@ -307,12 +307,12 @@ func WithDate(Wg *sync.WaitGroup) string {
 }
 
 func pulldb(con net.Conn, date string) {
-	// var err error
-	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-
+	var err error
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer db.Close()
 	// buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	// buf.Write(col)
