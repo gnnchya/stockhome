@@ -126,13 +126,11 @@ func MostWithA(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
 	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0")
-	// defer row.Close()
 
 	if err != nil {
 		fmt.Print(err)
 	}
 
-	// Make map for keeping
 	withMap := make(map[int]int)
 
 	for row.Next() {
@@ -161,9 +159,13 @@ func MostWithA(Wg *sync.WaitGroup) string {
 		return withSort[i] < withSort[j]
 	})
 
+	var i int = 0
 	for _, amount := range withSort {
-		//fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
 		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
+		i++
+		if i >= 100 {
+			break
+		}
 	}
 	return txt.String()
 }
@@ -176,13 +178,13 @@ func MostWithDate(start string, Wg *sync.WaitGroup) string {
 	endDate := end.Format("2006-01-02")
 
 	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
-	// defer row.Close()
+
 	if err != nil {
 		fmt.Print(err)
 	}
 
-	// Make map for keeping
 	withMap := make(map[int]int)
+
 	for row.Next() {
 		var itemID, amount int
 		err = row.Scan(&itemID, &amount)
@@ -208,11 +210,16 @@ func MostWithDate(start string, Wg *sync.WaitGroup) string {
 		return withSort[i] < withSort[j]
 	})
 
+	var i int = 0
 	for _, amount := range withSort {
-		//fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
 		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
+		i++
+		if i >= 100 {
+			break
+		}
 	}
 
+	defer row.Close()
 	return txt.String()
 }
 
@@ -220,13 +227,14 @@ func WithTime(Wg *sync.WaitGroup) string {
 	defer Wg.Done()
 	var txt strings.Builder
 	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
-	// defer row.Close()
+
 	if err != nil {
 		fmt.Print(err)
 	}
 
 	// Make map for keeping
 	withMap := make(map[string]int)
+
 	for row.Next() {
 		var amount int
 		var time string
@@ -248,9 +256,9 @@ func WithTime(Wg *sync.WaitGroup) string {
 	sort.Strings(withSort)
 
 	for _, time := range withSort {
-		//fmt.Printf("%s - %s | %-4d\n", time+":00", time+":59", withMap[time])
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
+	defer row.Close()
 	return txt.String()
 }
 
@@ -265,6 +273,7 @@ func WithDate(Wg *sync.WaitGroup) string {
 
 	// Make map for keeping
 	withMap := make(map[string]int)
+
 	for row.Next() {
 		var amount int
 		var date string
@@ -285,12 +294,15 @@ func WithDate(Wg *sync.WaitGroup) string {
 	}
 	sort.Strings(withSort)
 
+	var i int = 0
 	for _, date := range withSort {
-		//fmt.Printf("%s | %-4d\n", date, withMap[date])
 		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
-
+		i++
+		if i >= 100 {
+			break
+		}
 	}
-	// defer row.Close()
+	defer row.Close()
 	return txt.String()
 }
 
