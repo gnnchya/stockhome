@@ -125,8 +125,9 @@ func init() {
 var Wg sync.WaitGroup
 
 func Main(itemID int, amount int, userID int) string {
-
+	// defer Db.Close()
 	var statement string
+	// Wg := sync.WaitGroup{}
 
 	Wg.Add(1)
 	go func() {
@@ -137,8 +138,9 @@ func Main(itemID int, amount int, userID int) string {
 }
 
 func Main2(itemID int, amount int, userID int) string {
-
+	// defer Db.Close()
 	var statement string
+	// Wg := sync.WaitGroup{}
 
 	Wg.Add(1)
 	go func() {
@@ -154,7 +156,6 @@ func GetAmount(itemID int) int {
 	if err != nil {
 		fmt.Print(err)
 	}
-	
 
 	var amount int
 	for row.Next() {
@@ -173,13 +174,14 @@ func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 	check := Db.QueryRow("SELECT itemID FROM stock WHERE itemID = (?)", itemID).Scan(&checkID)
 
 	if check != nil {
-		_, err := Db.Exec("INSERT INTO stock VALUES (?, ?)", itemID, amount)
+		insert, err := Db.Query("INSERT INTO stock VALUES (?, ?)", itemID, amount)
 
 		if err != nil {
 			fmt.Println(err)
 		}
 		statement = fmt.Sprint("Added %d to database (%d units) | Item in Stock: %d\n", itemID, amount, amount)
 		addHis(itemID, true, amount, userID)
+		insert.Close()
 
 	} else {
 		Wg.Add(1)
@@ -202,7 +204,7 @@ func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 	if check != nil {
 		fmt.Println("Error: Item does not exist in database")
 	} else {
-		_, err := Db.Exec("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock+amount, itemID)
+		add, err := Db.Query("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock+amount, itemID)
 
 		if err != nil {
 			fmt.Println(err)
@@ -210,6 +212,7 @@ func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 		}
 		statement = fmt.Sprintf("Added %d to database (%d units) | Item in Stock: %d\n", itemID, amount, stock+amount)
 		addHis(itemID, true, amount, userID)
+		add.Close()
 
 	}
 	return statement
@@ -229,13 +232,14 @@ func withdraw(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 		fmt.Println("Error: Amount exceeds stock")
 
 	} else {
-		_, err := Db.Exec("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock-amount, itemID)
+		with, err := Db.Query("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock-amount, itemID)
 
 		if err != nil {
 			fmt.Printf("\n")
 		}
 		statement = fmt.Sprintf("Withdrawn %d from database (%d units) | Item in Stock: %d\n", itemID, amount, stock-amount)
 		addHis(itemID, false, amount, userID)
+		with.Close()
 	}
 	return statement
 }
@@ -245,11 +249,13 @@ func addHis(itemID int, action bool, amount int, userID int) {
 	var datetime = time.Now()
 	date := datetime.Format("2006-01-02")
 	time := datetime.Format("15:04:05")
-	_, err := Db.Exec("INSERT INTO history (action, userID, itemID, amount, date, time) VALUES(?, ?, ?, ?, ?, ?)", action, userID, itemID, amount, date, time)
+	// fmt.Println("hi", action, userID, itemID, amount, date, time)
+	add, err := Db.Query("INSERT INTO history (action, userID, itemID, amount, date, time) VALUES(?, ?, ?, ?, ?, ?)", action, userID, itemID, amount, date, time)
 	if err != nil {
 		fmt.Println("Error: Cannot be added to history")
 	}
 
+	add.Close()
 }
 
 //จบ DB
@@ -260,6 +266,7 @@ var i int
 var dateAndTime time.Time = time.Now()
 
 type cache struct {
+	//4
 	itemID        int
 	currentAmount int
 	Date          string
@@ -267,6 +274,7 @@ type cache struct {
 	prev, next    *cache
 }
 
+//มาแก้
 func addcache(itemID int, ItemAmount int) *cache {
 	return &cache{
 		itemID:        itemID,
@@ -292,7 +300,7 @@ func (q *queue) addFrontPage(itemID int, ItemAmount int) *cache {
 	if q.front == nil && q.rear == nil {
 		q.front, q.rear = page, page
 	} else {
-		page.next = q.front
+		page.next = q.front.next
 		q.front.prev = page
 		q.front = page
 	}
@@ -359,7 +367,6 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 	_, found := l.PageMap[itemID]
 
 	if found {
-	
 		l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
 		l.pageList.bringToMostUsed(l.PageMap[itemID])
 		return l.PageMap[itemID].currentAmount, found
@@ -390,6 +397,12 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 	return l.PageMap[itemID].currentAmount, found
 }
 
+// func main() {
+// 	var cache LRU
+// 	cache.InitLRU(10)
+
+// }
+
 //getItemAmount จาก TCP request
 func getAmountbyItem(itemID int) string {
 	amount, state := myCache.Read(itemID)
@@ -403,8 +416,10 @@ func getAmountbyItem(itemID int) string {
 func addToDB(itemID int, amount int, userID int) string {
 	defer mutex.Unlock()
 	mutex.Lock()
-	
 	val, state := myCache.Input(itemID, amount)
+	statement := Main(itemID, amount, userID)
+	// itemid := strconv.Itoa(itemID)
+	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
 }
@@ -420,6 +435,8 @@ func withDrawToDB(itemID int, amount int, userID int) string {
 		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
 	statement := Main2(itemID, amount, userID)
+	// itemid := strconv.Itoa(itemID)
+	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
 }
