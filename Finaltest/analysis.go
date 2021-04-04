@@ -13,20 +13,18 @@ import (
 )
 
 func Analysis(c chan string) (time.Duration, string, string, string) {
-	// defer db.Close()
-	cana := make(chan string)
 	var mem1, mem2, output string
 	var elapsed time.Duration
+	cana := make(chan string)
 	correct := "yes"
-
-	randate := "ana " + randomTimestamp()
+	rd := randomTimestamp()
+	randate := "ana " + rd
+	go analysis1(rd, cana)
 
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------ANALYSIS-------------------")
 		fmt.Println(randate)
-		com := strings.Split(randate, "-")
-		go analysis1(com[0], com[1], com[2], cana)
 		start := time.Now()
 		c <- randate
 
@@ -36,18 +34,21 @@ func Analysis(c chan string) (time.Duration, string, string, string) {
 		mem2 = <-c
 		done := <-c
 
-		if done == "done" {
+		switch done {
+		case "done":
 			if output == "error" {
 				output = "None"
 			}
-		} else {
+		default:
 			output = "None"
 		}
 	}
 
 	if output != "None" {
-
 		check := "Server: " + <-cana
+		// fmt.Println(check)
+		// fmt.Println(output)
+
 		if output == check {
 			fmt.Println("-->Correct output")
 		} else {
@@ -56,26 +57,28 @@ func Analysis(c chan string) (time.Duration, string, string, string) {
 		}
 	} else {
 		fmt.Println("## ERROR ##")
-		correct = "no"
+		correct = "nil"
 	}
 
 	fmt.Println("Analysis time elapsed: ", elapsed)
 	return elapsed, mem1, mem2, correct
 }
 
-// ref: https://stackoverflow.com/questions/40944233/generating-random-timestamps-in-go
+//ref :https://stackoverflow.com/questions/43495745/how-to-generate-random-date-in-go-lang/43497333
 func randomTimestamp() string {
-	randomTime := rand.Int63n(time.Now().Unix()-94608000) + 94608000
+	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
+	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	delta := max - min
 
-	randomNow := time.Unix(randomTime, 0).Format("2006-01-02")
-	return randomNow
+	rand.Seed(time.Now().UTC().UnixNano())
+	sec := rand.Int63n(delta) + min
+	date := time.Unix(sec, 0)
+	str := date.Format("2006-01-02")
+	return str
 }
 
 // analysis code ****************************************************
-func analysis1(year string, month string, day string, cana chan string) {
-	// defer db.Close()
-
-	var start string = year + "-" + month + "-" + day
+func analysis1(start string, cana chan string) {
 	var aWith, bWith, cWith, dWith string
 
 	Wg := sync.WaitGroup{}
@@ -141,12 +144,14 @@ func MostWithA(Wg *sync.WaitGroup) string {
 		return withSort[i] < withSort[j]
 	})
 
+	var i int = 0
 	for _, amount := range withSort {
-		//fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
 		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
+		i++
+		if i >= 100 {
+			break
+		}
 	}
-
-	// defer row.Close()
 	return txt.String()
 }
 
@@ -190,9 +195,13 @@ func MostWithDate(start string, Wg *sync.WaitGroup) string {
 		return withSort[i] < withSort[j]
 	})
 
+	var i int = 0
 	for _, amount := range withSort {
-		//fmt.Printf("%-6d | %-4d\n", amount, withMap[amount])
 		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
+		i++
+		if i >= 100 {
+			break
+		}
 	}
 
 	defer row.Close()
@@ -232,7 +241,6 @@ func WithTime(Wg *sync.WaitGroup) string {
 	sort.Strings(withSort)
 
 	for _, time := range withSort {
-		//fmt.Printf("%s - %s | %-4d\n", time+":00", time+":59", withMap[time])
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
 	defer row.Close()
@@ -271,10 +279,13 @@ func WithDate(Wg *sync.WaitGroup) string {
 	}
 	sort.Strings(withSort)
 
+	var i int = 0
 	for _, date := range withSort {
-		//fmt.Printf("%s | %-4d\n", date, withMap[date])
 		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
-
+		i++
+		if i >= 100 {
+			break
+		}
 	}
 	defer row.Close()
 	return txt.String()

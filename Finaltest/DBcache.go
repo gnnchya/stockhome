@@ -13,6 +13,7 @@ func DBcache(c chan string) (time.Duration, string, string, string, string, stri
 	var mem1, mem2, output, state, rdact string
 	var ran int
 	var elapsed time.Duration
+	cdb := make(chan string)
 	correct := "yes"
 
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -41,6 +42,7 @@ func DBcache(c chan string) (time.Duration, string, string, string, string, stri
 
 		output = <-c
 		elapsed = time.Since(start)
+		go show(ran, cdb)
 		mem1 = <-c
 		mem2 = <-c
 		state = <-c
@@ -52,8 +54,7 @@ func DBcache(c chan string) (time.Duration, string, string, string, string, stri
 	}
 
 	if output != "None" {
-		check := show(ran)
-		if output == check {
+		if output == <-cdb {
 			fmt.Println("-->Correct output")
 		} else {
 			fmt.Println("-->Incorrect output")
@@ -72,12 +73,12 @@ func DBcache(c chan string) (time.Duration, string, string, string, string, stri
 	return elapsed, mem1, mem2, "no", strconv.Itoa(rd), state
 }
 
-func show(itemID int) string {
+func show(itemID int, cdb chan string) {
 	var amount int
 	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
 	if check != nil {
-		return "Not in DB"
+		cdb <- "Not in DB"
 	}
-	return "Server: Database: " + strconv.Itoa(itemID) + "-" + strconv.Itoa(amount) // + "\n."
+	cdb <- "Server: Database: " + strconv.Itoa(itemID) + "-" + strconv.Itoa(amount) // + "\n."
 }

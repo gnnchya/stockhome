@@ -80,19 +80,21 @@ func main() {
 			fmt.Println("-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
 			fmt.Println("Expected number of client(s) :", *cli)
-			fmt.Println("Total number of spawned client(s) :", (cliCnt - 1))
+			fmt.Println("Total number of spawned client(s) :", (cliCnt))
+
 			fmt.Println("Server 1 :", mem1, "user(s) / Server 2 : ", mem2[:len(mem2)-1], "user(s)") //[:len(mem2)-1])
 			no, _ := strconv.Atoi(mem2[:len(mem2)-1])
 			// no, _ := strconv.Atoi(mem2)
-			fmt.Println("Client distribution correct: ", (cliCnt-1)/2 == no)
+			fmt.Println("Client distribution correct: ", (cliCnt)/2 == no)
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
 			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(cliCnt), "ms")
-			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
+			// fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
 			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
 			fmt.Println("Hit count:", counthit, ">>Average hit time : ", (float64(hitavg)/float64(time.Millisecond))/float64(counthit), "ms")
+			fmt.Println(">>HIT RATE: ", (float64(counthit)/float64(countmiss+counthit))*100, "%")
 			fmt.Println("++History Data correctness: ", (float64(counthit+countmiss)/float64(count2))*100, "%")
 			fmt.Println()
 			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
@@ -118,8 +120,11 @@ func main() {
 
 				anaavg = anaavg + elapsed
 				countall++
-				if correct == "yes" {
+				switch correct {
+				case "yes":
 					count++
+				case "nil":
+					countall--
 				}
 
 				//history test
@@ -129,7 +134,8 @@ func main() {
 				}
 
 				count2++
-				if correct == "yes" {
+				switch correct {
+				case "yes":
 					switch state {
 					case "true":
 						hitavg = hitavg + elapsed
@@ -138,6 +144,8 @@ func main() {
 						missavg = missavg + elapsed
 						countmiss++
 					}
+				case "nil":
+					count2--
 				}
 
 				//Add,WD,get test
@@ -147,7 +155,8 @@ func main() {
 				}
 
 				count3++
-				if correct == "yes" {
+				switch correct {
+				case "yes":
 					switch rd {
 					case "0":
 						countadd++
@@ -167,10 +176,10 @@ func main() {
 					default:
 						count3--
 					}
-
-				} else if correct == "nil" {
+				case "nil":
 					count3--
 				}
+
 				wg.Done()
 			}(ts)
 		}

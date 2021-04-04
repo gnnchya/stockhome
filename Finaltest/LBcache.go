@@ -13,6 +13,7 @@ import (
 func LBcache(c chan string) (time.Duration, string, string, string, string) {
 	var mem1, mem2, output, state string
 	var elapsed time.Duration
+	clb := make(chan string)
 	correct := "yes"
 	rd := randate()
 	randate1 := "his " + rd
@@ -21,6 +22,7 @@ func LBcache(c chan string) (time.Duration, string, string, string, string) {
 	if begin == "begin" {
 		fmt.Println("-------------------HISTORY-------------------")
 		fmt.Println(randate1)
+		go retrieve(rd, clb)
 		start := time.Now()
 
 		c <- randate1
@@ -42,7 +44,7 @@ func LBcache(c chan string) (time.Duration, string, string, string, string) {
 	}
 
 	if output != "None" {
-		check := retrieve(rd) + "."
+		check := <-clb + "."
 
 		if output == check {
 			fmt.Println("-->Correct output")
@@ -52,13 +54,13 @@ func LBcache(c chan string) (time.Duration, string, string, string, string) {
 		}
 	} else {
 		fmt.Println("## ERROR ##")
-		correct = "no"
+		correct = "nil"
 	}
 	fmt.Println("History time elapsed: ", elapsed)
 	return elapsed, mem1, mem2, correct, state
 }
 
-func retrieve(Date string) string {
+func retrieve(Date string, clb chan string) {
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	buf.Write(col)
@@ -83,11 +85,11 @@ func retrieve(Date string) string {
 		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
 		buf.Write(line)
 	}
-	return buf.String() + ""
+	clb <- buf.String() + ""
 }
 
 func randate() string {
-	min := time.Date(2017, 01, 01, 0, 0, 0, 0, time.UTC).Unix()
+	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
 	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
 	delta := max - min
 
