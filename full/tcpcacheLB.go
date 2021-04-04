@@ -35,15 +35,24 @@ func main() {
 			return
 		}
 		fmt.Println(con.RemoteAddr())
-		if mem1 <= mem2 {
-			// mem1++
-			go rec1(con)
-			// fmt.Println("server1", mem1, mem2)
-		} else if mem2 < mem1 {
-			// mem2++
-			go rec2(con)
-			// fmt.Println("server2", mem1, mem2)
+		if checkconnect("128.199.70.252:5001") == false || checkconnect("143.198.219.89:5002") == false {
+			if checkconnect("128.199.70.252:5001") == false {
+				go rec2(con)
+			} else if checkconnect("143.198.219.89:5002") == false {
+				go rec1(con)
+			}
+		} else if checkconnect("128.199.70.252:5001") == true && checkconnect("143.198.219.89:5002") == true {
+			if mem1 <= mem2 {
+				// mem1++
+				go rec1(con)
+				// fmt.Println("server1", mem1, mem2)
+			} else if mem2 < mem1 {
+				// mem2++
+				go rec2(con)
+				// fmt.Println("server2", mem1, mem2)
+			}
 		}
+
 	}
 	wg.Wait()
 }
@@ -189,16 +198,17 @@ func fb2(con net.Conn, ser2 net.Conn) {
 	}
 }
 
-func checkconnect(port string) {
+func checkconnect(port string) bool {
 	t := 600 * time.Second
-	con, err := net.DialTimeout("tcp", ":"+port, t)
+	con, err := net.DialTimeout("tcp", port, t)
 	if err != nil {
 		fmt.Println("Unhealthy: Server is Down")
-		fmt.Println("err11", err)
-		return
+		fmt.Println(err)
+		return false
 	}
 	fmt.Println("Healthy: Server is Up")
 	con.Close()
+	return true
 }
 
 func hc(port string) {
