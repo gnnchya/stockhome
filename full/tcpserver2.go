@@ -21,6 +21,7 @@ func main() {
 		return
 	}
 	defer connect.Close()
+	defer db.Close()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -32,7 +33,7 @@ func main() {
 		fmt.Println(con.RemoteAddr())
 		// go send(con, rec(con))
 	}
-	defer db.Close()
+
 }
 func rec(con net.Conn) {
 	for {
