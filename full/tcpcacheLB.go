@@ -14,7 +14,7 @@ import (
 
 var mem1 int = 0
 var mem2 int = 0
-var Lfu Cache = Cache{8000000, 0, make(map[int]*Node)}
+var Lfu Cache = Cache{5000000, 0, make(map[int]*Node)}
 var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
 var mu sync.Mutex
