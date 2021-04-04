@@ -404,7 +404,7 @@ func addToDB(itemID int, amount int, userID int) string {
 	mutex.Lock()
 
 	val, state := myCache.Input(itemID, amount)
-	fmt.Println(state + "\n")
+	fmt.Println(strconv.FormatBool(state) + "\n")
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
 }
 
