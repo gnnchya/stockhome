@@ -36,9 +36,20 @@ func main() {
 		}
 		fmt.Println(con.RemoteAddr())
 		if checkconnect("128.199.70.252:5001") == false {
-			go rec2(con)
+			if checkconnect("143.198.219.89:5002") == false {
+				fmt.Println("All server is down")
+				return
+			} else {
+				go rec2(con)
+			}
 		} else if checkconnect("143.198.219.89:5002") == false {
-			go rec1(con)
+			if checkconnect("128.199.70.252:5001") == false {
+				fmt.Println("All server is down")
+				return
+			} else {
+				go rec1(con)
+			}
+
 		} else {
 			if mem1 <= mem2 {
 				// mem1++
@@ -208,8 +219,8 @@ func checkconnect(port string) bool {
 	t := 600 * time.Second
 	con, err := net.DialTimeout("tcp", port, t)
 	if err != nil {
-		fmt.Println("Unhealthy: Server " + port + "is Down")
-		fmt.Println(err)
+		fmt.Println("Unhealthy: Server " + port + " is Down")
+		// fmt.Println(err)
 		return false
 	}
 	fmt.Println("Healthy: Server " + port + "is Up")
