@@ -12,9 +12,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
+func Analysis(c chan string) (time.Duration, string, string, string) {
 	// defer db.Close()
-
+	cana := make(chan string)
 	var mem1, mem2, output string
 	var elapsed time.Duration
 	correct := "yes"
@@ -25,6 +25,8 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 	if begin == "begin" {
 		fmt.Println("-------------------ANALYSIS-------------------")
 		fmt.Println(randate)
+		com := strings.Split(randate, "-")
+		go analysis1(com[0], com[1], com[2], cana)
 		start := time.Now()
 		c <- randate
 
@@ -44,8 +46,8 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 	}
 
 	if output != "None" {
-		com := strings.Split(randate, "-")
-		check := "Server: " + analysis1(com[0], com[1], com[2])
+
+		check := "Server: " + <-cana
 		if output == check {
 			fmt.Println("-->Correct output")
 		} else {
@@ -58,10 +60,7 @@ func Analysis(c chan string, cmem chan string, ctime chan time.Duration) {
 	}
 
 	fmt.Println("Analysis time elapsed: ", elapsed)
-	ctime <- elapsed
-	cmem <- mem1
-	cmem <- mem2
-	cmem <- correct
+	return elapsed, mem1, mem2, correct
 }
 
 // ref: https://stackoverflow.com/questions/40944233/generating-random-timestamps-in-go
@@ -73,7 +72,7 @@ func randomTimestamp() string {
 }
 
 // analysis code ****************************************************
-func analysis1(year string, month string, day string) string {
+func analysis1(year string, month string, day string, cana chan string) {
 	// defer db.Close()
 
 	var start string = year + "-" + month + "-" + day
@@ -102,7 +101,7 @@ func analysis1(year string, month string, day string) string {
 	}()
 
 	Wg.Wait()
-	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
+	cana <- (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
 func MostWithA(Wg *sync.WaitGroup) string {

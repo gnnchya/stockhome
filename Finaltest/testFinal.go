@@ -69,7 +69,7 @@ func main() {
 	timeout := time.After(time.Duration(*allt*60) * time.Second)
 
 	var anaavg, missavg, hitavg, missavg2, hitavg2, countall time.Duration = 0, 0, 0, 0, 0, 0
-	var mem1, mem2, correct, temp1, temp2 string
+	var mem1, mem2 string
 	var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 	for {
@@ -110,42 +110,27 @@ func main() {
 				wg.Add(1)
 				log.Printf("Client No %d started", ts)
 
-				ctime := make(chan time.Duration)
-				cmem := make(chan string)
-				wg2 := sync.WaitGroup{}
 				//Analysis test
-
-				wg2.Add(3)
-				go Analysis(c1, cmem, ctime)
-				elapsed := <-ctime
-				temp1 = <-cmem
-				temp2 = <-cmem
+				elapsed, temp1, temp2, correct := Analysis(c1)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
-				correct = <-cmem
 
 				anaavg = anaavg + elapsed
 				countall++
 				if correct == "yes" {
 					count++
 				}
-				wg2.Done()
 
 				//history test
-				// wg2.Add(1)
-				go LBcache(c1, cmem, ctime)
-				elapsed = <-ctime
-				temp1 = <-cmem
-				temp2 = <-cmem
+				elapsed, temp1, temp2, correct, state := LBcache(c1)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
-				correct = <-cmem
 
 				count2++
 				if correct == "yes" {
-					switch state := <-cmem; state {
+					switch state {
 					case "true":
 						hitavg = hitavg + elapsed
 						counthit++
@@ -154,22 +139,16 @@ func main() {
 						countmiss++
 					}
 				}
-				wg2.Done()
 
 				//Add,WD,get test
-				// wg2.Add(1)
-				go DBcache(c1, cmem, ctime)
-				elapsed = <-ctime
-				temp1 = <-cmem
-				temp2 = <-cmem
+				elapsed, temp1, temp2, correct, rd, state := DBcache(c1)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
-				correct = <-cmem
 
 				count3++
 				if correct == "yes" {
-					switch rd := <-cmem; rd {
+					switch rd {
 					case "0":
 						countadd++
 					case "1":
@@ -178,7 +157,7 @@ func main() {
 						countget++
 					}
 
-					switch state := <-cmem; state {
+					switch state {
 					case "true\n.":
 						hitavg2 = hitavg2 + elapsed
 						counthit2++
@@ -192,11 +171,7 @@ func main() {
 				} else if correct == "nil" {
 					count3--
 				}
-				wg2.Done()
-
 				wg.Done()
-				wg2.Wait()
-
 			}(ts)
 		}
 	}

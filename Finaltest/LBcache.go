@@ -10,7 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
+func LBcache(c chan string) (time.Duration, string, string, string, string) {
 	var mem1, mem2, output, state string
 	var elapsed time.Duration
 	correct := "yes"
@@ -55,12 +55,7 @@ func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 		correct = "no"
 	}
 	fmt.Println("History time elapsed: ", elapsed)
-	ctime <- elapsed
-	cmem <- mem1
-	cmem <- mem2
-	cmem <- correct
-	cmem <- state
-
+	return elapsed, mem1, mem2, correct, state
 }
 
 func retrieve(Date string) string {
