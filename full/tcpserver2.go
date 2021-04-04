@@ -21,7 +21,7 @@ func main() {
 		return
 	}
 	defer connect.Close()
-	defer db.Close()
+	// defer db.Close()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -93,7 +93,7 @@ func analysis(year string, month string, day string) string {
 		fmt.Println("Error: Cannot open database")
 	}
 
-	// defer db.Close()
+	defer db.Close()
 
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
@@ -309,12 +309,12 @@ func WithDate(Wg *sync.WaitGroup) string {
 }
 
 func pulldb(con net.Conn, date string) {
-	// var err error
-	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-	// defer db.Close()
+	var err error
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer db.Close()
 	// buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	// buf.Write(col)
