@@ -79,6 +79,7 @@ func rec1(con net.Conn) {
 		fmt.Println("err3", err)
 		mem1--
 		con.Close()
+		ser1.Close()
 		return
 	}
 	mem1++
@@ -87,6 +88,8 @@ func rec1(con net.Conn) {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println("err4", err)
+			con.Close()
+			ser1.Close()
 			mem1--
 			return
 		}
@@ -125,6 +128,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 			fmt.Println("err6", err)
 			// mem1--
 			con.Close()
+			ser1.Close()
 			return
 		}
 		fmt.Println("Forwarding response..")
@@ -143,6 +147,7 @@ func rec2(con net.Conn) {
 		fmt.Println("err7", err)
 		mem2--
 		con.Close()
+		ser2.Close()
 		return
 	}
 	mem2++
@@ -151,6 +156,8 @@ func rec2(con net.Conn) {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println("err8", err)
+			con.Close()
+			ser2.Close()
 			mem2--
 			return
 		}
@@ -189,6 +196,7 @@ func fb2(con net.Conn, ser2 net.Conn) {
 			fmt.Println("err10", err)
 			// mem2--
 			con.Close()
+			ser2.Close()
 			return
 		}
 		fmt.Println("Forwarding response..")
