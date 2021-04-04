@@ -14,7 +14,7 @@ import (
 
 var mem1 int = 0
 var mem2 int = 0
-var Lfu Cache = Cache{5000000, 0, make(map[int]*Node)}
+var Lfu Cache = Cache{6000000, 0, make(map[int]*Node)}
 var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
 var mu sync.Mutex
@@ -223,7 +223,7 @@ func checkconnect(port string) bool {
 		// fmt.Println(err)
 		return false
 	}
-	fmt.Println("Healthy: Server " + port + "is Up")
+	fmt.Println("Healthy: Server " + port + " is Up")
 	con.Close()
 	return true
 }
