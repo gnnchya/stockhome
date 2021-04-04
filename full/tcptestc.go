@@ -21,7 +21,7 @@ func main() {
 }
 
 func send() {
-	con, err := net.Dial("tcp", ":9999")
+	con, err := net.Dial("tcp", "128.199.70.252:9999")
 
 	if err != nil {
 		fmt.Println(err)
