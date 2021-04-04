@@ -38,15 +38,24 @@ func main() {
 			return
 		}
 		fmt.Println(con.RemoteAddr())
-		if mem1 <= mem2 {
-			// mem1++
-			go rec1(con)
-			// fmt.Println("server1", mem1, mem2)
-		} else if mem2 < mem1 {
-			// mem2++
-			go rec2(con)
-			// fmt.Println("server2", mem1, mem2)
+		if checkconnect("128.199.70.252:5001") == false || checkconnect("143.198.219.89:5002") == false {
+			if checkconnect("128.199.70.252:5001") == false {
+				go rec2(con)
+			} else if checkconnect("143.198.219.89:5002") == false {
+				go rec1(con)
+			}
+		} else if checkconnect("128.199.70.252:5001") == true && checkconnect("143.198.219.89:5002") == true {
+			if mem1 <= mem2 {
+				// mem1++
+				go rec1(con)
+				// fmt.Println("server1", mem1, mem2)
+			} else if mem2 < mem1 {
+				// mem2++
+				go rec2(con)
+				// fmt.Println("server2", mem1, mem2)
+			}
 		}
+
 	}
 }
 
@@ -103,28 +112,29 @@ func rec1(con net.Conn) {
 			return
 		} else {
 			ser1.Write([]byte(data))
-			go fb1(con, ser1)
+			// go fb1(con, ser1)
+			fb1(con, ser1)
 		}
 	}
 	// mem1--
 }
 
 func fb1(con net.Conn, ser1 net.Conn) {
-	for {
-		msg, err := bufio.NewReader(ser1).ReadString('.')
-		if err != nil {
-			fmt.Println(err)
-			// mem1--
-			con.Close()
-			return
-		}
-		fmt.Println("Forwarding response..")
-		fmt.Println()
-		// fmt.Println(msg)
-		// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
-		con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
-		con.Write([]byte("`"))
+	// for {
+	msg, err := bufio.NewReader(ser1).ReadString('.')
+	if err != nil {
+		fmt.Println(err)
+		// mem1--
+		con.Close()
+		return
 	}
+	fmt.Println("Forwarding response..")
+	fmt.Println()
+	// fmt.Println(msg)
+	// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
+	con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
+	con.Write([]byte("`"))
+	// }
 }
 
 func rec2(con net.Conn) {
@@ -167,40 +177,42 @@ func rec2(con net.Conn) {
 			return
 		} else {
 			ser2.Write([]byte(data))
-			go fb2(con, ser2)
+			// go fb2(con, ser2)
+			fb2(con, ser2)
 		}
 	}
 	// mem1--
 }
 
 func fb2(con net.Conn, ser2 net.Conn) {
-	for {
-		msg, err := bufio.NewReader(ser2).ReadString('.')
-		if err != nil {
-			fmt.Println(err)
-			// mem2--
-			con.Close()
-			return
-		}
-		fmt.Println("Forwarding response..")
-		fmt.Println()
-		// fmt.Println(msg)
-		// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
-		con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
-		con.Write([]byte("`"))
+	// for {
+	msg, err := bufio.NewReader(ser2).ReadString('.')
+	if err != nil {
+		fmt.Println(err)
+		// mem2--
+		con.Close()
+		return
 	}
+	fmt.Println("Forwarding response..")
+	fmt.Println()
+	// fmt.Println(msg)
+	// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
+	con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
+	con.Write([]byte("`"))
+	// }
 }
 
-func checkconnect(port string) {
+func checkconnect(port string) bool {
 	t := 600 * time.Second
-	con, err := net.DialTimeout("tcp", ":"+port, t)
+	con, err := net.DialTimeout("tcp", port, t)
 	if err != nil {
 		fmt.Println("Unhealthy: Server is Down")
 		fmt.Println(err)
-		return
+		return false
 	}
 	fmt.Println("Healthy: Server is Up")
 	con.Close()
+	return true
 }
 
 func hc(port string) {
