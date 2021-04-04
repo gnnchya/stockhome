@@ -35,15 +35,11 @@ func main() {
 			return
 		}
 		fmt.Println(con.RemoteAddr())
-		checkconnect("128.199.70.252:5001")
-		checkconnect("143.198.219.89:5002")
-		if checkconnect("128.199.70.252:5001") == false || checkconnect("143.198.219.89:5002") == false {
-			if checkconnect("128.199.70.252:5001") == false {
-				go rec2(con)
-			} else if checkconnect("143.198.219.89:5002") == false {
-				go rec1(con)
-			}
-		} else if checkconnect("128.199.70.252:5001") == true && checkconnect("143.198.219.89:5002") == true {
+		if checkconnect("128.199.70.252:5001") == false {
+			go rec2(con)
+		} else if checkconnect("143.198.219.89:5002") == false {
+			go rec1(con)
+		} else {
 			if mem1 <= mem2 {
 				// mem1++
 				go rec1(con)
