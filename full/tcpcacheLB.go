@@ -204,11 +204,11 @@ func checkconnect(port string) bool {
 	t := 600 * time.Second
 	con, err := net.DialTimeout("tcp", port, t)
 	if err != nil {
-		fmt.Println("Unhealthy: Server is Down")
+		fmt.Println("Unhealthy: Server " + port + "is Down")
 		fmt.Println(err)
 		return false
 	}
-	fmt.Println("Healthy: Server is Up")
+	fmt.Println("Healthy: Server " + poort + "is Up")
 	con.Close()
 	return true
 }
