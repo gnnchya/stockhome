@@ -263,6 +263,7 @@ func addHis(itemID int, action bool, amount int, userID int) {
 //จบ DB
 
 //เริ่ม cache
+//reference:https://medium.com/@fazlulkabir94/lru-cache-golang-implementation-92b7bafb76f0
 
 var i int
 var dateAndTime time.Time = time.Now()
