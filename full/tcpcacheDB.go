@@ -19,7 +19,7 @@ var mutex = &sync.Mutex{}
 
 func main() {
 	//ยังไม่รู้ค่าจริงของ init
-	myCache.InitLRU(1000)
+	myCache.InitLRU(100000)
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
