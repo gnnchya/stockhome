@@ -10,7 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func LBcache(c chan string) (time.Duration, string, string, string, string) {
+func LBcache(c chan string, ts int) (time.Duration, string, string, string, string) {
 	var mem1, mem2, output, state string
 	var elapsed time.Duration
 	clb := make(chan string)
@@ -20,7 +20,7 @@ func LBcache(c chan string) (time.Duration, string, string, string, string) {
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println("-------------------HISTORY-------------------")
+		fmt.Println("-------------------HISTORY------------------- Client no.", ts)
 		fmt.Println(randate1)
 		go retrieve(rd, clb)
 		start := time.Now()

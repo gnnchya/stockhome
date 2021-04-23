@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"sync"
+	//"sync"
 	"time"
 	"math/rand"
 
@@ -47,20 +47,20 @@ func main() {
 
 	var cliCnt int = 0
 	go func(c chan<- int) {
-		wg1 := sync.WaitGroup{}
+		//wg1 := sync.WaitGroup{}
 		for ti := 1; ti <= *cli; ti++ {
-			wg1.Add(1)
+			//wg1.Add(1)
 			c1 := make(chan string)
-			fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+			fmt.Println("\u001B[33m++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\u001B[0m")
 			log.Printf("Initiate client no. %d", ti)
 			go Client(c1)
 			c <- ti
 			cc <- c1
 			time.Sleep(time.Duration(delay) * time.Second)
 			cliCnt++
-			wg1.Done()
+			//wg1.Done()
 		}
-		wg1.Wait()
+		//wg1.Wait()
 	}(c)
 
 	timeout := time.After(time.Duration(*allt*60) * time.Second)
@@ -70,7 +70,7 @@ func main() {
 		case <-timeout:
 			defer db.Close()
 			fmt.Println()
-			fmt.Println("-----------------------------------RESULT---------------------------------------")
+			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
 			fmt.Println("Expected number of client(s) :", *cli)
 			fmt.Println("Total number of spawned client(s) :", (cliCnt))
@@ -95,7 +95,7 @@ func main() {
 			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
 			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
-			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%")
+			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
 			return
 
 		case ts := <-c:
@@ -103,37 +103,37 @@ func main() {
 				c1 := <-cc
 				log.Printf("Client No %d started", ts)
 
-					//Add,WD,get test >> Initial request
-					elapsed, temp1, temp2, correct, rd, state := DBcache(c1)
-					if temp1 != "error" {
-						mem1, mem2 = temp1, temp2
+				//Add,WD,get test >> Initial request
+				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts)
+				if temp1 != "error" {
+					mem1, mem2 = temp1, temp2
+				}
+
+				count3++
+				switch correct {
+				case "yes":
+					switch rd {
+					case "0":
+						countadd++
+					case "1":
+						countwd++
+					case "2":
+						countget++
 					}
 
-					count3++
-					switch correct {
-					case "yes":
-						switch rd {
-						case "0":
-							countadd++
-						case "1":
-							countwd++
-						case "2":
-							countget++
-						}
-
-						switch state {
-						case "true\n.":
-							hitavg2 = hitavg2 + elapsed
-							counthit2++
-						case "false\n.":
-							missavg2 = missavg2 + elapsed
-							countmiss2++
-						default:
-							count3--
-						}
-					case "nil":
+					switch state {
+					case "true\n.":
+						hitavg2 = hitavg2 + elapsed
+						counthit2++
+					case "false\n.":
+						missavg2 = missavg2 + elapsed
+						countmiss2++
+					default:
 						count3--
 					}
+				case "nil":
+					count3--
+				}
 
 				// Additional request of the user
 				for{
@@ -141,11 +141,11 @@ func main() {
 					rd := rand.Intn(100-1)+1
 					switch {
 					case rd <= 60: // 60% chance
-						dbtest(c1)
+						dbtest(c1, ts)
 					case rd <= 85: // 25% chance
-						histest(c1)
+						histest(c1, ts)
 					case rd <= 100: // 15% chance
-						anatest(c1)
+						anatest(c1, ts)
 					}
 
 				}
@@ -154,9 +154,9 @@ func main() {
 	}
 }
 
-func dbtest(c1 chan string){
+func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
-	elapsed, _, _, correct, rd, state := DBcache(c1)
+	elapsed, _, _, correct, rd, state := DBcache(c1, ts)
 
 	count3++
 	switch correct {
@@ -185,9 +185,9 @@ func dbtest(c1 chan string){
 	}
 }
 
-func anatest(c1 chan string){
+func anatest(c1 chan string, ts int){
 	//Analysis test
-	elapsed, _, _, correct := Analysis(c1)
+	elapsed, _, _, correct := Analysis(c1, ts)
 
 	anaavg = anaavg + elapsed
 	countall++
@@ -199,9 +199,9 @@ func anatest(c1 chan string){
 	}
 }
 
-func histest(c1 chan string){
+func histest(c1 chan string, ts int){
 	//history test
-	elapsed, _, _, correct, state := LBcache(c1)
+	elapsed, _, _, correct, state := LBcache(c1, ts)
 
 	count2++
 	switch correct {

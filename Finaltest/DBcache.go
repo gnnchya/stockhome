@@ -9,7 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func DBcache(c chan string) (time.Duration, string, string, string, string, string) {
+func DBcache(c chan string, ts int) (time.Duration, string, string, string, string, string) {
 	var mem1, mem2, output, state, rdact string
 	var ran int
 	var elapsed time.Duration
@@ -20,16 +20,16 @@ func DBcache(c chan string) (time.Duration, string, string, string, string, stri
 	ran = rand.Intn(10000-1) + 1 //10000
 	rdact = strconv.Itoa(ran)
 	rd := rand.Intn(100-1)+1
-	switch rd {
-	case 1 >= rd <= 20: // 20% chance
+	switch {
+	case rd <= 20: // 20% chance
 		rdact = "add " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(10-5)+5)
-		fmt.Println("---------------------ADD---------------------")
-	case 21 >= rd <= 55: // 35% chance
+		fmt.Println("---------------------ADD--------------------- Client no.", ts)
+	case rd <= 55: // 35% chance
 		rdact = "wd " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(5-1)+1)
-		fmt.Println("-------------------WITHDRAW------------------")
-	case 56 >= rd <= 100: // 45% chance
+		fmt.Println("-------------------WITHDRAW------------------ Client no.", ts)
+	case rd <= 100: // 45% chance
 		rdact = "get " + rdact
-		fmt.Println("-------------------ACQUIRE-------------------")
+		fmt.Println("-------------------ACQUIRE------------------- Client no.", ts)
 
 	}
 

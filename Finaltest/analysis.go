@@ -12,7 +12,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func Analysis(c chan string) (time.Duration, string, string, string) {
+func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	var mem1, mem2, output string
 	var elapsed time.Duration
 	cana := make(chan string)
@@ -23,7 +23,7 @@ func Analysis(c chan string) (time.Duration, string, string, string) {
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println("-------------------ANALYSIS-------------------")
+		fmt.Println("-------------------ANALYSIS------------------- Client no.", ts)
 		fmt.Println(randate)
 		start := time.Now()
 		c <- randate
