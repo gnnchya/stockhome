@@ -50,11 +50,11 @@ func Analysis(c chan string) (time.Duration, string, string, string) {
 		// fmt.Println(output)
 
 		if output == check {
-			fmt.Println("-->Correct output")
-		} else {
-			fmt.Println("-->Incorrect output")
+			fmt.Println("\033[32m -->Correct output\033[0m")
+		   } else {
+			fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
-		}
+		   }
 	} else {
 		fmt.Println("## ERROR ##")
 		correct = "nil"
@@ -70,7 +70,7 @@ func randomTimestamp() string {
 	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
 	delta := max - min
 
-	rand.Seed(time.Now().UTC().UnixNano())
+	// rand.Seed(time.Now().UTC().UnixNano())
 	sec := rand.Int63n(delta) + min
 	date := time.Unix(sec, 0)
 	str := date.Format("2006-01-02")

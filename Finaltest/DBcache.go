@@ -16,18 +16,18 @@ func DBcache(c chan string) (time.Duration, string, string, string, string, stri
 	cdb := make(chan string)
 	correct := "yes"
 
-	rand.Seed(time.Now().UTC().UnixNano())
+	// rand.Seed(time.Now().UTC().UnixNano())
 	ran = rand.Intn(10000-1) + 1 //10000
 	rdact = strconv.Itoa(ran)
-	rd := rand.Intn(3)
+	rd := rand.Intn(100-1)+1
 	switch rd {
-	case 0:
+	case 1 >= rd <= 20: // 20% chance
 		rdact = "add " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(10-5)+5)
 		fmt.Println("---------------------ADD---------------------")
-	case 1:
+	case 21 >= rd <= 55: // 35% chance
 		rdact = "wd " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(5-1)+1)
 		fmt.Println("-------------------WITHDRAW------------------")
-	case 2:
+	case 56 >= rd <= 100: // 45% chance
 		rdact = "get " + rdact
 		fmt.Println("-------------------ACQUIRE-------------------")
 
@@ -55,9 +55,9 @@ func DBcache(c chan string) (time.Duration, string, string, string, string, stri
 
 	if output != "None" {
 		if output == <-cdb {
-			fmt.Println("-->Correct output")
+			fmt.Println("\033[32m -->Correct output\033[0m")
 		} else {
-			fmt.Println("-->Incorrect output")
+			fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
 		}
 	} else {

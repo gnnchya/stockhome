@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"math/rand"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -103,76 +104,118 @@ func main() {
 				c1 := <-cc
 				log.Printf("Client No %d started", ts)
 
-				//Analysis test
-				elapsed, temp1, temp2, correct := Analysis(c1)
-				if temp1 != "error" {
-					mem1, mem2 = temp1, temp2
-				}
-
-				anaavg = anaavg + elapsed
-				countall++
-				switch correct {
-				case "yes":
-					count++
-				case "nil":
-					countall--
-				}
-
-				//history test
-				elapsed, temp1, temp2, correct, state := LBcache(c1)
-				if temp1 != "error" {
-					mem1, mem2 = temp1, temp2
-				}
-
-				count2++
-				switch correct {
-				case "yes":
-					switch state {
-					case "true":
-						hitavg = hitavg + elapsed
-						counthit++
-					case "false":
-						missavg = missavg + elapsed
-						countmiss++
-					}
-				case "nil":
-					count2--
-				}
-
-				//Add,WD,get test
-				elapsed, temp1, temp2, correct, rd, state := DBcache(c1)
-				if temp1 != "error" {
-					mem1, mem2 = temp1, temp2
-				}
-
-				count3++
-				switch correct {
-				case "yes":
-					switch rd {
-					case "0":
-						countadd++
-					case "1":
-						countwd++
-					case "2":
-						countget++
+					//Add,WD,get test >> Initial request
+					elapsed, temp1, temp2, correct, rd, state := DBcache(c1)
+					if temp1 != "error" {
+						mem1, mem2 = temp1, temp2
 					}
 
-					switch state {
-					case "true\n.":
-						hitavg2 = hitavg2 + elapsed
-						counthit2++
-					case "false\n.":
-						missavg2 = missavg2 + elapsed
-						countmiss2++
-					default:
+					count3++
+					switch correct {
+					case "yes":
+						switch rd {
+						case "0":
+							countadd++
+						case "1":
+							countwd++
+						case "2":
+							countget++
+						}
+
+						switch state {
+						case "true\n.":
+							hitavg2 = hitavg2 + elapsed
+							counthit2++
+						case "false\n.":
+							missavg2 = missavg2 + elapsed
+							countmiss2++
+						default:
+							count3--
+						}
+					case "nil":
 						count3--
 					}
-				case "nil":
-					count3--
-				}
 
-				// wg.Done()
+				// Additional request of the user
+				for{
+					time.Sleep(time.Duration(rand.Intn(60-20)+20) * time.Second) // rnadom sleep time between 20 secs - 60 secs
+					rd := rand.Intn(100-1)+1
+					switch rd {
+					case 1 >= rd <= 60: // 60% chance
+						dbtest(c1)	
+					case 61 >= rd <= 85: // 25% chance
+						histest(c1)
+					case 86 >= rd <= 100: // 15% chance
+						anatest(c1)
+					}
+
+				}
 			}(ts)
 		}
+	}
+}
+
+func dbtest(c1){
+	//Add,WD,get test
+	elapsed, _, _, correct, rd, state := DBcache(c1)
+
+	count3++
+	switch correct {
+	case "yes":
+		switch rd {
+		case "0":
+			countadd++
+		case "1":
+			countwd++
+		case "2":
+			countget++
+		}
+
+		switch state {
+		case "true\n.":
+			hitavg2 = hitavg2 + elapsed
+			counthit2++
+		case "false\n.":
+			missavg2 = missavg2 + elapsed
+			countmiss2++
+		default:
+			count3--
+		}
+	case "nil":
+		count3--
+	}
+}
+
+func anatest(c1){
+	//Analysis test
+	elapsed, temp1, temp2, correct := Analysis(c1)
+
+	anaavg = anaavg + elapsed
+	countall++
+	switch correct {
+	case "yes":
+		count++
+	case "nil":
+		countall--
+	}
+}
+
+func histest(c1){
+	//history test
+	elapsed, temp1, temp2, correct, state := LBcache(c1)
+
+	count2++
+	switch correct {
+	case "yes":
+		switch state {
+		case "true":
+			hitavg = hitavg + elapsed
+			counthit++
+		case "false":
+			missavg = missavg + elapsed
+			countmiss++
+		}
+	case "nil":
+		count2--
 	}
 }

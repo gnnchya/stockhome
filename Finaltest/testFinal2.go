@@ -40,19 +40,26 @@ func main() {
 
 	c := make(chan int)
 	cc := make(chan chan string)
+	c3 := make(chan chan sync.WaitGroup)
 
 	var cliCnt int = 0
 	go func(c chan<- int) {
 		wg1 := sync.WaitGroup{}
 		for ti := 1; ti <= *cli; ti++ {
 			wg1.Add(1)
+			wg := sync.WaitGroup{}
+			wg.Add(1)
 			c1 := make(chan string)
-			fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-			log.Printf("Initiate client no. %d", ti)
-			go Client(c1)
+			c2 := make(chan sync.WaitGroup)
+			fmt.Println("\033[33m++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\033[0m")
+			log.Printf("Initiate client no.", ti)
+			go Client(c1, &wg)
 			c <- ti
 			cc <- c1
+			c3 <- c2
+			c2 <- wg
 			time.Sleep(time.Duration(delay) * time.Second)
+			wg.Wait()
 			cliCnt++
 			wg1.Done()
 		}
@@ -70,7 +77,7 @@ func main() {
 		case <-timeout:
 			defer db.Close()
 			fmt.Println()
-			fmt.Println("-----------------------------------RESULT---------------------------------------")
+			fmt.Println("\033[36m-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
 			fmt.Println("Expected number of client(s) :", *cli)
 			fmt.Println("Total number of spawned client(s) :", (cliCnt))
@@ -95,12 +102,15 @@ func main() {
 			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
 			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
-			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%")
+			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
 			return
 
 		case ts := <-c:
 			go func(ts int) {
 				c1 := <-cc
+				c2 := <-c3
+				wg := <-c2
+				wg.Add(1)
 				log.Printf("Client No %d started", ts)
 
 				//Analysis test
@@ -171,7 +181,7 @@ func main() {
 					count3--
 				}
 
-				// wg.Done()
+				wg.Done()
 			}(ts)
 		}
 	}
