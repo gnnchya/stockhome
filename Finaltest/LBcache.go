@@ -59,7 +59,7 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 	fmt.Println("History time elapsed: ", elapsed)
 	return elapsed, mem1, mem2, correct, state
 }
-
+//
 func retrieve(Date string, clb chan string) {
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")

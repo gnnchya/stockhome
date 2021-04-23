@@ -46,8 +46,8 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 
 	if output != "None" {
 		check := "Server: " + <-cana
-		// fmt.Println(check)
-		// fmt.Println(output)
+		//fmt.Println(check)
+		//fmt.Println(output)
 
 		if output == check {
 			fmt.Println("\033[32m -->Correct output\033[0m")

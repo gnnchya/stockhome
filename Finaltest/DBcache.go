@@ -9,7 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func DBcache(c chan string, ts int) (time.Duration, string, string, string, string, string) {
+func DBcache(c chan string, ts int) (time.Duration, string, string, string, int, string) {
 	var mem1, mem2, output, state, rdact string
 	var ran int
 	var elapsed time.Duration
@@ -67,10 +67,10 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 	fmt.Println("Time elapsed: ", elapsed)
 	done := <-c
 	if done == "done" {
-		return elapsed, mem1, mem2, correct, strconv.Itoa(rd), state
+		return elapsed, mem1, mem2, correct, rd, state
 	}
 
-	return elapsed, mem1, mem2, "no", strconv.Itoa(rd), state
+	return elapsed, mem1, mem2, "no", rd, state
 }
 
 func show(itemID int, cdb chan string) {

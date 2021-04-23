@@ -121,7 +121,7 @@ func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
-	fmt.Println("Waiting for respond...")
+	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -182,7 +182,7 @@ func wd(con net.Conn, com []string, c chan string) {
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
-	fmt.Println("Waiting for respond...")
+	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -259,7 +259,7 @@ func his(con net.Conn, com []string, c chan string) {
 
 	con.Write([]byte(com[0] + ": " + since[0] + since[1] + "\n"))
 
-	fmt.Println("Downloading...")
+	//fmt.Println("Downloading...")
 
 	// Create a file that the client wants to download
 	dir, err := os.Getwd()
@@ -304,7 +304,7 @@ func his(con net.Conn, com []string, c chan string) {
 		return
 	}
 
-	fmt.Println("Download completed")
+	//fmt.Println("Download completed")
 	return
 }
 
@@ -377,7 +377,7 @@ func ana(con net.Conn, com []string, c chan string) {
 	}
 
 	con.Write([]byte(com[0] + ": " + since[0] + "-" + since[1] + "-" + since[2] + "\n"))
-	fmt.Println("Waiting for respond...")
+	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)

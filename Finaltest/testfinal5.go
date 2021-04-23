@@ -18,6 +18,8 @@ var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2, countall time.Duration = 0, 0, 0, 0, 0, 0
 var mem1, mem2 string
 var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
+var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 
 func main() {
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -69,6 +71,7 @@ func main() {
 		select {
 		case <-timeout:
 			defer db.Close()
+			time.Sleep(time.Duration(2) * time.Second)
 			fmt.Println()
 			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
@@ -81,7 +84,7 @@ func main() {
 			fmt.Println("Client distribution correct: ", (cliCnt)/2 == no)
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
-			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(cliCnt), "ms")
+			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
 			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
@@ -96,6 +99,14 @@ func main() {
 			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
 			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
+			//fmt.Println(missavg2)
+			//fmt.Println(hitavg2)
+			//
+			//fmt.Println(missavg)
+			//fmt.Println(hitavg)
+			//
+			//fmt.Println(anaavg)
+			//fmt.Println(countall)
 			return
 
 		case ts := <-c:
@@ -109,30 +120,38 @@ func main() {
 					mem1, mem2 = temp1, temp2
 				}
 
-				count3++
+				opcount3 <- 1
+				//count3++
 				switch correct {
 				case "yes":
-					switch  {
+					switch {
 					case rd <= 20:
-						countadd++
+						//countadd++
+						opcountadd <- countadd
 					case rd <= 55:
-						countwd++
+						opcountwd <- countwd
+						//countwd++
 					case rd <= 100:
-						countget++
+						//countget++
+						opcountget <- countget
 					}
 
 					switch state {
 					case "true\n.":
-						hitavg2 = hitavg2 + elapsed
-						counthit2++
+						opcounthit <- elapsed
+						//hitavg2 = hitavg2 + elapsed
+						//counthit2++
 					case "false\n.":
-						missavg2 = missavg2 + elapsed
-						countmiss2++
+						opcountmiss <- elapsed
+						//missavg2 = missavg2 + elapsed
+						//countmiss2++
 					default:
-						count3--
+						opcount3 <- 0
+						//count3--
 					}
 				case "nil":
-					count3--
+					opcount3 <- 0
+					//count3--
 				}
 
 				// Additional request of the user
@@ -147,41 +166,86 @@ func main() {
 					case rd <= 100: // 15% chance
 						anatest(c1, ts)
 					}
-
 				}
 			}(ts)
+
+		case t := <- opcount3:
+			switch t{
+			case 1:
+				count3++
+			case 0:
+				count3--
+			}
+		case <- opcountadd:
+			countadd++
+		case <- opcountwd:
+			countwd++
+		case <- opcountget:
+			countget++
+		case elapsed := <- opcounthit:
+			hitavg2 = hitavg2 + elapsed
+			counthit2++
+		case elapsed := <- opcountmiss:
+			missavg2 = missavg2 + elapsed
+			countmiss2++
+		case elapsed := <- opanaavg:
+			anaavg = anaavg + elapsed
+			countall++
+		case t:= <- opcount:
+			switch t{
+			case 1:
+				count++
+			case 0:
+				countall--
+			}
+		case elapsed := <- ophitavg:
+			hitavg = hitavg + elapsed
+			counthit++
+		case elapsed := <- opmissavg:
+			missavg = missavg + elapsed
+			countmiss++
+		case <- opcount2:
+			count2--
 		}
+
 	}
 }
 
 func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
 	elapsed, _, _, correct, rd, state := DBcache(c1, ts)
-
-	count3++
+	opcount3 <- 1
+	//count3++
 	switch correct {
 	case "yes":
 		switch {
 		case rd <= 20:
-			countadd++
+			//countadd++
+			opcountadd <- countadd
 		case rd <= 55:
-			countwd++
+			opcountwd <- countwd
+			//countwd++
 		case rd <= 100:
-			countget++
+			//countget++
+			opcountget <- countget
 		}
 
 		switch state {
 		case "true\n.":
-			hitavg2 = hitavg2 + elapsed
-			counthit2++
+			opcounthit <- elapsed
+			//hitavg2 = hitavg2 + elapsed
+			//counthit2++
 		case "false\n.":
-			missavg2 = missavg2 + elapsed
-			countmiss2++
+			opcountmiss <- elapsed
+			//missavg2 = missavg2 + elapsed
+			//countmiss2++
 		default:
-			count3--
+			opcount3 <- 0
+			//count3--
 		}
 	case "nil":
-		count3--
+		opcount3 <- 0
+		//count3--
 	}
 }
 
@@ -189,13 +253,16 @@ func anatest(c1 chan string, ts int){
 	//Analysis test
 	elapsed, _, _, correct := Analysis(c1, ts)
 
-	anaavg = anaavg + elapsed
-	countall++
+	opanaavg <- elapsed
+	//anaavg = anaavg + elapsed
+	//countall++
 	switch correct {
 	case "yes":
-		count++
+		opcount <- 1
+		//count++
 	case "nil":
-		countall--
+		opcount <- 0
+		//countall--
 	}
 }
 
@@ -208,13 +275,16 @@ func histest(c1 chan string, ts int){
 	case "yes":
 		switch state {
 		case "true":
-			hitavg = hitavg + elapsed
-			counthit++
+			ophitavg <- elapsed
+			//hitavg = hitavg + elapsed
+			//counthit++
 		case "false":
-			missavg = missavg + elapsed
-			countmiss++
+			opmissavg <- elapsed
+			//missavg = missavg + elapsed
+			//countmiss++
 		}
 	case "nil":
-		count2--
+		opcount2 <- count2
+		//count2--
 	}
 }
