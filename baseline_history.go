@@ -37,6 +37,6 @@ func main(filename string) {
 	}
 	row.Close()
 
-	// Data
+	// Data that will be sent
 	buf.Bytes()
 }
