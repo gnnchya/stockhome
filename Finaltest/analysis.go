@@ -24,7 +24,7 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------ANALYSIS------------------- Client no.", ts)
-		fmt.Println(randate)
+		//fmt.Println(randate)
 		start := time.Now()
 		c <- randate
 
@@ -50,17 +50,17 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 		//fmt.Println(output)
 
 		if output == output {
-			fmt.Println("\033[32m -->Correct output\033[0m")
+			//fmt.Println("\033[32m -->Correct output\033[0m")
 		   } else {
-			fmt.Println("\033[31m -->Incorrect output\033[0m")
+			//fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
 		   }
 	} else {
-		fmt.Println("## ERROR ##")
+		//fmt.Println("## ERROR ##")
 		correct = "nil"
 	}
 
-	fmt.Println("Analysis time elapsed: ", elapsed)
+	//fmt.Println("Analysis time elapsed: ", elapsed)
 	return elapsed, mem1, mem2, correct
 }
 

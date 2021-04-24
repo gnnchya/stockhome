@@ -21,7 +21,7 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------HISTORY------------------- Client no.", ts)
-		fmt.Println(randate1)
+		//fmt.Println(randate1)
 		go retrieve(rd, clb)
 		start := time.Now()
 
@@ -47,16 +47,16 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 		check := <-clb + "."
 
 		if output == check {
-			fmt.Println("\033[32m -->Correct output\033[0m")
+			//fmt.Println("\033[32m -->Correct output\033[0m")
 		   } else {
-			fmt.Println("\033[31m -->Incorrect output\033[0m")
+			//fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
 		   }
 	} else {
-		fmt.Println("## ERROR ##")
+		//fmt.Println("## ERROR ##")
 		correct = "nil"
 	}
-	fmt.Println("History time elapsed: ", elapsed)
+	//fmt.Println("History time elapsed: ", elapsed)
 	return elapsed, mem1, mem2, correct, state
 }
 //

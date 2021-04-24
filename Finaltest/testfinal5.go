@@ -41,7 +41,8 @@ func main() {
 		return
 	}
 
-	delay := float64(*rut) / float64(*cli)
+	delay := (float64(*rut) / float64(*cli))*1000
+
 	fmt.Printf("************************************\nClient : %d\nRamp up time : %d seconds\nTotal run time : %d minutes\n", *cli, *rut, *allt)
 	fmt.Println("************************************")
 
@@ -53,13 +54,13 @@ func main() {
 		//wg1 := sync.WaitGroup{}
 		for ti := 1; ti <= *cli; ti++ {
 			//wg1.Add(1)
+			time.Sleep(time.Duration(delay) * time.Millisecond)
 			c1 := make(chan string)
 			fmt.Println("\u001B[33m++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\u001B[0m")
 			log.Printf("Initiate client no. %d", ti)
 			go Client(c1)
 			c <- ti
 			cc <- c1
-			time.Sleep(time.Duration(delay) * time.Second)
 			cliCnt++
 			//wg1.Done()
 		}
@@ -100,14 +101,6 @@ func main() {
 			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
 			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
-			fmt.Println(missavg2)
-			fmt.Println(hitavg2)
-
-			fmt.Println(missavg)
-			fmt.Println(hitavg)
-
-			fmt.Println(anaavg)
-			fmt.Println(countall)
 			return
 
 		case ts := <-c:

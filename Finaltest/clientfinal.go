@@ -138,7 +138,7 @@ func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 	c <- mem2
 	c <- state
 
-	fmt.Println(msg[0])
+	//fmt.Println(msg[0])
 }
 
 func wd(con net.Conn, com []string, c chan string) {
@@ -199,7 +199,7 @@ func wd(con net.Conn, com []string, c chan string) {
 	c <- mem2
 	c <- state
 
-	fmt.Println(msg[0])
+	//fmt.Println(msg[0])
 }
 
 func his(con net.Conn, com []string, c chan string) {
@@ -392,12 +392,12 @@ func ana(con net.Conn, com []string, c chan string) {
 	c <- mem1
 	c <- mem2
 	// fmt.Println(msg[0])
-	fmt.Println("Server: Response sent")
+	//fmt.Println("Server: Response sent")
 }
 
 func get(con net.Conn, com []string, c chan string) {
 	con.Write([]byte(com[0] + ": " + com[1] + "\n"))
-	fmt.Println("Waiting for respond...")
+	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -414,7 +414,7 @@ func get(con net.Conn, com []string, c chan string) {
 	c <- mem2
 	c <- state
 
-	fmt.Println(msg[0])
+	//fmt.Println(msg[0])
 
 }
 

@@ -35,7 +35,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println(rdact)
+		//fmt.Println(rdact)
 		start := time.Now()
 
 		c <- rdact
@@ -55,16 +55,16 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 
 	if output != "None" {
 		if output == <-cdb {
-			fmt.Println("\033[32m -->Correct output\033[0m")
+			//fmt.Println("\033[32m -->Correct output\033[0m")
 		} else {
-			fmt.Println("\033[31m -->Incorrect output\033[0m")
+			//fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
 		}
 	} else {
-		fmt.Println("## ERROR ##")
+		//fmt.Println("## ERROR ##")
 		correct = "nil"
 	}
-	fmt.Println("Time elapsed: ", elapsed)
+	//fmt.Println("Time elapsed: ", elapsed)
 	done := <-c
 	if done == "done" {
 		return elapsed, mem1, mem2, correct, rd, state
