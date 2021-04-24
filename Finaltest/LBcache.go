@@ -93,7 +93,7 @@ func randate() string {
 	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
 	delta := max - min
 
-	// rand.Seed(time.Now().UTC().UnixNano())
+	//rand.Seed(time.Now().UTC().UnixNano())
 	sec := rand.Int63n(delta) + min
 	date := time.Unix(sec, 0)
 	str := date.Format("2006-01")

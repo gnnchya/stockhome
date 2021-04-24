@@ -15,11 +15,11 @@ import (
 func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	var mem1, mem2, output string
 	var elapsed time.Duration
-	cana := make(chan string)
+	//cana := make(chan string)
 	correct := "yes"
 	rd := randomTimestamp()
 	randate := "ana " + rd
-	go analysis1(rd, cana)
+	//go analysis1(rd, cana)
 
 	begin := <-c
 	if begin == "begin" {

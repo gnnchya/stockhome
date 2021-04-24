@@ -15,9 +15,9 @@ import (
 
 var db *sql.DB
 var eir error
-var anaavg, missavg, hitavg, missavg2, hitavg2, countall time.Duration = 0, 0, 0, 0, 0, 0
+var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
-var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 func main() {
@@ -26,7 +26,7 @@ func main() {
 		fmt.Println("Error: Cannot open database")
 	}
 	db.SetMaxIdleConns(0)
-	rand.Seed(22)
+	rand.Seed(time.Now().UTC().UnixNano())
 
 	//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 	cli := flag.Int("cli", 10, "Number of clients")
@@ -100,7 +100,7 @@ func main() {
 			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
 			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
-			fmt.Println(missavg)
+			fmt.Println(missavg2)
 			fmt.Println(hitavg2)
 
 			fmt.Println(missavg)
@@ -169,7 +169,9 @@ func main() {
 					}
 				}
 			}(ts)
-
+			default:
+		}
+		select{
 		case t := <- opcount3:
 			switch t{
 			case 1:
@@ -177,21 +179,49 @@ func main() {
 			case 0:
 				count3--
 			}
+		default:
+		}
+
+		select{
 		case <- opcountadd:
 			countadd++
+		default:
+		}
+
+		select{
 		case <- opcountwd:
 			countwd++
+		default:
+		}
+
+		select{
 		case <- opcountget:
 			countget++
+		default:
+		}
+
+		select{
 		case elapsed := <- opcounthit:
 			hitavg2 = hitavg2 + elapsed
 			counthit2++
+		default:
+		}
+
+		select{
 		case elapsed := <- opcountmiss:
 			missavg2 = missavg2 + elapsed
 			countmiss2++
+		default:
+		}
+
+		select{
 		case elapsed := <- opanaavg:
 			anaavg = anaavg + elapsed
 			countall++
+		default:
+		}
+
+		select{
 		case t:= <- opcount:
 			switch t{
 			case 1:
@@ -199,16 +229,28 @@ func main() {
 			case 0:
 				countall--
 			}
+		default:
+		}
+
+		select{
 		case elapsed := <- ophitavg:
 			hitavg = hitavg + elapsed
 			counthit++
+		default:
+		}
+
+		select{
 		case elapsed := <- opmissavg:
 			missavg = missavg + elapsed
 			countmiss++
-		case <- opcount2:
-			count2--
+		default:
 		}
 
+		select{
+		case <- opcount2:
+			count2--
+		default:
+		}
 	}
 }
 
