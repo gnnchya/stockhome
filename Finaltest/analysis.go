@@ -15,11 +15,11 @@ import (
 func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	var mem1, mem2, output string
 	var elapsed time.Duration
-	//cana := make(chan string)
+	cana := make(chan string)
 	correct := "yes"
 	rd := randomTimestamp()
 	randate := "ana " + rd
-	//go analysis1(rd, cana)
+	go analysis1(rd, cana)
 
 	begin := <-c
 	if begin == "begin" {
@@ -45,11 +45,11 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	}
 
 	if output != "None" {
-		//check := "Server: " + <-cana
+		check := "Server: " + <-cana
 		//fmt.Println(check)
 		//fmt.Println(output)
 
-		if output == output {
+		if output == check {
 			//fmt.Println("\033[32m -->Correct output\033[0m")
 		   } else {
 			//fmt.Println("\033[31m -->Incorrect output\033[0m")
