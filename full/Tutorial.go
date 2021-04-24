@@ -5,6 +5,13 @@ import (
 )
 
 func main() {
-	a := "asdf."
-	fmt.Println(a[:len(a)-1])
+	for i := 1; i <= 100; i++ {
+		fmt.Println(i)
+		defer gun()
+	}
+	
+}
+
+func gun(){
+	fmt.Println("wow")
 }

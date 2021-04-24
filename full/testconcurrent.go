@@ -14,22 +14,26 @@ var wg1 sync.WaitGroup
 
 
 func main() {
-	for i := 0; i < 1000; i++ {
-		go connect()
+	for i := 1; i <= 100; i++ {
+		con, err := net.Dial("tcp", "128.199.70.176:9999")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		go connect(con)
 		// time.Sleep(10 * time.Millisecond)
 		fmt.Println(i)
+		defer con.Write([]byte("exit:\n"))
+		// defer con.Close()
 	}
 	wg.Wait()
+	
 }
 
-func connect() {
+func connect(con net.Conn) {
 	wg.Add(1)
 	a++
-	con, err := net.Dial("tcp", "128.199.70.176:9999")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	
 	// defer con.Close()
 	con.Write([]byte("ana:2021-02-02\n"))
 	data, err := bufio.NewReader(con).ReadString('`')

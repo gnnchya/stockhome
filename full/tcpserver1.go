@@ -19,7 +19,7 @@ var wgana sync.WaitGroup
 var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
 var wgexit sync.WaitGroup
-var wg sync.WaitGroup
+var wgall sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
@@ -101,11 +101,11 @@ func rec(con net.Conn) {
 			wgexit.Done()
 			return
 		default:
-			wg.Add(1)
+			wgall.Add(1)
 			send(con, "Some How Error!")
-			wg.Done()
+			wgall.Done()
 		}
-		wg.Wait()
+		wgall.Wait()
 		wgadd.Wait()
 		wgwd.Wait()
 		wgget.Wait()

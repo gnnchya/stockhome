@@ -135,7 +135,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser1).ReadString('.')
 		if err != nil {
-			fmt.Println("err6", err)
+			// fmt.Println("err6", err)
 			// mem1--
 			con.Close()
 			ser1.Close()
@@ -203,7 +203,7 @@ func fb2(con net.Conn, ser2 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser2).ReadString('.')
 		if err != nil {
-			fmt.Println("err10", err)
+			// fmt.Println("err10", err)
 			// mem2--
 			con.Close()
 			ser2.Close()
