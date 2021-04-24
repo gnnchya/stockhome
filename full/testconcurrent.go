@@ -14,25 +14,46 @@ var wg1 sync.WaitGroup
 
 
 func main() {
-	for i := 1; i <= 100; i++ {
+	for i := 1; i <= 4000; i++ {
 		con, err := net.Dial("tcp", "128.199.70.176:9999")
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		go connect(con)
-		// time.Sleep(10 * time.Millisecond)
+		if i % 4 == 0{
+			go add(con,i)
+		}else if i % 4 == 1{
+			go ana(con,i)
+		} else if i % 4 == 2{
+			go wd(con,i)
+		} else if i % 4 == 3{
+			go get(con,i)
+		}
 		fmt.Println(i)
 		defer con.Write([]byte("exit:\n"))
-		// defer con.Close()
 	}
 	wg.Wait()
 	
 }
 
-func connect(con net.Conn) {
+func get(con net.Conn,i int) {
 	wg.Add(1)
-	a++
+	
+	// defer con.Close()
+	con.Write([]byte("get:12\n"))
+	data, err := bufio.NewReader(con).ReadString('`')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	fmt.Println(msg[0],i)
+	defer wg.Done()
+}
+
+func ana(con net.Conn,i int) {
+	wg.Add(1)
 	
 	// defer con.Close()
 	con.Write([]byte("ana:2021-02-02\n"))
@@ -43,6 +64,38 @@ func connect(con net.Conn) {
 	}
 	msg := strings.Split(data, "*")
 	msg[0] = strings.TrimSpace(msg[0])
-	fmt.Println("ana",a)
+	fmt.Println("ana",i)
+	defer wg.Done()
+}
+
+func add(con net.Conn,i int) {
+	wg.Add(1)
+	
+	// defer con.Close()
+	con.Write([]byte("add:12-12-1\n"))
+	data, err := bufio.NewReader(con).ReadString('`')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	fmt.Println(msg[0],i)
+	defer wg.Done()
+}
+
+func wd(con net.Conn,i int) {
+	wg.Add(1)
+	
+	// defer con.Close()
+	con.Write([]byte("wd:12-12-1\n"))
+	data, err := bufio.NewReader(con).ReadString('`')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	msg := strings.Split(data, "*")
+	msg[0] = strings.TrimSpace(msg[0])
+	fmt.Println(msg[0],i)
 	defer wg.Done()
 }
