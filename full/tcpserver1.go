@@ -13,13 +13,13 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 )
-var wgadd sync.WaitGroup
-var wgdb sync.WaitGroup
-var wgana sync.WaitGroup
-var wgwd sync.WaitGroup
-var wgget sync.WaitGroup
-var wgexit sync.WaitGroup
-var wgall sync.WaitGroup
+// var wgadd sync.WaitGroup
+// var wgdb sync.WaitGroup
+// var wgana sync.WaitGroup
+// var wgwd sync.WaitGroup
+// var wgget sync.WaitGroup
+// var wgexit sync.WaitGroup
+// var wgall sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
@@ -44,10 +44,9 @@ func main() {
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 		// go send(con, rec(con))
-		
 	}
-
 }
+
 func rec(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
@@ -63,60 +62,61 @@ func rec(con net.Conn) {
 		msg[1] = strings.TrimSpace(msg[1])
 		switch msg[0] {
 		case "ana":
-			wgana.Add(1)
+			// wgana.Add(1)
 			date := strings.Split(msg[1], "-")
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
 			send(con, analysis(date[0], date[1], date[2]))
-			wgana.Done()
+			// wgana.Done()
 		case "add":
-			wgadd.Add(1)
+			// wgadd.Add(1)
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			send(con, add(id[0], id[1], id[2]))
-			wgadd.Done()
+			// wgadd.Done()
 		case "wd":
-			wgwd.Add(1)
+			// wgwd.Add(1)
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			send(con, withdraw(id[0], id[1], id[2]))
-			wgwd.Done()
+			// wgwd.Done()
 		case "db":
-			wgdb.Add(1)
+			// wgdb.Add(1)
 			pulldb(con, msg[1])
-			wgdb.Done()
+			// wgdb.Done()
 		case "get":
-			wgget.Add(1)
+			// wgget.Add(1)
 			send(con, getItemAmount(msg[1]))
-			wgget.Done()
+			// wgget.Done()
 		case "exit":
-			wgexit.Add(1)
+			// wgexit.Add(1)
 			con.Close()
 			fmt.Println("EOF")
-			wgexit.Done()
+			// wgexit.Done()
 			return
 		default:
-			wgall.Add(1)
+			// wgall.Add(1)
 			send(con, "Some How Error!")
-			wgall.Done()
+			// wgall.Done()
 		}
-		wgall.Wait()
-		wgadd.Wait()
-		wgwd.Wait()
-		wgget.Wait()
-		wgana.Wait()
-		wgexit.Wait()
-		wgdb.Wait()
+		// wgall.Wait()
+		// wgadd.Wait()
+		// wgwd.Wait()
+		// wgget.Wait()
+		// wgana.Wait()
+		// wgexit.Wait()
+		// wgdb.Wait()
 	}
 }
 
 func send(con net.Conn, msg string) {
 	con.Write([]byte("Server: " + msg + "."))
+
 }
 
 var db *sql.DB
