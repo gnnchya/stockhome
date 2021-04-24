@@ -75,7 +75,7 @@ func rec(con net.Conn) {
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
 			send(con, analysis(date[0], date[1], date[2]))
-			wgana.done()
+			wgana.Done()
 		case "add":
 			wgadd.Add(1)
 			id := strings.Split(msg[1], "-")
