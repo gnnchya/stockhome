@@ -40,6 +40,7 @@ func main() {
 				fmt.Println("All server is down")
 				return
 			} else {
+				fmt.Println("Server is down. Please try again.")
 				go rec2(con)
 			}
 		} else if checkconnect("143.198.219.89:5002") == false {
@@ -47,6 +48,7 @@ func main() {
 				fmt.Println("All server is down")
 				return
 			} else {
+				fmt.Println("Server is down. Please try again.")
 				go rec1(con)
 			}
 

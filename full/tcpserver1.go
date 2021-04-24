@@ -13,6 +13,13 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 )
+var wgadd sync.WaitGroup
+var wgdb sync.WaitGroup
+var wgana sync.WaitGroup
+var wgwd sync.WaitGroup
+var wgget sync.WaitGroup
+var wgexit sync.WaitGroup
+var wg sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
@@ -37,6 +44,13 @@ func main() {
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 		// go send(con, rec(con))
+		wg.Wait()
+		wgadd.Wait()
+		wgwd.Wait()
+		wgget.Wait()
+		wgana.Wait()
+		wgexit.Wait()
+		wgdb.Wait()
 	}
 
 }
@@ -47,6 +61,7 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
+		
 		fmt.Println()
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
@@ -54,33 +69,47 @@ func rec(con net.Conn) {
 		msg[1] = strings.TrimSpace(msg[1])
 		switch msg[0] {
 		case "ana":
+			wgana.Add(1)
 			date := strings.Split(msg[1], "-")
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
 			send(con, analysis(date[0], date[1], date[2]))
+			wgana.done()
 		case "add":
+			wgadd.Add(1)
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			send(con, add(id[0], id[1], id[2]))
+			wgadd.Done()
 		case "wd":
+			wgwd.Add(1)
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			send(con, withdraw(id[0], id[1], id[2]))
+			wgwd.Done()
 		case "db":
+			wgdb.Add(1)
 			pulldb(con, msg[1])
+			wgdb.Done()
 		case "get":
+			wgget.Add(1)
 			send(con, getItemAmount(msg[1]))
+			wgget.Done()
 		case "exit":
+			wgexit.Add(1)
 			con.Close()
 			fmt.Println("EOF")
+			wg.exit.Done()
 			return
 		default:
+			wg.Add(1)
 			send(con, "Some How Error!")
+			wg.Done()
 		}
 	}
 }
