@@ -104,7 +104,7 @@ func rec(con net.Conn) {
 			wgexit.Add(1)
 			con.Close()
 			fmt.Println("EOF")
-			wg.exit.Done()
+			wgexit.Done()
 			return
 		default:
 			wg.Add(1)
