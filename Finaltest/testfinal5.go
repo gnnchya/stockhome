@@ -22,7 +22,6 @@ var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan i
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 
 func init(){
-	rand.Seed(22)
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if eir != nil {
 		fmt.Println("Error: Cannot open database")
@@ -31,6 +30,7 @@ func init(){
 }
 
 func main() {
+	rand.Seed(22)
 	//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 	cli := flag.Int("cli", 10, "Number of clients")
 	rut := flag.Int("rmup", 30, "Time to spawn all clients")
@@ -73,6 +73,7 @@ func main() {
 	timeout := time.After(time.Duration(*allt*60) * time.Second)
 
 	for {
+
 		select {
 		case <-timeout:
 			defer db.Close()
