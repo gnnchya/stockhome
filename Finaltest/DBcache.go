@@ -23,13 +23,13 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 	switch {
 	case rd <= 20: // 20% chance
 		rdact = "add " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(10-5)+5)
-		fmt.Println("---------------------ADD--------------------- Client no.", ts)
+		fmt.Println("---------------------\u001B[48;5;22mADD\u001B[0m--------------------- Client no.", ts)
 	case rd <= 55: // 35% chance
 		rdact = "wd " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(5-1)+1)
-		fmt.Println("-------------------WITHDRAW------------------ Client no.", ts)
+		fmt.Println("-------------------\u001B[48;5;88mWITHDRAW\u001B[0m------------------ Client no.", ts)
 	case rd <= 100: // 45% chance
 		rdact = "get " + rdact
-		fmt.Println("-------------------ACQUIRE------------------- Client no.", ts)
+		fmt.Println("-------------------\u001B[48;5;25mACQUIRE\u001B[0m------------------- Client no.", ts)
 
 	}
 

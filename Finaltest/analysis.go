@@ -23,7 +23,7 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println("-------------------ANALYSIS------------------- Client no.", ts)
+		fmt.Println("-------------------\u001b[48;5;89mANALYSIS\u001b[0m------------------- Client no.", ts)
 		//fmt.Println(randate)
 		start := time.Now()
 		c <- randate

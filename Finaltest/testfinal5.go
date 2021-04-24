@@ -20,14 +20,17 @@ var mem1, mem2 string
 var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
-func main() {
+
+func init(){
+	rand.Seed(22)
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if eir != nil {
 		fmt.Println("Error: Cannot open database")
 	}
 	db.SetMaxIdleConns(0)
-	rand.Seed(time.Now().UTC().UnixNano())
+}
 
+func main() {
 	//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 	cli := flag.Int("cli", 10, "Number of clients")
 	rut := flag.Int("rmup", 30, "Time to spawn all clients")
@@ -56,8 +59,8 @@ func main() {
 			//wg1.Add(1)
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 			c1 := make(chan string)
-			fmt.Println("\u001B[33m++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\u001B[0m")
-			log.Printf("Initiate client no. %d", ti)
+			log.Println("\033[36m+++++++++++++++++++ Initiate client no.\u001B[0m", ti)
+			//log.Printf("Initiate client no. %d\u001B[0m", ti)
 			go Client(c1)
 			c <- ti
 			cc <- c1
@@ -73,7 +76,7 @@ func main() {
 		select {
 		case <-timeout:
 			defer db.Close()
-			time.Sleep(time.Duration(2) * time.Second)
+			time.Sleep(time.Duration(3) * time.Second)
 			fmt.Println()
 			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
@@ -106,7 +109,7 @@ func main() {
 		case ts := <-c:
 			go func(ts int) {
 				c1 := <-cc
-				log.Printf("Client No %d started", ts)
+				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
 
 				//Add,WD,get test >> Initial request
 				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts)
@@ -151,13 +154,13 @@ func main() {
 				// Additional request of the user
 				for{
 					time.Sleep(time.Duration(rand.Intn(60-20)+20) * time.Second) // random sleep time between 20 secs - 60 secs
-					rd := rand.Intn(100-1)+1
+					rdt := rand.Intn(100-1)+1
 					switch {
-					case rd <= 60: // 60% chance
+					case rdt <= 60: // 60% chance
 						dbtest(c1, ts)
-					case rd <= 85: // 25% chance
+					case rdt <= 85: // 25% chance
 						histest(c1, ts)
-					case rd <= 100: // 15% chance
+					case rdt <= 100: // 15% chance
 						anatest(c1, ts)
 					}
 				}
