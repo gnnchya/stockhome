@@ -7,18 +7,18 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
+	// "sync"
 	"time"
 )
 
-func Client(c chan string, wg *sync.WaitGroup) {
+func Client(c chan string) {
 	var try int = 0
 	var con net.Conn
 	var err error
 
 	for {
 		// time.Sleep(1 * time.Millisecond)
-		con, err = net.Dial("tcp", ":9999")
+		con, err = net.Dial("tcp", "128.199.70.176:9999")
 		if err != nil && try >= 3 {
 			fmt.Println("error: ", err)
 			error3(c)
@@ -41,11 +41,11 @@ func Client(c chan string, wg *sync.WaitGroup) {
 		case "add":
 			add(con, com, c)
 			c <- "done"
-			wg.Done()
+			// wg.Done()
 		case "wd":
 			wd(con, com, c)
 			c <- "done"
-			wg.Done()
+			// wg.Done()
 		case "his":
 			his(con, com, c)
 			c <- "done"
@@ -57,8 +57,9 @@ func Client(c chan string, wg *sync.WaitGroup) {
 		case "get":
 			get(con, com, c)
 			c <- "done"
-			wg.Done()
+			// wg.Done()
 		case "exit":
+			fmt.Println("Client disconnected")
 			con.Close()
 			return
 		default:
@@ -120,7 +121,7 @@ func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
-	fmt.Println("Waiting for respond...")
+	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -181,7 +182,7 @@ func wd(con net.Conn, com []string, c chan string) {
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
-	fmt.Println("Waiting for respond...")
+	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -254,14 +255,11 @@ func his(con net.Conn, com []string, c chan string) {
 		fmt.Println("Cannot diplay the current month!")
 		error4(c)
 		return
-	} else if mm > 12 || mm < 1 {
-		fmt.Println("Invalid Month")
-		return
 	}
 
 	con.Write([]byte(com[0] + ": " + since[0] + since[1] + "\n"))
 
-	fmt.Println("Downloading...")
+	//fmt.Println("Downloading...")
 
 	// Create a file that the client wants to download
 	dir, err := os.Getwd()
@@ -306,7 +304,7 @@ func his(con net.Conn, com []string, c chan string) {
 		return
 	}
 
-	fmt.Println("Download completed")
+	//fmt.Println("Download completed")
 	return
 }
 
@@ -379,7 +377,7 @@ func ana(con net.Conn, com []string, c chan string) {
 	}
 
 	con.Write([]byte(com[0] + ": " + since[0] + "-" + since[1] + "-" + since[2] + "\n"))
-	fmt.Println("Waiting for respond...")
+	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -398,12 +396,6 @@ func ana(con net.Conn, com []string, c chan string) {
 }
 
 func get(con net.Conn, com []string, c chan string) {
-	com[1] = strings.TrimSpace(com[1])
-	_, err := strconv.Atoi(com[1])
-	if err != nil {
-		fmt.Println("Please enter the item ID as an integer!")
-		return
-	}
 	con.Write([]byte(com[0] + ": " + com[1] + "\n"))
 	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
@@ -428,13 +420,13 @@ func get(con net.Conn, com []string, c chan string) {
 
 func error3(c chan string) {
 	c <- "error"
-	c <- "0"
-	c <- "0"
+	c <- "error"
+	c <- "error"
 }
 
 func error4(c chan string) {
 	c <- "error"
-	c <- "0"
-	c <- "0"
+	c <- "error"
+	c <- "error"
 	c <- "error"
 }

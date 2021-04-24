@@ -13,11 +13,13 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 )
+
 var wgadd sync.WaitGroup
 var wgdb sync.WaitGroup
 var wgana sync.WaitGroup
 var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
+
 // var wgexit sync.WaitGroup
 // var wgall sync.WaitGroup
 
@@ -54,7 +56,7 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
-		
+
 		fmt.Println()
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
@@ -105,12 +107,12 @@ func rec(con net.Conn) {
 			// wgall.Done()
 		}
 		// wgall.Wait()
-		// wgadd.Wait()
-		// wgwd.Wait()
-		// wgget.Wait()
-		// wgana.Wait()
+		wgadd.Wait()
+		wgwd.Wait()
+		wgget.Wait()
+		wgana.Wait()
 		// wgexit.Wait()
-		// wgdb.Wait()
+		wgdb.Wait()
 	}
 }
 

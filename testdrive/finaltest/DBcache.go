@@ -9,26 +9,27 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
+func DBcache(c chan string, ts int) (time.Duration, string, string, string, int, string) {
 	var mem1, mem2, output, state, rdact string
 	var ran int
 	var elapsed time.Duration
+	cdb := make(chan string)
 	correct := "yes"
 
-	rand.Seed(time.Now().UTC().UnixNano())
-	ran = rand.Intn(10000) //10000
+	// rand.Seed(time.Now().UTC().UnixNano())
+	ran = rand.Intn(10000-1) + 1 //10000
 	rdact = strconv.Itoa(ran)
-	rd := rand.Intn(3)
-	switch rd {
-	case 0:
+	rd := rand.Intn(100-1)+1
+	switch {
+	case rd <= 20: // 20% chance
 		rdact = "add " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(10-5)+5)
-		fmt.Println("---------------------ADD---------------------")
-	case 1:
+		fmt.Println("---------------------ADD--------------------- Client no.", ts)
+	case rd <= 55: // 35% chance
 		rdact = "wd " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(5-1)+1)
-		fmt.Println("-------------------WITHDRAW------------------")
-	case 2:
+		fmt.Println("-------------------WITHDRAW------------------ Client no.", ts)
+	case rd <= 100: // 45% chance
 		rdact = "get " + rdact
-		fmt.Println("-------------------ACQUIRE-------------------")
+		fmt.Println("-------------------ACQUIRE------------------- Client no.", ts)
 
 	}
 
@@ -41,22 +42,22 @@ func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 
 		output = <-c
 		elapsed = time.Since(start)
+		go show(ran, cdb)
 		mem1 = <-c
 		mem2 = <-c
 		state = <-c
 
-		if output == "error" {
+		if output == "Server: error" || output == "Server: nil" {
 			output = "None"
 		}
 
 	}
 
 	if output != "None" {
-		check := show(ran)
-		if output == check {
-			fmt.Println("-->Correct output")
+		if output == <-cdb {
+			fmt.Println("\033[32m -->Correct output\033[0m")
 		} else {
-			fmt.Println("-->Incorrect output")
+			fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
 		}
 	} else {
@@ -66,21 +67,18 @@ func DBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 	fmt.Println("Time elapsed: ", elapsed)
 	done := <-c
 	if done == "done" {
-		ctime <- elapsed
-		cmem <- mem1
-		cmem <- mem2
-		cmem <- correct
-		cmem <- strconv.Itoa(rd)
-		cmem <- state
+		return elapsed, mem1, mem2, correct, rd, state
 	}
+
+	return elapsed, mem1, mem2, "no", rd, state
 }
 
-func show(itemID int) string {
+func show(itemID int, cdb chan string) {
 	var amount int
 	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
 	if check != nil {
-		return "Not in DB"
+		cdb <- "Not in DB"
 	}
-	return "Server: Database: " + strconv.Itoa(itemID) + "-" + strconv.Itoa(amount) // + "\n."
+	cdb <- "Server: Database: " + strconv.Itoa(itemID) + "-" + strconv.Itoa(amount) // + "\n."
 }

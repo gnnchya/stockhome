@@ -10,25 +10,19 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var inputdate = [16]string{"2019-12", "2020-01", "2020-02", "2020-03", "2020-04",
-	"2020-05", "2020-06", "2020-07", "2020-08", "2020-09", "2020-10", "2020-11",
-	"2020-12", "2021-01", "2021-02", "2021-03"} // "2021-04", "2021-05"
-
-func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
-	var mem1, mem2, output, state, fnoutput string
+func LBcache(c chan string, ts int) (time.Duration, string, string, string, string) {
+	var mem1, mem2, output, state string
 	var elapsed time.Duration
+	clb := make(chan string)
 	correct := "yes"
-	rand.Seed(time.Now().UTC().UnixNano())
-	rd := rand.Intn(16)
-	randate := inputdate[rd]
-	randate1 := "his " + randate
+	rd := randate()
+	randate1 := "his " + rd
 
 	begin := <-c
 	if begin == "begin" {
-		// fmt.Println("-------------------HISTORY-------------------")
-		fnoutput = "-------------------HISTORY-------------------\n"
-		// fmt.Println(randate1)
-		fnoutput = fnoutput + randate1 + "\n"
+		fmt.Println("-------------------HISTORY------------------- Client no.", ts)
+		fmt.Println(randate1)
+		go retrieve(rd, clb)
 		start := time.Now()
 
 		c <- randate1
@@ -50,31 +44,23 @@ func LBcache(c chan string, cmem chan string, ctime chan time.Duration) {
 	}
 
 	if output != "None" {
-		check := retrieve(randate) + "."
-		if output == check {
-			fnoutput = fnoutput + "-->Correct output\n"
-			// fmt.Println("-->Correct output")
-		} else {
-			fnoutput = fnoutput + "-->Incorrect output\n"
-			// fmt.Println("-->Incorrect output")
-			correct = "no"
-		}
-	} else {
-		// fmt.Println("## ERROR ##")
-		fnoutput = fnoutput + "## ERROR ##\n"
-		correct = "no"
-	}
-	// fmt.Println("History time elapsed: ", elapsed)
-	fnoutput = fnoutput + "History time elapsed: " + elapsed.String() + "\n"
-	ctime <- elapsed
-	cmem <- mem1
-	cmem <- mem2
-	cmem <- correct
-	cmem <- state
-	fmt.Println(fnoutput)
-}
+		check := <-clb + "."
 
-func retrieve(Date string) string {
+		if output == check {
+			fmt.Println("\033[32m -->Correct output\033[0m")
+		   } else {
+			fmt.Println("\033[31m -->Incorrect output\033[0m")
+			correct = "no"
+		   }
+	} else {
+		fmt.Println("## ERROR ##")
+		correct = "nil"
+	}
+	fmt.Println("History time elapsed: ", elapsed)
+	return elapsed, mem1, mem2, correct, state
+}
+//
+func retrieve(Date string, clb chan string) {
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	buf.Write(col)
@@ -84,7 +70,7 @@ func retrieve(Date string) string {
 	endDate := Date + "-31"
 	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 	}
 
 	// Slice each row
@@ -99,5 +85,17 @@ func retrieve(Date string) string {
 		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
 		buf.Write(line)
 	}
-	return buf.String() + ""
+	clb <- buf.String() + ""
+}
+
+func randate() string {
+	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
+	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	delta := max - min
+
+	//rand.Seed(time.Now().UTC().UnixNano())
+	sec := rand.Int63n(delta) + min
+	date := time.Unix(sec, 0)
+	str := date.Format("2006-01")
+	return str
 }
