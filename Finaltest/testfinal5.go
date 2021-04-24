@@ -17,15 +17,16 @@ var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2, countall time.Duration = 0, 0, 0, 0, 0, 0
 var mem1, mem2 string
-var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
-
 func main() {
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if eir != nil {
 		fmt.Println("Error: Cannot open database")
 	}
+	db.SetMaxIdleConns(0)
+	rand.Seed(22)
 
 	//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 	cli := flag.Int("cli", 10, "Number of clients")
@@ -99,14 +100,14 @@ func main() {
 			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
 			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
-			//fmt.Println(missavg2)
-			//fmt.Println(hitavg2)
-			//
-			//fmt.Println(missavg)
-			//fmt.Println(hitavg)
-			//
-			//fmt.Println(anaavg)
-			//fmt.Println(countall)
+			fmt.Println(missavg)
+			fmt.Println(hitavg2)
+
+			fmt.Println(missavg)
+			fmt.Println(hitavg)
+
+			fmt.Println(anaavg)
+			fmt.Println(countall)
 			return
 
 		case ts := <-c:
