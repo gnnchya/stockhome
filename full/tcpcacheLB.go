@@ -18,6 +18,7 @@ var Lfu Cache = Cache{4000000, 0, make(map[int]*Node)}
 var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
 var mu sync.Mutex
+// var wgcon sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.176:9999")
@@ -63,7 +64,7 @@ func main() {
 				// fmt.Println("server2", mem1, mem2)
 			}
 		}
-
+		// wgcon.Wait()
 	}
 	wg.Wait()
 }

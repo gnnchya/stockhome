@@ -44,13 +44,7 @@ func main() {
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 		// go send(con, rec(con))
-		wg.Wait()
-		wgadd.Wait()
-		wgwd.Wait()
-		wgget.Wait()
-		wgana.Wait()
-		wgexit.Wait()
-		wgdb.Wait()
+		
 	}
 
 }
@@ -111,6 +105,13 @@ func rec(con net.Conn) {
 			send(con, "Some How Error!")
 			wg.Done()
 		}
+		wg.Wait()
+		wgadd.Wait()
+		wgwd.Wait()
+		wgget.Wait()
+		wgana.Wait()
+		wgexit.Wait()
+		wgdb.Wait()
 	}
 }
 
