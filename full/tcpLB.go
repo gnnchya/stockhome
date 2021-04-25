@@ -18,7 +18,7 @@ var mem3 int = 0
 
 // var Lfu Cache = Cache{4000000, 0, make(map[int]*Node)}
 // var Cache_queue Queue = Queue{nil, nil}
-var wg sync.WaitGroup
+// var wg sync.WaitGroup
 var mu sync.Mutex
 
 // var wgcon sync.WaitGroup
@@ -85,7 +85,7 @@ func main() {
 		}
 		// wgcon.Wait()
 	}
-	wg.Wait()
+	// wg.Wait()
 }
 
 func rec3(con net.Conn) {
