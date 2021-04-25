@@ -20,6 +20,7 @@ var wgana sync.WaitGroup
 var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
 var wghis sync.WaitGroup
+var wgall sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
@@ -41,12 +42,14 @@ func main() {
 			return
 		}
 		go rec(con)
+		wgall.Wait()
 		fmt.Println(con.RemoteAddr())
 	}
 }
 
 func rec(con net.Conn) {
 	for {
+		wgall.Add(1)
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -98,6 +101,7 @@ func rec(con net.Conn) {
 		default:
 			send(con, "Some How Error!")
 		}
+		wgall.Done()
 	}
 }
 
