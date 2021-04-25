@@ -64,36 +64,36 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			ana := analysis(date[0], date[1], date[2])
 			wgana.Wait()
+			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			add := add(id[0], id[1], id[2])
 			wgadd.Wait()
+			add := add(id[0], id[1], id[2])
 			send(con, add)
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wd := withdraw(id[0], id[1], id[2])
 			wgwd.Wait()
+			wd := withdraw(id[0], id[1], id[2])
 			send(con, wd)
 		case "get":
-			get := getItemAmount(msg[1])
 			wgget.Wait()
+			get := getItemAmount(msg[1])
 			send(con, get)
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
 			return
 		case "his":
-			his := his(data)
 			wghis.Wait()
+			his := his(data)
 			send(con, his)
 		default:
 			send(con, "Some How Error!")
