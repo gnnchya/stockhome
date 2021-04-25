@@ -21,7 +21,7 @@ var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
 
 // var wgexit sync.WaitGroup
-var wgall sync.WaitGroup
+// var wgall sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
@@ -51,7 +51,7 @@ func main() {
 
 func rec(con net.Conn) {
 	for {
-		wgall.Add(1)
+		// wgall.Add(1)
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -70,7 +70,7 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			wgana.Wait()
+			// wgana.Wait()
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 			// wgana.Done()
@@ -80,7 +80,7 @@ func rec(con net.Conn) {
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wgadd.Wait()
+			// wgadd.Wait()
 			add := add(id[0], id[1], id[2])
 			send(con, add)
 			// wgadd.Done()
@@ -90,18 +90,18 @@ func rec(con net.Conn) {
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wgwd.Wait()
+			// wgwd.Wait()
 			wd := withdraw(id[0], id[1], id[2])
 			send(con, wd)
 			// wgwd.Done()
 		case "db":
 			// wgdb.Add(1)
-			wgdb.Wait()
+			// wgdb.Wait()
 			pulldb(con, msg[1])
 			// wgdb.Done()
 		case "get":
 			// wgget.Add(1)
-			wgget.Wait()
+			// wgget.Wait()
 			get := getItemAmount(msg[1])
 			send(con, get)
 			// wgget.Done()
@@ -116,7 +116,7 @@ func rec(con net.Conn) {
 			send(con, "Some How Error!")
 			// wgall.Done()
 		}
-		wgall.Done()
+		// wgall.Done()
 
 		// wgexit.Wait()
 
@@ -131,8 +131,8 @@ func send(con net.Conn, msg string) {
 var db *sql.DB
 
 func analysis(year string, month string, day string) string {
-	wgall.Wait()
-	wgana.Add(1)
+	// wgana.Add(1)
+	// defer wgana.Done()
 	// var err error
 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	// if err != nil {
@@ -167,7 +167,7 @@ func analysis(year string, month string, day string) string {
 	}()
 
 	Wg.Wait()
-	defer wgana.Done()
+
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -356,8 +356,8 @@ func WithDate(Wg *sync.WaitGroup) string {
 }
 
 func pulldb(con net.Conn, date string) {
-	wgall.Wait()
-	wgdb.Add(1)
+	// wgdb.Add(1)
+	// defer wgdb.Done()
 	// var err error
 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	// if err != nil {
@@ -395,12 +395,12 @@ func pulldb(con net.Conn, date string) {
 	}
 	// con.Write(buf.Bytes())
 	con.Write([]byte("."))
-	defer wgdb.Done()
+
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	wgall.Wait()
-	wgadd.Add(1)
+	// wgadd.Add(1)
+	// defer wgadd.Done()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -415,13 +415,13 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	defer wgadd.Done()
+
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	wgall.Wait()
-	wgwd.Add(1)
+	// wgwd.Add(1)
+	// defer wgwd.Done()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -436,28 +436,26 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	defer wgwd.Done()
+
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	wgall.Wait()
-	wgget.Add(1)
+	// wgget.Add(1)
+	// defer wgget.Done()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
-
+	defer cs.Close()
 	cs.Write([]byte("get:" + itemID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
 		return "nil" + "*" + "no" + "\n"
 	}
-	cs.Close()
 	fmt.Println(val)
-	defer wgget.Done()
 	return val
 }
