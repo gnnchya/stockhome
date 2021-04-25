@@ -72,9 +72,8 @@ func rec(con net.Conn) {
 func send(con net.Conn, msg []byte, state string) {
 	temp := append(msg, []byte("*")...)
 	temp1 := append(temp, []byte(state)...)
-	con.Write(temp1)
-	con.Write([]byte("."))
-
+	temp2 := append(temp1, []byte(".")...)
+	con.Write(temp2)
 }
 
 var db *sql.DB
