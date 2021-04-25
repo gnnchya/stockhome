@@ -90,7 +90,7 @@ func main() {
 
 // }
 
-func rec1(con net.Conn, data string) {
+func rec1(con net.Conn) {
 
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
@@ -149,7 +149,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 	}
 }
 
-func rec2(con net.Conn, data string) {
+func rec2(con net.Conn) {
 
 	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
