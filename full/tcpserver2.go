@@ -21,7 +21,7 @@ var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
 
 // var wgexit sync.WaitGroup
-// var wgall sync.WaitGroup
+var wgall sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
