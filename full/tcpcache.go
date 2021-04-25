@@ -68,8 +68,10 @@ func rec(con net.Conn) {
 				fmt.Println("err5", err)
 				return
 			}
-			a, b := Lfu.get(&Cache_queue, date, "128.199.70.252:5001")
-			send1(con, a, b)
+			a := history(date)
+			wg.Wait()
+			fmt.Println("hi")
+			send(con, a)
 	}
 }
 
@@ -106,31 +108,6 @@ var Files = make(map[int]*Node)
 var wg sync.WaitGroup
 var mu sync.Mutex
 
-func main() {
-	// defer profile.Start(profile.MemProfile).Stop()
-	// for i := 0; i < 10; i++ {
-	// wg.Add(1)
-	history(202102)
-	// time.Sleep(500 * time.Millisecond)
-	// }
-	wg.Wait()
-	fmt.Println("hi")
-	Save(222200, Lfu.block[202109].value)
-	// history(202012)
-	// history(202011)
-
-	// history(202010)
-	// history(202009)
-
-	// history(202101)
-	// for {
-	// 	fmt.Print("HI: ")
-	// 	var first int
-	// 	fmt.Scanln(&first)
-	// 	history(first)
-	// 	break
-	// }
-}
 
 type Cache struct {
 	capacity int //bytes unit
