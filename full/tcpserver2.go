@@ -165,7 +165,7 @@ func analysis(year string, month string, day string) string {
 	}()
 
 	Wg.Wait()
-	wgana.Done()
+	defer wgana.Done()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -392,7 +392,7 @@ func pulldb(con net.Conn, date string) {
 	}
 	// con.Write(buf.Bytes())
 	con.Write([]byte("."))
-	wgdb.Done()
+	defer wgdb.Done()
 }
 
 func add(userID string, itemID string, itemAmount string) string {
@@ -411,7 +411,7 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	wgadd.Done()
+	defer wgadd.Done()
 	return val
 }
 
@@ -431,7 +431,7 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	wgwd.Done()
+	defer wgwd.Done()
 	return val
 }
 
@@ -443,14 +443,15 @@ func getItemAmount(itemID string) string {
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
-	defer cs.Close()
+
 	cs.Write([]byte("get:" + itemID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
 		return "nil" + "*" + "no" + "\n"
 	}
+	cs.Close()
 	fmt.Println(val)
-	wgget.Done()
+	defer wgget.Done()
 	return val
 }

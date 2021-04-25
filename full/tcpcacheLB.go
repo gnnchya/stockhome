@@ -18,6 +18,7 @@ var Lfu Cache = Cache{4000000, 0, make(map[int]*Node)}
 var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
 var mu sync.Mutex
+
 // var wgcon sync.WaitGroup
 
 func main() {
@@ -39,7 +40,7 @@ func main() {
 		if checkconnect("128.199.70.252:5001") == false {
 			if checkconnect("143.198.219.89:5002") == false {
 				fmt.Println("All server is down")
-				return
+				// return
 			} else {
 				fmt.Println("Server is down. Please try again.")
 				go rec2(con)
@@ -47,7 +48,7 @@ func main() {
 		} else if checkconnect("143.198.219.89:5002") == false {
 			if checkconnect("128.199.70.252:5001") == false {
 				fmt.Println("All server is down")
-				return
+				// return
 			} else {
 				fmt.Println("Server is down. Please try again.")
 				go rec1(con)
