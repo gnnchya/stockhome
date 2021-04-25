@@ -30,7 +30,6 @@ func main() {
 		return
 	}
 	defer connect.Close()
-	// var err error
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -42,9 +41,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		// wgall.Add(1)
 		go rec(con)
-		// wgall.Wait()
 		fmt.Println(con.RemoteAddr())
 	}
 }
@@ -56,7 +53,6 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
-
 		fmt.Println()
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
@@ -97,13 +93,11 @@ func rec(con net.Conn) {
 		default:
 			send(con, "Some How Error!")
 		}
-
 	}
 }
 
 func send(con net.Conn, msg string) {
 	con.Write([]byte("Server: " + msg + "."))
-
 }
 
 func his(msg string) string {

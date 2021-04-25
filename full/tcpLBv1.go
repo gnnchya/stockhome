@@ -45,7 +45,6 @@ func main() {
 				fmt.Println("All server is down")
 			} else {
 				fmt.Println("Server 1 is down. Please try again.")
-
 				go rec2(con)
 				wg2.Wait()
 			}
@@ -54,17 +53,14 @@ func main() {
 				fmt.Println("All server is down")
 			} else {
 				fmt.Println("Server 2 is down. Please try again.")
-
 				go rec1(con)
 				wg1.Wait()
 			}
 		} else {
 			if mem1 <= mem2 {
-
 				go rec1(con)
 				wg1.Wait()
 			} else if mem2 < mem1 {
-
 				go rec2(con)
 				wg2.Wait()
 			}
