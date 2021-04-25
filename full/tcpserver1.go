@@ -21,7 +21,7 @@ var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
 var wghis sync.WaitGroup
 
-var wgall sync.WaitGroup
+// var wgall sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
@@ -42,9 +42,9 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		wgall.Add(1)
+		// wgall.Add(1)
 		go rec(con)
-		wgall.Wait()
+		// wgall.Wait()
 		fmt.Println(con.RemoteAddr())
 	}
 }
@@ -69,46 +69,46 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			wgana.Wait()
+			// wgana.Wait()
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
-			wgall.Done()
+			// wgall.Done()
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wgadd.Wait()
+			// wgadd.Wait()
 			add := add(id[0], id[1], id[2])
 			send(con, add)
-			wgall.Done()
+			// wgall.Done()
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wgwd.Wait()
+			// wgwd.Wait()
 			wd := withdraw(id[0], id[1], id[2])
 			send(con, wd)
-			wgall.Done()
+			// wgall.Done()
 		case "get":
-			wgget.Wait()
+			// wgget.Wait()
 			get := getItemAmount(msg[1])
 			send(con, get)
-			wgall.Done()
+			// wgall.Done()
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
-			wgall.Done()
+			// wgall.Done()
 			return
 		case "his":
-			wghis.Wait()
+			// wghis.Wait()
 			his := his(data)
 			send(con, his)
-			wgall.Done()
+			// wgall.Done()
 		default:
 			send(con, "Some How Error!")
-			wgall.Done()
+			// wgall.Done()
 		}
 
 	}
