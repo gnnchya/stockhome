@@ -100,6 +100,7 @@ func rec3(con net.Conn) {
 	}
 	fmt.Println("server3", mem3)
 	for {
+		fmt.Println("loop")
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println("err4", err)
