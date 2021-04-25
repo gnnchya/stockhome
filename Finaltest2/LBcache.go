@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -10,7 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func LBcache(c chan string, ts int) (time.Duration, string, string, string, string) {
+func LBcache(c chan string, ts int, db *sql.DB) (time.Duration, string, string, string, string) {
 	var mem1, mem2, output, state string
 	var elapsed time.Duration
 	clb := make(chan string)
@@ -22,7 +23,7 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 	if begin == "begin" {
 		fmt.Println("-------------------\u001B[48;5;208mHISTORY\u001B[0m------------------- Client no.", ts)
 		//fmt.Println(randate1)
-		go retrieve(rd, clb)
+		go retrieve(rd, clb, db)
 		start := time.Now()
 
 		c <- randate1
@@ -60,7 +61,7 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 	return elapsed, mem1, mem2, correct, state
 }
 //
-func retrieve(Date string, clb chan string) {
+func retrieve(Date string, clb chan string, db *sql.DB) {
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	buf.Write(col)

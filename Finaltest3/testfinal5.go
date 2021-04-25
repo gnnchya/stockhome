@@ -5,10 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	//"sync"
 	"time"
-	"math/rand"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -21,13 +21,13 @@ var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd,
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 
-func init(){
-	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if eir != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	db.SetMaxIdleConns(0)
-}
+//func init(){
+//	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+//	if eir != nil {
+//		fmt.Println("Error: Cannot open database")
+//	}
+//	db.SetMaxIdleConns(0)
+//}
 
 func main() {
 	rand.Seed(22)

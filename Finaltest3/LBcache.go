@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -61,6 +62,13 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 }
 //
 func retrieve(Date string, clb chan string) {
+	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if eir != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	db.SetMaxIdleConns(0)
+
+
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	buf.Write(col)
@@ -86,6 +94,7 @@ func retrieve(Date string, clb chan string) {
 		buf.Write(line)
 	}
 	row.Close()
+	db.Close()
 	clb <- "Server: "+ buf.String()
 }
 

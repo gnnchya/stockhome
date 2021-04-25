@@ -5,29 +5,29 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	//"sync"
 	"time"
-	"math/rand"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB
-var eir error
+//var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
 var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 
-func init(){
-	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if eir != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	db.SetMaxIdleConns(0)
-}
+//func init(){
+//	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+//	if eir != nil {
+//		fmt.Println("Error: Cannot open database")
+//	}
+//	db.SetMaxIdleConns(0)
+//}
 
 func main() {
 	rand.Seed(22)
@@ -51,12 +51,19 @@ func main() {
 
 	c := make(chan int)
 	cc := make(chan chan string)
+	cdb := make(chan *sql.DB)
 
 	var cliCnt int = 0
 	go func(c chan<- int) {
 		//wg1 := sync.WaitGroup{}
 		for ti := 1; ti <= *cli; ti++ {
 			//wg1.Add(1)
+			db, eir := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+			if eir != nil {
+				fmt.Println("Error: Cannot open database")
+			}
+			db.SetMaxIdleConns(0)
+
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 			c1 := make(chan string)
 			log.Println("\033[36m+++++++++++++++++++ Initiate client no.\u001B[0m", ti)
@@ -64,6 +71,7 @@ func main() {
 			go Client(c1)
 			c <- ti
 			cc <- c1
+			cdb <- db
 			cliCnt++
 			//wg1.Done()
 		}
@@ -112,10 +120,11 @@ func main() {
 		case ts := <-c:
 			go func(ts int) {
 				c1 := <-cc
+				db := <- cdb
 				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
 
 				//Add,WD,get test >> Initial request
-				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts)
+				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts, db)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
@@ -153,13 +162,14 @@ func main() {
 					rdt := rand.Intn(100-1)+1
 					switch {
 					case rdt <= 60: // 60% chance
-						dbtest(c1, ts)
+						dbtest(c1, ts, db)
 					case rdt <= 85: // 25% chance
-						histest(c1, ts)
+						histest(c1, ts, db)
 					case rdt <= 100: // 15% chance
-						anatest(c1, ts)
+						anatest(c1, ts, db)
 					}
 				}
+				db.Close()
 			}(ts)
 			default:
 		}
@@ -251,9 +261,9 @@ func main() {
 	}
 }
 
-func dbtest(c1 chan string, ts int){
+func dbtest(c1 chan string, ts int, db *sql.DB){
 	//Add,WD,get test
-	elapsed, _, _, correct, rd, state := DBcache(c1, ts)
+	elapsed, _, _, correct, rd, state := DBcache(c1, ts, db)
 	opcount3 <- 1
 	switch correct {
 	case "yes":
@@ -279,9 +289,9 @@ func dbtest(c1 chan string, ts int){
 	}
 }
 
-func anatest(c1 chan string, ts int){
+func anatest(c1 chan string, ts int, db *sql.DB){
 	//Analysis test
-	elapsed, _, _, correct := Analysis(c1, ts)
+	elapsed, _, _, correct := Analysis(c1, ts, db)
 
 	opanaavg <- elapsed
 	switch correct {
@@ -292,9 +302,9 @@ func anatest(c1 chan string, ts int){
 	}
 }
 
-func histest(c1 chan string, ts int){
+func histest(c1 chan string, ts int, db *sql.DB){
 	//history test
-	elapsed, _, _, correct, state := LBcache(c1, ts)
+	elapsed, _, _, correct, state := LBcache(c1, ts, db)
 
 	opcount2 <- 1
 	switch correct {

@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
+
 	//"database/sql"
 	"fmt"
 	"math/rand"
@@ -288,6 +290,12 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 
 func rtDB(buf *bytes.Buffer) []string {
 	var err error
+	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if eir != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	db.SetMaxIdleConns(0)
+
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
 	if err != nil {
 		fmt.Print(err)
@@ -305,6 +313,7 @@ func rtDB(buf *bytes.Buffer) []string {
 		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
 		buf.Write(line)
 	}
+	db.Close()
 
 	s := strings.Split(buf.String(), ",")
 	return s

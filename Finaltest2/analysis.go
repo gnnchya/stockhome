@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
+
 	//"database/sql"
 	"fmt"
 	"math/rand"
@@ -14,14 +16,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
+func Analysis(c chan string, ts int, db *sql.DB) (time.Duration, string, string, string) {
 	var mem1, mem2, output string
 	var elapsed time.Duration
 	cana := make(chan string)
 	correct := "yes"
 	rd := randomTimestamp()
 	randate := "ana " + rd
-	go analysis1(rd, cana)
+	go analysis1(rd, cana, db)
 
 	begin := <-c
 	if begin == "begin" {
@@ -80,12 +82,12 @@ func randomTimestamp() string {
 }
 
 // analysis code ****************************************************
-func analysis1(start string, cana chan string){
+func analysis1(start string, cana chan string, db *sql.DB){
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
 
 	buf := bytes.NewBuffer(make([]byte, 0))
-	s := rtDB(buf)
+	s := rtDB(buf, db)
 
 	Wg.Add(1)
 	go func() {
@@ -286,7 +288,7 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 
 // ---------------------------------------------------------------------------------------------------
 
-func rtDB(buf *bytes.Buffer) []string {
+func rtDB(buf *bytes.Buffer, db *sql.DB) []string {
 	var err error
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
 	if err != nil {
