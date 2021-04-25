@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
 	"fmt"
 	"net"
@@ -131,47 +132,53 @@ func analysis(year string, month string, day string) string {
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	s := rtDB(buf)
+
 	Wg.Add(1)
 	go func() {
-		aWith = MostWithA(&Wg)
+		aWith = MostWithA(&Wg, s)
 	}()
+
 	Wg.Add(1)
 	go func() {
-		bWith = MostWithDate(start, &Wg)
+		bWith = MostWithDate(start, &Wg, s)
 	}()
+
 	Wg.Add(1)
 	go func() {
-		cWith = WithTime(&Wg)
+		cWith = WithTime(&Wg, s)
 	}()
+
 	Wg.Add(1)
 	go func() {
-		dWith = WithDate(&Wg)
+		dWith = WithDate(&Wg, s)
 	}()
+
 	Wg.Wait()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWithA(Wg *sync.WaitGroup) string {
+func MostWithA(Wg *sync.WaitGroup, s []string) string {
 	defer Wg.Done()
 	var txt strings.Builder
-	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0")
-
-	if err != nil {
-		fmt.Print(err)
-	}
+	var count int = 0
 
 	withMap := make(map[int]int)
-
-	for row.Next() {
-		var itemID, amount int
-		err = row.Scan(&itemID, &amount)
-
-		// If exist, add to value. If not, add key.
-		if val, ok := withMap[itemID]; ok {
-			withMap[itemID] = amount + val
-		} else {
-			withMap[itemID] = amount
+	for count <= len(s) {
+		if count+1 >= len(s) {
+			break
 		}
+		amount, _ := strconv.Atoi(s[count+1])
+		id, _ := strconv.Atoi(s[count])
+		if val, ok := withMap[id]; ok {
+			withMap[id] = amount + val
+		} else {
+			withMap[id] = amount
+		}
+
+		count = count + 4
 	}
 
 	// Make slice for sorting
@@ -199,35 +206,35 @@ func MostWithA(Wg *sync.WaitGroup) string {
 	return txt.String()
 }
 
-func MostWithDate(start string, Wg *sync.WaitGroup) string {
+func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 	defer Wg.Done()
 	var txt strings.Builder
+	var count int = 0
 	startDate, _ := time.Parse("2006-01-02", start)
 	var end = time.Now()
-	endDate := end.Format("2006-01-02")
-
-	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
-
-	if err != nil {
-		fmt.Print(err)
-	}
 
 	withMap := make(map[int]int)
-
-	for row.Next() {
-		var itemID, amount int
-		err = row.Scan(&itemID, &amount)
-
-		// If exist, add to value. If not, add key.
-		if val, ok := withMap[itemID]; ok {
-			withMap[itemID] = amount + val
-		} else {
-			withMap[itemID] = amount
+	for count <= len(s) {
+		if count+1 >= len(s) {
+			break
 		}
+		amount, _ := strconv.Atoi(s[count+1])
+		id, _ := strconv.Atoi(s[count])
+		check, _ := time.Parse("2006-01-02", s[count+2])
+		if check.After(startDate) && check.Before(end) {
+			if val, ok := withMap[id]; ok {
+				withMap[id] = amount + val
+			} else {
+				withMap[id] = amount
+			}
+		}
+
+		count = count + 4
 	}
 
 	// Make slice for sorting
 	withSort := make([]int, 0, len(withMap))
+
 	for amount := range withMap {
 		withSort = append(withSort, amount)
 	}
@@ -248,33 +255,29 @@ func MostWithDate(start string, Wg *sync.WaitGroup) string {
 		}
 	}
 
-	defer row.Close()
 	return txt.String()
 }
 
-func WithTime(Wg *sync.WaitGroup) string {
+func WithTime(Wg *sync.WaitGroup, s []string) string {
 	defer Wg.Done()
 	var txt strings.Builder
-	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
-
-	if err != nil {
-		fmt.Print(err)
-	}
-
+	var count int = 0
 	// Make map for keeping
+
 	withMap := make(map[string]int)
-
-	for row.Next() {
-		var amount int
-		var time string
-		err = row.Scan(&time, &amount)
-
-		// If exist, add to value. If not, add key.
+	for count <= len(s) {
+		if count+1 >= len(s) {
+			break
+		}
+		amount, _ := strconv.Atoi(s[count+1])
+		time := s[count+3]
 		if val, ok := withMap[time[0:2]]; ok {
 			withMap[time[0:2]] = amount + val
 		} else {
 			withMap[time[0:2]] = amount
 		}
+
+		count = count + 4
 	}
 
 	// Make slice for sorting
@@ -287,33 +290,29 @@ func WithTime(Wg *sync.WaitGroup) string {
 	for _, time := range withSort {
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
-	defer row.Close()
 	return txt.String()
 }
 
-func WithDate(Wg *sync.WaitGroup) string {
+func WithDate(Wg *sync.WaitGroup, s []string) string {
 	defer Wg.Done()
 	var txt strings.Builder
-	row, err := db.Query("SELECT date, amount FROM history WHERE action = 0")
-
-	if err != nil {
-		fmt.Print(err)
-	}
+	var count int = 0
 
 	// Make map for keeping
 	withMap := make(map[string]int)
-
-	for row.Next() {
-		var amount int
-		var date string
-		err = row.Scan(&date, &amount)
-
-		// If exist, add to value. If not, add key.
+	for count <= len(s) {
+		if count+1 >= len(s) {
+			break
+		}
+		amount, _ := strconv.Atoi(s[count+1])
+		date := s[count+2]
 		if val, ok := withMap[date]; ok {
 			withMap[date] = amount + val
 		} else {
 			withMap[date] = amount
 		}
+
+		count = count + 4
 	}
 
 	// Make slice for sorting
@@ -321,7 +320,7 @@ func WithDate(Wg *sync.WaitGroup) string {
 	for date := range withMap {
 		withSort = append(withSort, date)
 	}
-	sort.Strings(withSort)
+	sort.Sort(sort.Reverse(sort.StringSlice(withSort)))
 
 	var i int = 0
 	for _, date := range withSort {
@@ -331,8 +330,40 @@ func WithDate(Wg *sync.WaitGroup) string {
 			break
 		}
 	}
-	defer row.Close()
 	return txt.String()
+}
+
+// ---------------------------------------------------------------------------------------------------
+
+func rtDB(buf *bytes.Buffer) []string {
+	var err error
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+
+	defer db.Close()
+
+	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Slice each row
+	for row.Next() {
+		var itemID, amount int
+		var date, time string
+		err = row.Scan(&itemID, &amount, &date, &time)
+		if err != nil {
+			fmt.Print(err)
+		}
+		// Write each line
+		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
+		buf.Write(line)
+	}
+
+	s := strings.Split(buf.String(), ",")
+	return s
 }
 
 func add(userID string, itemID string, itemAmount string) string {
