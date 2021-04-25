@@ -42,15 +42,16 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		wgall.Add(1)
 		go rec(con)
-		// wgall.Wait()
+		wgall.Wait()
 		fmt.Println(con.RemoteAddr())
 	}
 }
 
 func rec(con net.Conn) {
 	for {
-		// wgall.Add(1)
+		wgall.Add(1)
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -102,7 +103,7 @@ func rec(con net.Conn) {
 		default:
 			send(con, "Some How Error!")
 		}
-		// wgall.Done()
+		wgall.Done()
 	}
 }
 
