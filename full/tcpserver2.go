@@ -50,9 +50,7 @@ func main() {
 }
 
 func rec(con net.Conn) {
-
 	for {
-
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -71,7 +69,9 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			send(con, analysis(date[0], date[1], date[2]))
+			wgana.Wait()
+			ana := analysis(date[0], date[1], date[2])
+			send(con, ana)
 			// wgana.Done()
 		case "add":
 			// wgadd.Add(1)
@@ -79,7 +79,9 @@ func rec(con net.Conn) {
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			send(con, add(id[0], id[1], id[2]))
+			wgadd.Wait()
+			add := add(id[0], id[1], id[2])
+			send(con, add)
 			// wgadd.Done()
 		case "wd":
 			// wgwd.Add(1)
@@ -87,15 +89,20 @@ func rec(con net.Conn) {
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			send(con, withdraw(id[0], id[1], id[2]))
+			wgwd.Wait()
+			wd := withdraw(id[0], id[1], id[2])
+			send(con, wd)
 			// wgwd.Done()
 		case "db":
 			// wgdb.Add(1)
+			wgdb.Wait()
 			pulldb(con, msg[1])
 			// wgdb.Done()
 		case "get":
 			// wgget.Add(1)
-			send(con, getItemAmount(msg[1]))
+			wgget.Wait()
+			get := getItemAmount(msg[1])
+			send(con, get)
 			// wgget.Done()
 		case "exit":
 			// wgexit.Add(1)
@@ -109,12 +116,8 @@ func rec(con net.Conn) {
 			// wgall.Done()
 		}
 		// wgall.Wait()
-		wgadd.Wait()
-		wgwd.Wait()
-		wgget.Wait()
-		wgana.Wait()
+
 		// wgexit.Wait()
-		wgdb.Wait()
 
 	}
 }
