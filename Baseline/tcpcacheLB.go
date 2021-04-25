@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -16,6 +15,7 @@ var mem1 int = 0
 var mem2 int = 0
 var wg sync.WaitGroup
 var mu sync.Mutex
+
 // var wgcon sync.WaitGroup
 
 func main() {
@@ -34,34 +34,16 @@ func main() {
 			return
 		}
 		fmt.Println(con.RemoteAddr())
-		if checkconnect("128.199.70.252:5001") == false {
-			if checkconnect("143.198.219.89:5002") == false {
-				fmt.Println("All server is down")
-				return
-			} else {
-				fmt.Println("Server is down. Please try again.")
-				go rec2(con)
-			}
-		} else if checkconnect("143.198.219.89:5002") == false {
-			if checkconnect("128.199.70.252:5001") == false {
-				fmt.Println("All server is down")
-				return
-			} else {
-				fmt.Println("Server is down. Please try again.")
-				go rec1(con)
-			}
-
-		} else {
-			if mem1 <= mem2 {
-				// mem1++
-				go rec1(con)
-				// fmt.Println("server1", mem1, mem2)
-			} else if mem2 < mem1 {
-				// mem2++
-				go rec2(con)
-				// fmt.Println("server2", mem1, mem2)
-			}
+		if mem1 <= mem2 {
+			// mem1++
+			go rec1(con)
+			// fmt.Println("server1", mem1, mem2)
+		} else if mem2 < mem1 {
+			// mem2++
+			go rec2(con)
+			// fmt.Println("server2", mem1, mem2)
 		}
+
 		// wgcon.Wait()
 	}
 	wg.Wait()
@@ -81,7 +63,7 @@ func main() {
 // }
 
 func rec1(con net.Conn) {
-
+	mem1++
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println("err3", err)
@@ -90,7 +72,7 @@ func rec1(con net.Conn) {
 		ser1.Close()
 		return
 	}
-	mem1++
+
 	fmt.Println("server1", mem1, mem2)
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
@@ -140,7 +122,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 }
 
 func rec2(con net.Conn) {
-
+	mem2++
 	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println("err7", err)
@@ -149,7 +131,7 @@ func rec2(con net.Conn) {
 		ser2.Close()
 		return
 	}
-	mem2++
+
 	fmt.Println("server2", mem1, mem2)
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
@@ -198,33 +180,6 @@ func fb2(con net.Conn, ser2 net.Conn) {
 	}
 }
 
-func checkconnect(port string) bool {
-	t := 600 * time.Second
-	con, err := net.DialTimeout("tcp", port, t)
-	if err != nil {
-		fmt.Println("Unhealthy: Server " + port + " is Down")
-		// fmt.Println(err)
-		return false
-	}
-	fmt.Println("Healthy: Server " + port + " is Up")
-	con.Close()
-	return true
-}
-
-func hc(port string) {
-	// reference code "https://kasvith.me/posts/lets-create-a-simple-lb-go/"
-	ticker := time.NewTicker(5 * time.Second)
-	done := make(chan bool)
-	for {
-		select {
-		case <-done:
-			return
-		case <-ticker.C:
-			checkconnect(port)
-		}
-	}
-}
-
 func send1(con net.Conn, msg []byte, state string) {
 	temp := append(msg, []byte("*")...)
 	temp1 := append(temp, []byte(state)...)
@@ -235,4 +190,3 @@ func send1(con net.Conn, msg []byte, state string) {
 	con.Write(temp5)
 	con.Write([]byte("`"))
 }
-
