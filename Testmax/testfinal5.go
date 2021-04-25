@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -13,8 +12,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
-var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
 var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -69,7 +66,6 @@ func main() {
 
 		select {
 		case <-timeout:
-			defer db.Close()
 			//time.Sleep(time.Duration(3) * time.Second)
 			fmt.Println()
 			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
