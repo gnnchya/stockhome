@@ -96,7 +96,8 @@ func rec1(con net.Conn) {
 		ser1.Close()
 		return
 	}
-	wg1.Done()
+	defer wg1.Done()
+	defer ser1.Close()
 	fmt.Println("server1", mem1, mem2)
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
@@ -152,7 +153,8 @@ func rec2(con net.Conn) {
 		ser2.Close()
 		return
 	}
-	wg2.Done()
+	defer wg2.Done()
+	defer ser2.Close()
 	fmt.Println("server2", mem1, mem2)
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
