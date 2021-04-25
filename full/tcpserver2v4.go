@@ -129,7 +129,7 @@ func send(con net.Conn, msg string) {
 func his(msg string) string {
 	// wghis.Add(1)
 	// defer wghis.Done()
-	m.Lock()
+	// m.Lock()
 	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
@@ -142,7 +142,7 @@ func his(msg string) string {
 		fmt.Println(err)
 		return "nil"
 	}
-	m.Unlock()
+	// m.Unlock()
 	return data
 }
 
@@ -151,7 +151,7 @@ var db *sql.DB
 func analysis(year string, month string, day string) string {
 	// wgana.Add(1)
 	// defer wgana.Done()
-	m.Lock()
+	// m.Lock()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
@@ -174,7 +174,7 @@ func analysis(year string, month string, day string) string {
 		dWith = WithDate(&Wg, s)
 	}()
 	Wg.Wait()
-	m.Unlock()
+	// m.Unlock()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -387,7 +387,7 @@ func rtDB(buf *bytes.Buffer) []string {
 func add(userID string, itemID string, itemAmount string) string {
 	// wgadd.Add(1)
 	// defer wgadd.Done()
-	m.Lock()
+	// m.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -402,14 +402,14 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	m.Unlock()
+	// m.Unlock()
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
 	// wgwd.Add(1)
 	// defer wgwd.Done()
-	m.Lock()
+	// m.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -424,14 +424,14 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	m.Unlock()
+	// m.Unlock()
 	return val
 }
 
 func getItemAmount(itemID string) string {
 	// wgget.Add(1)
 	// defer wgget.Done()
-	m.Lock()
+	// m.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -446,6 +446,6 @@ func getItemAmount(itemID string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	m.Unlock()
+	// m.Unlock()
 	return val
 }
