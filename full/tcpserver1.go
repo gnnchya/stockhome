@@ -72,6 +72,7 @@ func rec(con net.Conn) {
 			wgana.Wait()
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
+			wgall.Done()
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -80,6 +81,7 @@ func rec(con net.Conn) {
 			wgadd.Wait()
 			add := add(id[0], id[1], id[2])
 			send(con, add)
+			wgall.Done()
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -88,22 +90,27 @@ func rec(con net.Conn) {
 			wgwd.Wait()
 			wd := withdraw(id[0], id[1], id[2])
 			send(con, wd)
+			wgall.Done()
 		case "get":
 			wgget.Wait()
 			get := getItemAmount(msg[1])
 			send(con, get)
+			wgall.Done()
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
+			wgall.Done()
 			return
 		case "his":
 			wghis.Wait()
 			his := his(data)
 			send(con, his)
+			wgall.Done()
 		default:
 			send(con, "Some How Error!")
+			wgall.Done()
 		}
-		wgall.Done()
+
 	}
 }
 
