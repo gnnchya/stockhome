@@ -70,8 +70,8 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			wgana.Wait()
 			ana := analysis(date[0], date[1], date[2])
+			wgana.Wait()
 			send(con, ana)
 			// wgana.Done()
 		case "add":
@@ -80,8 +80,8 @@ func rec(con net.Conn) {
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wgadd.Wait()
 			add := add(id[0], id[1], id[2])
+			wgadd.Wait()
 			send(con, add)
 			// wgadd.Done()
 		case "wd":
@@ -90,19 +90,19 @@ func rec(con net.Conn) {
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wgwd.Wait()
 			wd := withdraw(id[0], id[1], id[2])
+			wgwd.Wait()
 			send(con, wd)
 			// wgwd.Done()
 		case "db":
 			// wgdb.Add(1)
-			wgdb.Wait()
 			pulldb(con, msg[1])
+			wgdb.Wait()
 			// wgdb.Done()
 		case "get":
 			// wgget.Add(1)
-			wgget.Wait()
 			get := getItemAmount(msg[1])
+			wgget.Wait()
 			send(con, get)
 			// wgget.Done()
 		case "exit":
