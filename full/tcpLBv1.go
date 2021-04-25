@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -18,7 +19,8 @@ var mem3 int = 0
 // var Lfu Cache = Cache{4000000, 0, make(map[int]*Node)}
 // var Cache_queue Queue = Queue{nil, nil}
 // var wg sync.WaitGroup
-// var mu sync.Mutex
+var wg1 sync.WaitGroup
+var wg2 sync.WaitGroup
 
 // var wgcon sync.WaitGroup
 
@@ -43,6 +45,7 @@ func main() {
 				fmt.Println("All server is down")
 			} else {
 				fmt.Println("Server 1 is down. Please try again.")
+				wg2.Wait()
 				go rec2(con)
 			}
 		} else if checkconnect("143.198.219.89:5002") == false {
@@ -50,12 +53,15 @@ func main() {
 				fmt.Println("All server is down")
 			} else {
 				fmt.Println("Server 2 is down. Please try again.")
+				wg1.Wait()
 				go rec1(con)
 			}
 		} else {
 			if mem1 <= mem2 {
+				wg1.Wait()
 				go rec1(con)
 			} else if mem2 < mem1 {
+				wg2.Wait()
 				go rec2(con)
 			}
 		}
@@ -76,6 +82,7 @@ func main() {
 // }
 
 func rec1(con net.Conn) {
+	wg1.Add(1)
 	mem1++
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
@@ -85,6 +92,7 @@ func rec1(con net.Conn) {
 		ser1.Close()
 		return
 	}
+	wg1.Done()
 	fmt.Println("server1", mem1, mem2)
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
@@ -130,6 +138,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 }
 
 func rec2(con net.Conn) {
+	wg2.Add(1)
 	mem2++
 	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
@@ -139,6 +148,7 @@ func rec2(con net.Conn) {
 		ser2.Close()
 		return
 	}
+	wg2.Done()
 	fmt.Println("server2", mem1, mem2)
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
