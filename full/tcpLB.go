@@ -53,7 +53,7 @@ func main() {
 			if checkconnect("139.59.116.139:5004") == false {
 				fmt.Println("History server is down")
 			} else {
-				go rec3(con)
+				go rec3(con, data)
 			}
 		} else if checkconnect("128.199.70.252:5001") == false {
 			if checkconnect("143.198.219.89:5002") == false {
@@ -61,7 +61,7 @@ func main() {
 				// return
 			} else {
 				fmt.Println("Server is down. Please try again.")
-				go rec2(con)
+				go rec2(con, data)
 			}
 		} else if checkconnect("143.198.219.89:5002") == false {
 			if checkconnect("128.199.70.252:5001") == false {
@@ -69,7 +69,7 @@ func main() {
 				// return
 			} else {
 				fmt.Println("Server is down. Please try again.")
-				go rec1(con)
+				go rec1(con, data)
 			}
 
 		} else {
@@ -88,7 +88,7 @@ func main() {
 	// wg.Wait()
 }
 
-func rec3(con net.Conn) {
+func rec3(con net.Conn, data string) {
 	mem3++
 	ser3, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
@@ -100,15 +100,15 @@ func rec3(con net.Conn) {
 	}
 	fmt.Println("server3", mem3)
 	for {
-		fmt.Println("loop")
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println("err4", err)
-			con.Close()
-			ser3.Close()
-			mem3--
-			return
-		}
+		// fmt.Println("loop")
+		// data, err := bufio.NewReader(con).ReadString('\n')
+		// if err != nil {
+		// 	fmt.Println("err4", err)
+		// 	con.Close()
+		// 	ser3.Close()
+		// 	mem3--
+		// 	return
+		// }
 		fmt.Println()
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
@@ -160,7 +160,7 @@ func fb3(con net.Conn, ser3 net.Conn) {
 
 // }
 
-func rec1(con net.Conn) {
+func rec1(con net.Conn, data string) {
 
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
@@ -173,14 +173,14 @@ func rec1(con net.Conn) {
 	mem1++
 	fmt.Println("server1", mem1, mem2)
 	for {
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println("err4", err)
-			con.Close()
-			ser1.Close()
-			mem1--
-			return
-		}
+		// data, err := bufio.NewReader(con).ReadString('\n')
+		// if err != nil {
+		// 	fmt.Println("err4", err)
+		// 	con.Close()
+		// 	ser1.Close()
+		// 	mem1--
+		// 	return
+		// }
 		fmt.Println()
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
@@ -219,7 +219,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 	}
 }
 
-func rec2(con net.Conn) {
+func rec2(con net.Conn, data string) {
 
 	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
@@ -232,14 +232,14 @@ func rec2(con net.Conn) {
 	mem2++
 	fmt.Println("server2", mem1, mem2)
 	for {
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println("err8", err)
-			con.Close()
-			ser2.Close()
-			mem2--
-			return
-		}
+		// data, err := bufio.NewReader(con).ReadString('\n')
+		// if err != nil {
+		// 	fmt.Println("err8", err)
+		// 	con.Close()
+		// 	ser2.Close()
+		// 	mem2--
+		// 	return
+		// }
 		fmt.Println()
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
