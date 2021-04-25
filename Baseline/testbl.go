@@ -19,7 +19,7 @@ var anaavg, missavg, hitavg, hisavg, awgavg time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
 var count, count2, count3, counthis, countawg, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
-var opcountawg, opcounthis, opanaavg= make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
+var opcountawg, opcounthis, opanaavg, opcountawg2, opcounthis2= make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 
 func init(){
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -90,17 +90,19 @@ func main() {
 			fmt.Println("Client distribution correct: ", (cliCnt)/2 == no)
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
+			fmt.Println("Analysis count: ", countall)
 			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
 			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
+			fmt.Println("History count: ", count2)
 			fmt.Println(">>Average History time :", (float64(hisavg)/float64(time.Millisecond))/float64(counthis), "ms")
 			fmt.Println("++History Data correctness: ", (float64(counthis)/float64(count2))*100, "%")
 			fmt.Println()
 			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
 			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
 			fmt.Println(">>Average transaction time :", (float64(awgavg)/float64(time.Millisecond))/float64(countawg), "ms")
-			fmt.Println("++Cache Data correctness: ", (float64(countadd+countwd+countget)/float64(count3))*100, "%\033[0m")
+			fmt.Println("++Cache Data correctness: ", (float64(countawg)/float64(count3))*100, "%\033[0m")
 			return
 
 		case ts := <-c:
@@ -190,9 +192,21 @@ func main() {
 		}
 
 		select{
+		case elapsed := <- opcountawg2:
+			awgavg = awgavg + elapsed
+		default:
+		}
+
+		select{
 		case elapsed := <- opcounthis:
 			hisavg = hisavg + elapsed
 			counthis++
+		default:
+		}
+
+		select{
+		case elapsed := <- opcounthis2:
+			hisavg = hisavg + elapsed
 		default:
 		}
 
@@ -231,20 +245,21 @@ func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
 	elapsed, _, _, correct, rd := DBcache(c1, ts)
 	opcount3 <- 1
+	switch {
+	case rd <= 20:
+		opcountadd <- countadd
+	case rd <= 55:
+		opcountwd <- countwd
+	case rd <= 100:
+		opcountget <- countget
+	}
 	switch correct {
 	case "yes":
-		switch {
-		case rd <= 20:
-			opcountadd <- countadd
-		case rd <= 55:
-			opcountwd <- countwd
-		case rd <= 100:
-			opcountget <- countget
-		}
-
 		opcountawg <- elapsed
-
+	case "no":
+		opcountawg2 <- elapsed
 	case "nil":
+		fmt.Println("here2: ", elapsed)
 		opcount3 <- 0
 	}
 }
@@ -252,7 +267,7 @@ func dbtest(c1 chan string, ts int){
 func anatest(c1 chan string, ts int){
 	//Analysis test
 	elapsed, _, _, correct := Analysis(c1, ts)
-
+	//fmt.Println("ana: ", elapsed)
 	opanaavg <- elapsed
 
 	switch correct {
@@ -268,11 +283,13 @@ func anatest(c1 chan string, ts int){
 func histest(c1 chan string, ts int){
 	//history test
 	elapsed, _, _, correct := LBcache(c1, ts)
-
+	//fmt.Println("his: ", elapsed)
 	opcount2 <- 1
 	switch correct {
 	case "yes":
-	opcounthis <- elapsed
+		opcounthis <- elapsed
+	case "no":
+		opcounthis2 <- elapsed
 	case "nil":
 		opcount2 <- 0
 	}

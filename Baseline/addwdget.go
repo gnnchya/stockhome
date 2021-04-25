@@ -10,7 +10,7 @@ import (
 )
 
 func DBcache(c chan string, ts int) (time.Duration, string, string, string, int) {
-	var mem1, mem2, output, state, rdact string
+	var mem1, mem2, output, rdact string
 	var ran int
 	var elapsed time.Duration
 	cdb := make(chan string)
@@ -53,9 +53,16 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int)
 	}
 
 	if output != "None" {
-		if output == <-cdb {
+		a := <- cdb
+		if output == a {
+			fmt.Println(output)
+			fmt.Println(a)
+
 			//fmt.Println("\033[32m -->Correct output\033[0m")
 		} else {
+			fmt.Println(output)
+			fmt.Println(a)
+			fmt.Println("wrong")
 			//fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
 		}
@@ -68,7 +75,6 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int)
 	if done == "done" {
 		return elapsed, mem1, mem2, correct, rd
 	}
-
 	return elapsed, mem1, mem2, "no", rd
 }
 
@@ -79,5 +85,5 @@ func show(itemID int, cdb chan string) {
 	if check != nil {
 		cdb <- "Not in DB"
 	}
-	cdb <- "Server: Database: " + strconv.Itoa(itemID) + "-" + strconv.Itoa(amount) // + "\n."
+	cdb <- "Server: "+ strconv.Itoa(itemID) + "-" + strconv.Itoa(amount) + "."
 }

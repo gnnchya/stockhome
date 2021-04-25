@@ -323,7 +323,7 @@ func add(userID string, itemID string, itemAmount string) string {
 		}
 	}
 	fmt.Println(statement)
-	return statement
+	return strconv.Itoa(amount)
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
@@ -351,24 +351,22 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 	}
 	fmt.Println(statement)
 
-	return statement
+	return strconv.Itoa(amount)
 }
 
 func getItemAmount(itemID string) string {
 
-	row, err := db.Query("SELECT amount FROM stock WHERE itemID = (?)", itemID)
-
-	if err != nil {
-		fmt.Print(err)
-	}
-
 	var amount int
-	for row.Next() {
-		err = row.Scan(&itemID, &amount)
+	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
+
+	if check != nil {
+		return "Not in DB."
 	}
 	a := itemID + "-" + strconv.Itoa(amount) + "."
 	fmt.Println(a)
 	return a
+
+
 }
 
 func his(filename string) []byte {
@@ -398,6 +396,5 @@ func his(filename string) []byte {
 	row.Close()
 
 	// Data that will be sent
-	temp := append(buf.Bytes(),[]byte(".")...)
-	return temp
+	return buf.Bytes()
 }

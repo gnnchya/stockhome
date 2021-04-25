@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
+	//"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -81,36 +81,17 @@ func randomTimestamp() string {
 func analysis1(start string, cana chan string) {
 	var aWith, bWith, cWith, dWith string
 
-	Wg := sync.WaitGroup{}
+	aWith = MostWithA()
+	bWith = MostWithDate(start)
+	cWith = WithTime()
+	dWith = WithDate()
 
-	Wg.Add(1)
-	go func() {
-		aWith = MostWithA(&Wg)
-	}()
-
-	Wg.Add(1)
-	go func() {
-		bWith = MostWithDate(start, &Wg)
-	}()
-
-	Wg.Add(1)
-	go func() {
-		cWith = WithTime(&Wg)
-	}()
-
-	Wg.Add(1)
-	go func() {
-		dWith = WithDate(&Wg)
-	}()
-
-	Wg.Wait()
-	cana <- (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
+	cana <-  (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWithA(Wg *sync.WaitGroup) string {
-	defer Wg.Done()
+func MostWithA() string {
 	var txt strings.Builder
-	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0")
+	row, err := db.Query("SELECT itemID, amount FROM stockhome.history WHERE action = 0")
 
 	if err != nil {
 		fmt.Print(err)
@@ -155,14 +136,13 @@ func MostWithA(Wg *sync.WaitGroup) string {
 	return txt.String()
 }
 
-func MostWithDate(start string, Wg *sync.WaitGroup) string {
-	defer Wg.Done()
+func MostWithDate(start string) string {
 	var txt strings.Builder
 	startDate, _ := time.Parse("2006-01-02", start)
 	var end = time.Now()
 	endDate := end.Format("2006-01-02")
 
-	row, err := db.Query("SELECT itemID, amount FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
+	row, err := db.Query("SELECT itemID, amount FROM stockhome.history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
 
 	if err != nil {
 		fmt.Print(err)
@@ -208,10 +188,9 @@ func MostWithDate(start string, Wg *sync.WaitGroup) string {
 	return txt.String()
 }
 
-func WithTime(Wg *sync.WaitGroup) string {
-	defer Wg.Done()
+func WithTime() string {
 	var txt strings.Builder
-	row, err := db.Query("SELECT time, amount FROM history WHERE action = 0")
+	row, err := db.Query("SELECT time, amount FROM stockhome.history WHERE action = 0")
 
 	if err != nil {
 		fmt.Print(err)
@@ -247,10 +226,9 @@ func WithTime(Wg *sync.WaitGroup) string {
 	return txt.String()
 }
 
-func WithDate(Wg *sync.WaitGroup) string {
-	defer Wg.Done()
+func WithDate() string {
 	var txt strings.Builder
-	row, err := db.Query("SELECT date, amount FROM history WHERE action = 0")
+	row, err := db.Query("SELECT date, amount FROM stockhome.history WHERE action = 0")
 
 	if err != nil {
 		fmt.Print(err)
@@ -277,7 +255,7 @@ func WithDate(Wg *sync.WaitGroup) string {
 	for date := range withMap {
 		withSort = append(withSort, date)
 	}
-	sort.Strings(withSort)
+	sort.Sort(sort.Reverse(sort.StringSlice(withSort)))
 
 	var i int = 0
 	for _, date := range withSort {

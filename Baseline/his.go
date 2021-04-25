@@ -11,7 +11,7 @@ import (
 )
 
 func LBcache(c chan string, ts int) (time.Duration, string, string, string) {
-	var mem1, mem2, output, state string
+	var mem1, mem2, output string
 	var elapsed time.Duration
 	clb := make(chan string)
 	correct := "yes"
@@ -44,7 +44,6 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string) {
 
 	if output != "None" {
 		check := <-clb + "."
-
 		if output == check {
 			//fmt.Println("\033[32m -->Correct output\033[0m")
 		} else {
@@ -84,7 +83,7 @@ func retrieve(Date string, clb chan string) {
 		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
 		buf.Write(line)
 	}
-	clb <- buf.String() + ""
+	clb <- "Server: "+ buf.String()
 }
 
 func randate() string {
