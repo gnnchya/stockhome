@@ -132,7 +132,6 @@ func Main(itemID int, amount int, userID int) string {
 
 	Wg.Add(1)
 	go func() {
-		defer Wg.Done()
 		statement = addNew(itemID, amount, userID, &Wg)
 	}()
 	Wg.Wait()
@@ -145,7 +144,6 @@ func Main2(itemID int, amount int, userID int) string {
 
 	Wg.Add(1)
 	go func() {
-		defer Wg.Done()
 		statement = withdraw(itemID, amount * (-1), userID, &Wg)
 	}()
 	Wg.Wait()
