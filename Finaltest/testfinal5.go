@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+
 	//"sync"
-	"time"
 	"math/rand"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -17,11 +18,11 @@ var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
-var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 
-func init(){
+func init() {
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if eir != nil {
 		fmt.Println("Error: Cannot open database")
@@ -44,7 +45,7 @@ func main() {
 		return
 	}
 
-	delay := (float64(*rut) / float64(*cli))*1000
+	delay := (float64(*rut) / float64(*cli)) * 1000
 
 	fmt.Printf("************************************\nClient : %d\nRamp up time : %d seconds\nTotal run time : %d minutes\n", *cli, *rut, *allt)
 	fmt.Println("************************************")
@@ -153,9 +154,9 @@ func main() {
 				}
 
 				// Additional request of the user
-				for{
+				for {
 					time.Sleep(time.Duration(rand.Intn(60-20)+20) * time.Second) // random sleep time between 20 secs - 60 secs
-					rdt := rand.Intn(100-1)+1
+					rdt := rand.Intn(100-1) + 1
 					switch {
 					case rdt <= 60: // 60% chance
 						dbtest(c1, ts)
@@ -166,11 +167,11 @@ func main() {
 					}
 				}
 			}(ts)
-			default:
+		default:
 		}
-		select{
-		case t := <- opcount3:
-			switch t{
+		select {
+		case t := <-opcount3:
+			switch t {
 			case 1:
 				count3++
 			case 0:
@@ -179,48 +180,48 @@ func main() {
 		default:
 		}
 
-		select{
-		case <- opcountadd:
+		select {
+		case <-opcountadd:
 			countadd++
 		default:
 		}
 
-		select{
-		case <- opcountwd:
+		select {
+		case <-opcountwd:
 			countwd++
 		default:
 		}
 
-		select{
-		case <- opcountget:
+		select {
+		case <-opcountget:
 			countget++
 		default:
 		}
 
-		select{
-		case elapsed := <- opcounthit:
+		select {
+		case elapsed := <-opcounthit:
 			hitavg2 = hitavg2 + elapsed
 			counthit2++
 		default:
 		}
 
-		select{
-		case elapsed := <- opcountmiss:
+		select {
+		case elapsed := <-opcountmiss:
 			missavg2 = missavg2 + elapsed
 			countmiss2++
 		default:
 		}
 
-		select{
-		case elapsed := <- opanaavg:
+		select {
+		case elapsed := <-opanaavg:
 			anaavg = anaavg + elapsed
 			countall++
 		default:
 		}
 
-		select{
-		case t:= <- opcount:
-			switch t{
+		select {
+		case t := <-opcount:
+			switch t {
 			case 1:
 				count++
 			case 0:
@@ -229,23 +230,23 @@ func main() {
 		default:
 		}
 
-		select{
-		case elapsed := <- ophitavg:
+		select {
+		case elapsed := <-ophitavg:
 			hitavg = hitavg + elapsed
 			counthit++
 		default:
 		}
 
-		select{
-		case elapsed := <- opmissavg:
+		select {
+		case elapsed := <-opmissavg:
 			missavg = missavg + elapsed
 			countmiss++
 		default:
 		}
 
-		select{
-		case t:= <- opcount2:
-			switch t{
+		select {
+		case t := <-opcount2:
+			switch t {
 			case 1:
 				count2++
 			case 0:
@@ -256,7 +257,7 @@ func main() {
 	}
 }
 
-func dbtest(c1 chan string, ts int){
+func dbtest(c1 chan string, ts int) {
 	//Add,WD,get test
 	elapsed, _, _, correct, rd, state := DBcache(c1, ts)
 	opcount3 <- 1
@@ -294,7 +295,7 @@ func dbtest(c1 chan string, ts int){
 	}
 }
 
-func anatest(c1 chan string, ts int){
+func anatest(c1 chan string, ts int) {
 	//Analysis test
 	elapsed, _, _, correct := Analysis(c1, ts)
 
@@ -311,7 +312,7 @@ func anatest(c1 chan string, ts int){
 	}
 }
 
-func histest(c1 chan string, ts int){
+func histest(c1 chan string, ts int) {
 	//history test
 	elapsed, _, _, correct, state := LBcache(c1, ts)
 
@@ -319,11 +320,11 @@ func histest(c1 chan string, ts int){
 	switch correct {
 	case "yes":
 		switch state {
-		case "true":
+		case "true.":
 			ophitavg <- elapsed
 			//hitavg = hitavg + elapsed
 			//counthit++
-		case "false":
+		case "false.":
 			opmissavg <- elapsed
 			//missavg = missavg + elapsed
 			//countmiss++
