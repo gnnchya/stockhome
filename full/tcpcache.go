@@ -246,42 +246,42 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 
 func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	name := strconv.Itoa(filename)
-	if _, ok := Files[filename]; ok {
-		fmt.Println("From VM")
-		Read(c, q, name)
-		return
-	} else {
-		fmt.Println("From DB")
-		Date := name[0:4] + "-" + name[4:6]
-		buf := bytes.NewBuffer(make([]byte, 0))
-		col := []byte("userID,itemID,amount,date,time")
-		buf.Write(col)
-		startDate := Date + "-01" //2021-02-01
-		endDate := Date + "-31"   //2021-02-31
+	// if _, ok := Files[filename]; ok {
+	// 	fmt.Println("From VM")
+	// 	Read(c, q, name)
+	// 	return
+	// } else {
+	fmt.Println("From DB")
+	Date := name[0:4] + "-" + name[4:6]
+	buf := bytes.NewBuffer(make([]byte, 0))
+	col := []byte("userID,itemID,amount,date,time")
+	buf.Write(col)
+	startDate := Date + "-01" //2021-02-01
+	endDate := Date + "-31"   //2021-02-31
 
-		row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
+	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
+	if err != nil {
+		fmt.Print(err)
+	}
+	// Slice each row
+	for row.Next() {
+		var userID, itemID, amount int
+		var date, time string
+		err = row.Scan(&userID, &itemID, &amount, &date, &time)
 		if err != nil {
 			fmt.Print(err)
 		}
-		// Slice each row
-		for row.Next() {
-			var userID, itemID, amount int
-			var date, time string
-			err = row.Scan(&userID, &itemID, &amount, &date, &time)
-			if err != nil {
-				fmt.Print(err)
-			}
-			// Write each line
-			line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-			buf.Write(line)
-		}
-		row.Close()
-
-		wg.Add(1)
-		go Save(filename, buf.Bytes())
-		c.set(q, filename, buf.Bytes())
-		return
+		// Write each line
+		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
+		buf.Write(line)
 	}
+	row.Close()
+
+	wg.Add(1)
+	go Save(filename, buf.Bytes())
+	c.set(q, filename, buf.Bytes())
+	return
+	// }
 }
 
 var KB = uint64(1024)
