@@ -22,7 +22,7 @@ var Wg sync.WaitGroup
 func main() {
 	//ยังไม่รู้ค่าจริงของ init\
 	myCache.InitLRU(380000)
-	connect, err := net.Listen("tcp", "143.198.195.15:5003")
+	connect, err := net.Listen("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -117,9 +117,10 @@ func send(con net.Conn, msg string) {
 	con.Write([]byte("Database: " + msg))
 }
 
+
 func init() {
 	var err error
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
 
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -127,28 +128,7 @@ func init() {
 }
 
 
-func Main(itemID int, amount int, userID int) string {
-	var statement string
 
-	Wg.Add(1)
-	go func() {
-		statement = addNew(itemID, amount, userID, &Wg)
-	}()
-	Wg.Wait()
-	return statement
-}
-
-func Main2(itemID int, amount int, userID int) string {
-
-	var statement string
-
-	Wg.Add(1)
-	go func() {
-		statement = withdraw(itemID, amount * (-1), userID, &Wg)
-	}()
-	Wg.Wait()
-	return statement
-}
 
 func GetAmount(itemID int) string {
 	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
@@ -167,7 +147,7 @@ func GetAmount(itemID int) string {
 func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
-	defer Wg.Done()
+	
 	var checkID int
 	var statement string
 
@@ -186,8 +166,10 @@ func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 	} else {
 		Wg.Add(1)
 		go func() {
+			defer Wg.Done()
 			addExist(itemID, amount, userID, Wg)
 		}()
+		// Wg.Wait()
 	}
 	return statement
 }
@@ -195,7 +177,7 @@ func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 	// For adding EXISTING items. For items CURRENTLY in the database.
 	// If you add a new item, it will die. Use addNew for items NOT in database
-	defer Wg.Done()
+	// defer Wg.Done()
 	var checkID, stock int
 	var statement string
 
@@ -218,7 +200,7 @@ func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 }
 
 func withdraw(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
-	defer Wg.Done()
+	// defer Wg.Done()
 	var checkID, stock int
 	var statement string
 
@@ -437,14 +419,15 @@ func getAmountbyItem(itemID int) string {
 func addToDB(itemID int, amount int, userID int) string{
 	var val int
 	var state bool
-
+	var statement string
 	Wg.Add(1)
 	go func() {
 		defer Wg.Done()
 		val, state = myCache.Input(itemID, amount)
+		statement = addNew(itemID, amount, userID, &Wg)
 	} ()
 	Wg.Wait()
-	statement := Main(itemID, amount, userID)
+	
 	fmt.Println(statement + "\n")
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
 
@@ -455,14 +438,15 @@ func addToDB(itemID int, amount int, userID int) string{
 func withDrawToDB(itemID int, amount int, userID int) string{
 	var eir int
 	var state bool
-	
+	var statement string
 	Wg.Add(1)
 	go func() {
 		defer Wg.Done()
 		eir, state = myCache.Input(itemID, amount)
+		statement = withdraw(itemID, amount * (-1), userID, &Wg)
 	}()
 	Wg.Wait()
-	statement := Main2(itemID, amount, userID)
+	
 	if eir == -1 {
 		// return error ให้ users
 		 return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
