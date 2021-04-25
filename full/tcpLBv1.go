@@ -45,24 +45,28 @@ func main() {
 				fmt.Println("All server is down")
 			} else {
 				fmt.Println("Server 1 is down. Please try again.")
-				wg2.Wait()
+
 				go rec2(con)
+				wg2.Wait()
 			}
 		} else if checkconnect("143.198.219.89:5002") == false {
 			if checkconnect("128.199.70.252:5001") == false {
 				fmt.Println("All server is down")
 			} else {
 				fmt.Println("Server 2 is down. Please try again.")
-				wg1.Wait()
+
 				go rec1(con)
+				wg1.Wait()
 			}
 		} else {
 			if mem1 <= mem2 {
-				wg1.Wait()
+
 				go rec1(con)
+				wg1.Wait()
 			} else if mem2 < mem1 {
-				wg2.Wait()
+
 				go rec2(con)
+				wg2.Wait()
 			}
 		}
 	}
