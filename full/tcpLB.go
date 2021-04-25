@@ -99,33 +99,33 @@ func rec3(con net.Conn, data string) {
 		return
 	}
 	fmt.Println("server3", mem3)
-	for {
-		// fmt.Println("loop")
-		// data, err := bufio.NewReader(con).ReadString('\n')
-		// if err != nil {
-		// 	fmt.Println("err4", err)
-		// 	con.Close()
-		// 	ser3.Close()
-		// 	mem3--
-		// 	return
-		// }
-		fmt.Println()
-		fmt.Print("Client: " + data)
-		msg := strings.Split(data, ":")
-		msg[0] = strings.TrimSpace(msg[0])
-		if msg[0] == "exit" {
-			ser3.Write([]byte("exit:\n"))
-			ser3.Close()
-			mem3--
-			fmt.Println("EOF")
-			con.Close()
-			return
-		} else {
-			ser3.Write([]byte(data))
-			fmt.Println("Already send history")
-			go fb3(con, ser3)
-		}
+	// for {
+	// fmt.Println("loop")
+	// data, err := bufio.NewReader(con).ReadString('\n')
+	// if err != nil {
+	// 	fmt.Println("err4", err)
+	// 	con.Close()
+	// 	ser3.Close()
+	// 	mem3--
+	// 	return
+	// }
+	fmt.Println()
+	fmt.Print("Client: " + data)
+	msg := strings.Split(data, ":")
+	msg[0] = strings.TrimSpace(msg[0])
+	if msg[0] == "exit" {
+		ser3.Write([]byte("exit:\n"))
+		ser3.Close()
+		mem3--
+		fmt.Println("EOF")
+		con.Close()
+		return
+	} else {
+		ser3.Write([]byte(data))
+		fmt.Println("Already send history")
+		go fb3(con, ser3)
 	}
+	// }
 	// mem1--
 }
 
