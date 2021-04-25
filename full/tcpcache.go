@@ -1,3 +1,4 @@
+// ref https://github.com/ricochet2200/go-disk-usage author ricochet2200
 package main
 
 import (
@@ -10,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	//"github.com/ricochet2200/go-disk-usage/du"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -59,21 +62,21 @@ func rec(con net.Conn) {
 			fmt.Println("err5", err)
 			return
 		}
-		a := Lfu.get(&Cache_queue, date)
-		send(con, a)
+		a, b := Lfu.get(&Cache_queue, date)
+		send(con, a, b)
 		fmt.Println("hi")
 
 	}
 }
 
-func send(con net.Conn, msg []byte) {
-	con.Write(msg)
+func send(con net.Conn, msg []byte, state string) {
+	temp := append(msg, []byte("*")...)
+	temp1 := append(temp, []byte(state)...)
+	con.Write(temp1)
 	con.Write([]byte("."))
 
 }
 
-// var mem1 int = 0
-// var mem2 int = 0
 var db *sql.DB
 
 // capacity size in bytes
@@ -141,9 +144,6 @@ func (q *Queue) deQ(list string) {
 			fmt.Println("Size (deq2)", Lfu.size)
 			q.Tail = q.Tail.next
 			q.Tail.prev = nil
-			// if q.Tail == nil {
-			// 	q.Head = q.Tail
-			// }
 			return
 		}
 	} else {
@@ -219,9 +219,9 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 	return
 }
 
-func (c *Cache) get(q *Queue, itemId int) []byte {
-	// wg.Add(1)
-	//state := "true"
+func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
+	wg.Add(1)
+	state := "true"
 	mu.Lock()
 	defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
@@ -229,45 +229,30 @@ func (c *Cache) get(q *Queue, itemId int) []byte {
 		fmt.Println("----HIT----")
 		fmt.Println()
 	} else {
-		// read(c, q, strconv.Itoa(itemId))
-		filename := strconv.Itoa(itemId)
-		// a := time.Now()
-		retrieve_go(c, q, filename)
+		// filename := strconv.Itoa(itemId)
+		retrieve(c, q, itemId)
 		// fmt.Println(time.Since(a))
 		// fmt.Println("CS:", len(c.block))
 		fmt.Println("----MISS----")
 		fmt.Println()
-		//state = "false"
+		state = "false"
 	}
 	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
-	// wg.Done()
-	return c.block[itemId].value //, state
-	// fmt.Println(Lfu)
-	// Cache_queue.printQ()
+	wg.Done()
+	return c.block[itemId].value, state
 	// fmt.Println("Final", c.size, "\n")
 	// fmt.Println(c.block[itemId].value)
 }
 
-// func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-// 	con, err := net.Dial("tcp", cn)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	defer con.Close()
-// 	con.Write([]byte("db :" + Date + "\n"))
-// 	data, err := bufio.NewReader(con).ReadBytes('.')
-// 	name, _ := strconv.Atoi(filename)
-// 	c.set(q, name, data)
-// }
-
-func retrieve_go(c *Cache, q *Queue, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	name, _ := strconv.Atoi(filename)
-	if _, ok := Files[name]; ok {
-		Read(c, q, filename)
+func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+	name := strconv.Itoa(filename)
+	if _, ok := Files[filename]; ok {
+		fmt.Println("From VM")
+		Read(c, q, name)
 		return
 	} else {
-		Date := filename[0:4] + "-" + filename[4:6]
+		fmt.Println("From DB")
+		Date := name[0:4] + "-" + name[4:6]
 		buf := bytes.NewBuffer(make([]byte, 0))
 		col := []byte("userID,itemID,amount,date,time")
 		buf.Write(col)
@@ -292,9 +277,9 @@ func retrieve_go(c *Cache, q *Queue, filename string) { //c *Cache, q *Queue, st
 		}
 		row.Close()
 
-		// name, _ := strconv.Atoi(filename)
-		go Save(name, buf.Bytes())
-		c.set(q, name, buf.Bytes())
+		wg.Add(1)
+		go Save(filename, buf.Bytes())
+		c.set(q, filename, buf.Bytes())
 		return
 	}
 }
@@ -330,6 +315,7 @@ func Save(filename int, data []byte) {
 	}
 	file.Write(data)
 	file.Close()
+	wg.Done()
 }
 
 func Read(c *Cache, q *Queue, filename string) {
