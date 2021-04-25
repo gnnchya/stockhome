@@ -59,16 +59,16 @@ func rec(con net.Conn) {
 			fmt.Println("err5", err)
 			return
 		}
-		a := string(history(date))
-		// wg.Wait()
+		a := Lfu.get(&Cache_queue, date, "143.198.219.89:5002")
+		send(con, a)
 		fmt.Println("hi")
-		con.Write([]byte(a + "."))
 
 	}
 }
 
-func send(con net.Conn, msg string) {
-	con.Write([]byte("Server: " + msg + "."))
+func send(con net.Conn, msg []byte) {
+	con.Write(msg)
+	con.Write([]byte("."))
 
 }
 
@@ -358,12 +358,12 @@ func Read(c *Cache, q *Queue, filename string) {
 	c.set(q, name, buf.Bytes())
 }
 
-func history(daterequest int) []byte {
-	// var err error
-	// db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
-	// defer db.Close()
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-	return Lfu.get(&Cache_queue, daterequest)
-}
+// func history(daterequest int) []byte {
+// 	// var err error
+// 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+// 	// defer db.Close()
+// 	// if err != nil {
+// 	// 	fmt.Println("Error: Cannot open database")
+// 	// }
+// 	return Lfu.get(&Cache_queue, daterequest)
+// }
