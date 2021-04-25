@@ -19,8 +19,8 @@ var wgdb sync.WaitGroup
 var wgana sync.WaitGroup
 var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
+var wghis sync.WaitGroup
 
-// var wgexit sync.WaitGroup
 // var wgall sync.WaitGroup
 
 func main() {
@@ -111,6 +111,10 @@ func rec(con net.Conn) {
 			fmt.Println("EOF")
 			// wgexit.Done()
 			return
+		case "his":
+			his := his(data)
+			wghis.Wait()
+			send(con, his)
 		default:
 			// wgall.Add(1)
 			send(con, "Some How Error!")
@@ -126,6 +130,24 @@ func rec(con net.Conn) {
 func send(con net.Conn, msg string) {
 	con.Write([]byte("Server: " + msg + "."))
 
+}
+
+func his(msg string) {
+	wghis.Add(1)
+	defer wghis.Done()
+	con, err := net.Dial("tcp", "139.59.116.139:5004")
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	defer con.Close()
+	con.Write([]byte(msg))
+	data, err := bufio.NewReader(con).ReadString('.')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	return data
 }
 
 var db *sql.DB
