@@ -22,7 +22,7 @@ var Wg sync.WaitGroup
 func main() {
 	//ยังไม่รู้ค่าจริงของ init\
 	myCache.InitLRU(380000)
-	connect, err := net.Listen("tcp", ":5003")
+	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -120,7 +120,7 @@ func send(con net.Conn, msg string) {
 
 func init() {
 	var err error
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
