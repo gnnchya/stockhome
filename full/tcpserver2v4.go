@@ -15,7 +15,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var m sync.Mutex
+var mana sync.Mutex
+var madd sync.Mutex
+var mwd sync.Mutex
+var mget sync.Mutex
+var mhis sync.Mutex
 
 // var wgall sync.WaitGroup
 
@@ -46,13 +50,7 @@ func main() {
 }
 
 func rec(con net.Conn) {
-	var wgadd sync.WaitGroup
-	var wgana sync.WaitGroup
-	var wgwd sync.WaitGroup
-	var wgget sync.WaitGroup
-	var wghis sync.WaitGroup
 	for {
-		// wgall.Add(1)
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -70,49 +68,31 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			wgana.Add(1)
 			ana := analysis(date[0], date[1], date[2])
-			wgana.Done()
-			wgana.Wait()
 			send(con, ana)
-			// wgall.Done()
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wgadd.Add(1)
 			add := add(id[0], id[1], id[2])
-			wgadd.Done()
-			wgadd.Wait()
 			send(con, add)
-			// wgall.Done()
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wgwd.Add(1)
 			wd := withdraw(id[0], id[1], id[2])
-			wgwd.Done()
-			wgwd.Wait()
 			send(con, wd)
-			// wgall.Done()
 		case "get":
-			wgget.Add(1)
 			get := getItemAmount(msg[1])
-			wgget.Done()
-			wgget.Wait()
 			send(con, get)
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
 			return
 		case "his":
-			wghis.Add(1)
 			his := his(data)
-			wghis.Done()
-			wghis.Wait()
 			send(con, his)
 		default:
 			send(con, "Some How Error!")
@@ -127,9 +107,7 @@ func send(con net.Conn, msg string) {
 }
 
 func his(msg string) string {
-	// wghis.Add(1)
-	// defer wghis.Done()
-	// m.Lock()
+	mhis.Lock()
 	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
@@ -142,16 +120,14 @@ func his(msg string) string {
 		fmt.Println(err)
 		return "nil"
 	}
-	// m.Unlock()
+	mhis.Unlock()
 	return data
 }
 
 var db *sql.DB
 
 func analysis(year string, month string, day string) string {
-	// wgana.Add(1)
-	// defer wgana.Done()
-	// m.Lock()
+	mana.Lock()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
@@ -174,7 +150,7 @@ func analysis(year string, month string, day string) string {
 		dWith = WithDate(&Wg, s)
 	}()
 	Wg.Wait()
-	// m.Unlock()
+	mana.Unlock()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -385,9 +361,7 @@ func rtDB(buf *bytes.Buffer) []string {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	// wgadd.Add(1)
-	// defer wgadd.Done()
-	// m.Lock()
+	madd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -402,14 +376,12 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	// m.Unlock()
+	madd.Unlock()
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	// wgwd.Add(1)
-	// defer wgwd.Done()
-	// m.Lock()
+	mwd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -424,14 +396,12 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	// m.Unlock()
+	mwd.Unlock()
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	// wgget.Add(1)
-	// defer wgget.Done()
-	// m.Lock()
+	mget.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -446,6 +416,6 @@ func getItemAmount(itemID string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	// m.Unlock()
+	mget.Unlock()
 	return val
 }

@@ -1,4 +1,3 @@
-//reference:https://medium.com/@fazlulkabir94/lru-cache-golang-implementation-92b7bafb76f0
 package main
 
 import (
@@ -17,11 +16,10 @@ import (
 var Db *sql.DB
 var myCache LRU
 var mutex = &sync.Mutex{}
-var Wg sync.WaitGroup
 
 func main() {
-	//ยังไม่รู้ค่าจริงของ init\
-	myCache.InitLRU(380000)
+	//ยังไม่รู้ค่าจริงของ init
+	myCache.InitLRU(100000)
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -126,12 +124,15 @@ func init() {
 	}
 }
 
+var Wg sync.WaitGroup
+
 func Main(itemID int, amount int, userID int) string {
+	// defer Db.Close()
 	var statement string
+	// Wg := sync.WaitGroup{}
 
 	Wg.Add(1)
 	go func() {
-		defer Wg.Done()
 		statement = addNew(itemID, amount, userID, &Wg)
 	}()
 	Wg.Wait()
@@ -139,19 +140,19 @@ func Main(itemID int, amount int, userID int) string {
 }
 
 func Main2(itemID int, amount int, userID int) string {
-
+	// defer Db.Close()
 	var statement string
+	// Wg := sync.WaitGroup{}
 
 	Wg.Add(1)
 	go func() {
-		defer Wg.Done()
 		statement = withdraw(itemID, amount*(-1), userID, &Wg)
 	}()
 	Wg.Wait()
 	return statement
 }
 
-func GetAmount(itemID int) string {
+func GetAmount(itemID int) int {
 	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
 
 	if err != nil {
@@ -162,7 +163,7 @@ func GetAmount(itemID int) string {
 	for row.Next() {
 		err = row.Scan(&itemID, &amount)
 	}
-	return strconv.Itoa(amount)
+	return amount
 }
 
 func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
@@ -214,6 +215,7 @@ func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 		statement = fmt.Sprintf("Added %d to database (%d units) | Item in Stock: %d\n", itemID, amount, stock+amount)
 		addHis(itemID, true, amount, userID)
 		add.Close()
+
 	}
 	return statement
 }
@@ -249,16 +251,19 @@ func addHis(itemID int, action bool, amount int, userID int) {
 	var datetime = time.Now()
 	date := datetime.Format("2006-01-02")
 	time := datetime.Format("15:04:05")
+	// fmt.Println("hi", action, userID, itemID, amount, date, time)
 	add, err := Db.Query("INSERT INTO history (action, userID, itemID, amount, date, time) VALUES(?, ?, ?, ?, ?, ?)", action, userID, itemID, amount, date, time)
 	if err != nil {
 		fmt.Println("Error: Cannot be added to history")
 	}
+
 	add.Close()
 }
 
 //จบ DB
 
-// เริ่ม cache
+//เริ่ม cache
+//reference:https://medium.com/@fazlulkabir94/lru-cache-golang-implementation-92b7bafb76f0
 
 var i int
 var dateAndTime time.Time = time.Now()
@@ -347,14 +352,12 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
-	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
-
 	if _, found := l.PageMap[itemID]; !found {
 		fmt.Println("Miss")
-		page := l.pageList.addFrontPage(itemID, GetAmountVal)
+		page := l.pageList.addFrontPage(itemID, GetAmount(itemID))
 		l.size++
 		l.PageMap[itemID] = page
-		return GetAmountVal, "false"
+		return GetAmount(itemID), "false"
 	}
 	fmt.Println("HIT")
 	val := l.PageMap[itemID].currentAmount
@@ -363,43 +366,25 @@ func (l *LRU) Read(itemID int) (int, string) {
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
-	fmt.Println(GetAmountVal)
 	_, found := l.PageMap[itemID]
-	if found {
-		if ItemAmount < 0 {
-			if GetAmountVal+ItemAmount < 0 {
-				fmt.Println(GetAmountVal + ItemAmount)
-				fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-				return -1, found
-			} else {
-				l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
-				l.pageList.bringToMostUsed(l.PageMap[itemID])
-				return l.PageMap[itemID].currentAmount, found
-			}
-		} else {
-			l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
-			l.pageList.bringToMostUsed(l.PageMap[itemID])
-		}
-	}
 
+	if found {
+		l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
+		l.pageList.bringToMostUsed(l.PageMap[itemID])
+		return l.PageMap[itemID].currentAmount, found
+	}
 	if l.size == l.capacity {
 		key := l.pageList.getRear().itemID
 		l.pageList.removeLeastUsed()
 		l.size--
 		delete(l.PageMap, key)
 	}
-
-	// itemamount  เป็นลบแล้วไม่ found
 	if ItemAmount < 0 {
-		if GetAmountVal+ItemAmount < 0 {
+		if GetAmount(itemID)+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
 			return -1, found
 		} else {
-			page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
+			page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
 			l.size++
 			l.PageMap[itemID] = page
 			return l.PageMap[itemID].currentAmount, found
@@ -407,11 +392,10 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 	}
 
 	if ItemAmount > 0 {
-		page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
+		page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
 		l.size++
 		l.PageMap[itemID] = page
 	}
-
 	return l.PageMap[itemID].currentAmount, found
 }
 
@@ -432,41 +416,31 @@ func getAmountbyItem(itemID int) string {
 
 // add() request
 func addToDB(itemID int, amount int, userID int) string {
-	var val int
-	var state bool
-
-	Wg.Add(1)
-	go func() {
-		defer Wg.Done()
-		val, state = myCache.Input(itemID, amount)
-	}()
-	Wg.Wait()
+	defer mutex.Unlock()
+	mutex.Lock()
+	val, state := myCache.Input(itemID, amount)
 	statement := Main(itemID, amount, userID)
+	// itemid := strconv.Itoa(itemID)
+	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
-
 }
 
 //withdraw() tcp
 //withdraw()database จาก server
 func withDrawToDB(itemID int, amount int, userID int) string {
-	var eir int
-	var state bool
-
-	Wg.Add(1)
-	go func() {
-		defer Wg.Done()
-		eir, state = myCache.Input(itemID, amount)
-	}()
-	Wg.Wait()
-	statement := Main2(itemID, amount, userID)
+	defer mutex.Unlock()
+	mutex.Lock()
+	eir, state := myCache.Input(itemID, amount)
 	if eir == -1 {
 		// return error ให้ users
 		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
+	statement := Main2(itemID, amount, userID)
+	// itemid := strconv.Itoa(itemID)
+	// result := strconv.Itoa(amount)
 	fmt.Println(statement + "\n")
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
-
 }
 
 //ถ้าจะรัน cache ใหม่ต่อวันต้อง while True init ใหม่
