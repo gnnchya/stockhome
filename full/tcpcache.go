@@ -61,11 +61,11 @@ func rec(con net.Conn) {
 			fmt.Println("err5", err)
 			return
 		}
-		fmt.Println("history")
+		// fmt.Println("history")
 		a, b := Lfu.get(&Cache_queue, date)
-		fmt.Println("finish")
+		// fmt.Println("finish")
 		send(con, a, b)
-		fmt.Println("hi")
+		// fmt.Println("hi")
 	}
 }
 
