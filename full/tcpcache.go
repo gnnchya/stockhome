@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -13,19 +14,28 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var Db *sql.DB
-var myCache LRU
-var mutex = &sync.Mutex{}
+var wgadd sync.WaitGroup
+var wgdb sync.WaitGroup
+var wgana sync.WaitGroup
+var wgwd sync.WaitGroup
+var wgget sync.WaitGroup
+
+// var wgexit sync.WaitGroup
+// var wgall sync.WaitGroup
 
 func main() {
-	//ยังไม่รู้ค่าจริงของ init
-	myCache.InitLRU(100000)
-	connect, err := net.Listen("tcp", "143.198.195.15:5003")
+	connect, err := net.Listen("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
+	// var err error
+	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	// if err != nil {
+	// 	fmt.Println("Error: Cannot open database")
+	// }
+	// defer db.Close()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -41,406 +51,365 @@ func main() {
 
 func rec(con net.Conn) {
 	for {
+		// wgall.Add(1)
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(data)
+
+		fmt.Println()
+		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
 		msg[0] = strings.TrimSpace(msg[0])
-		switch msg[0] {
-		case "add":
-			msg[1] = strings.TrimSpace(msg[1])
-			id := strings.Split(msg[1], "-")
-			id[0] = strings.TrimSpace(id[0])
-			id[1] = strings.TrimSpace(id[1])
-			id[2] = strings.TrimSpace(id[2])
-			iid, err := strconv.Atoi(id[0])
+		msg[1] = strings.TrimSpace(msg[1])
+		date, err := strconv.Atoi(msg[1])
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("err5", err)
 				return
 			}
-			amt, err := strconv.Atoi(id[1])
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			uid, err := strconv.Atoi(id[2])
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			send(con, addToDB(iid, amt, uid))
-		case "wd":
-			msg[1] = strings.TrimSpace(msg[1])
-			id := strings.Split(msg[1], "-")
-			id[0] = strings.TrimSpace(id[0])
-			id[1] = strings.TrimSpace(id[1])
-			id[2] = strings.TrimSpace(id[2])
-			iid, err := strconv.Atoi(id[0])
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			amt, err := strconv.Atoi(id[1])
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			uid, err := strconv.Atoi(id[2])
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			send(con, withDrawToDB(iid, amt*(-1), uid))
-		case "get":
-			msg[1] = strings.TrimSpace(msg[1])
-			iid, err := strconv.Atoi(msg[1])
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			send(con, getAmountbyItem(iid))
-		case "exit":
-			con.Close()
-		default:
-			send(con, "DB Error!")
-		}
+			a, b := Lfu.get(&Cache_queue, date, "128.199.70.252:5001")
+			send1(con, a, b)
 	}
 }
 
 func send(con net.Conn, msg string) {
-	fmt.Println("msg:", msg)
-	con.Write([]byte("Database: " + msg))
+	con.Write([]byte("Server: " + msg + "."))
+
 }
 
-func init() {
-	var err error
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+package main
 
+import (
+	"bufio"
+	"bytes"
+	"database/sql"
+	"fmt"
+	"os"
+	"strconv"
+	"sync"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+// var mem1 int = 0
+// var mem2 int = 0
+var db *sql.DB
+
+// capacity size in bytes
+var Lfu Cache = Cache{capacity: 4000000, size: 0, block: make(map[int]*Node)}
+var Cache_queue Queue = Queue{Head: nil, Tail: nil}
+
+// saved file filename
+var Namelist Queue = Queue{nil, nil}
+var Files = make(map[int]*Node)
+var wg sync.WaitGroup
+var mu sync.Mutex
+
+func main() {
+	// defer profile.Start(profile.MemProfile).Stop()
+	// for i := 0; i < 10; i++ {
+	// wg.Add(1)
+	history(202102)
+	// time.Sleep(500 * time.Millisecond)
+	// }
+	wg.Wait()
+	fmt.Println("hi")
+	Save(222200, Lfu.block[202109].value)
+	// history(202012)
+	// history(202011)
+
+	// history(202010)
+	// history(202009)
+
+	// history(202101)
+	// for {
+	// 	fmt.Print("HI: ")
+	// 	var first int
+	// 	fmt.Scanln(&first)
+	// 	history(first)
+	// 	break
+	// }
+}
+
+type Cache struct {
+	capacity int //bytes unit
+	size     int //bytes unit
+	block    map[int]*Node
+}
+
+type Node struct {
+	key   int
+	value []byte
+	count int
+	next  *Node
+	prev  *Node
+}
+
+type Queue struct {
+	Head *Node
+	Tail *Node
+}
+
+func (q *Queue) initQ() {
+	q.Head, q.Tail = nil, nil
+}
+
+func (q *Queue) isEmpty() bool {
+	return q.Head == nil
+}
+
+func (q *Queue) enQ(n *Node) {
+	if q.Head == nil {
+		q.Head = n
+		q.Tail = q.Head
+	} else {
+		n.next = q.Tail
+		q.Tail.prev = n
+		q.Tail = n
+	}
+}
+
+func (q *Queue) deQ(list string) {
+	if list == "Lfu" {
+		if q.Head == nil {
+			return
+		} else if q.Head == q.Tail {
+			delete(Lfu.block, q.Tail.key)
+			Lfu.size -= len(q.Tail.value)
+			fmt.Println("Size (deq1)", Lfu.size)
+			q.Head = q.Head.next
+			q.Tail = q.Head
+			return
+		} else {
+			delete(Lfu.block, q.Tail.key)
+			Lfu.size -= len(q.Tail.value)
+			fmt.Println("Size (deq2)", Lfu.size)
+			q.Tail = q.Tail.next
+			q.Tail.prev = nil
+			// if q.Tail == nil {
+			// 	q.Head = q.Tail
+			// }
+			return
+		}
+	} else {
+		if q.Head == nil {
+			return
+		} else if q.Head == q.Tail {
+			delete(Files, q.Tail.key)
+			q.Head = q.Head.next
+			q.Tail = q.Head
+			return
+		} else {
+			delete(Files, q.Tail.key)
+			q.Tail = q.Tail.next
+			q.Tail.prev = nil
+			return
+		}
+	}
+}
+
+func (q *Queue) update(n *Node) {
+	n.count++
+	for n.next != nil && n.count > n.next.count {
+		nt := n.next
+		if n.next.next != nil {
+			n.next.next.prev = n
+		} else {
+			q.Head = n
+		}
+		n.next = n.next.next
+		if n.prev != nil {
+			n.prev.next = nt
+		} else {
+			q.Tail = nt
+		}
+		nt.prev = n.prev
+		n.prev, nt.next = nt, n
+	}
+	return
+}
+
+func (q *Queue) printQ() {
+	c := q.Head
+	if c == nil {
+		fmt.Println("Queue Empty")
+		return
+	}
+	for c != nil {
+		fmt.Print(c.key, c.count, "\n")
+		c = c.prev
+	}
+	print("\n")
+	return
+}
+
+func (c *Cache) set(q *Queue, itemId int, value []byte) {
+	valSize := len(value)
+	if _, ok := c.block[itemId]; ok {
+		c.block[itemId].value = value
+		q.update(c.block[itemId])
+		return
+	} else if c.size+valSize < c.capacity {
+		c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
+		q.enQ(c.block[itemId])
+		c.size += valSize
+		return
+	}
+	for c.size+valSize > c.capacity {
+		q.deQ("Lfu")
+	}
+	c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
+	q.enQ(c.block[itemId])
+	c.size += valSize
+	return
+}
+
+func (c *Cache) get(q *Queue, itemId int) []byte {
+	wg.Add(1)
+	//state := "true"
+	mu.Lock()
+	defer mu.Unlock()
+	if _, ok := c.block[itemId]; ok {
+		q.update(c.block[itemId])
+		fmt.Println("----HIT----")
+		fmt.Println()
+	} else {
+		// read(c, q, strconv.Itoa(itemId))
+		filename := strconv.Itoa(itemId)
+		// a := time.Now()
+		retrieve_go(c, q, filename)
+		// fmt.Println(time.Since(a))
+		// fmt.Println("CS:", len(c.block))
+		fmt.Println("----MISS----")
+		fmt.Println()
+		//state = "false"
+	}
+	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
+	wg.Done()
+	return c.block[itemId].value //, state
+	// fmt.Println(Lfu)
+	// Cache_queue.printQ()
+	// fmt.Println("Final", c.size, "\n")
+	// fmt.Println(c.block[itemId].value)
+}
+
+// func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+// 	con, err := net.Dial("tcp", cn)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
+// 	defer con.Close()
+// 	con.Write([]byte("db :" + Date + "\n"))
+// 	data, err := bufio.NewReader(con).ReadBytes('.')
+// 	name, _ := strconv.Atoi(filename)
+// 	c.set(q, name, data)
+// }
+
+func retrieve_go(c *Cache, q *Queue, filename string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+	name, _ := strconv.Atoi(filename)
+	if _, ok := Files[name]; ok {
+		Read(c, q, filename)
+		return
+	} else {
+		Date := filename[0:4] + "-" + filename[4:6]
+		buf := bytes.NewBuffer(make([]byte, 0))
+		col := []byte("userID,itemID,amount,date,time")
+		buf.Write(col)
+		startDate := Date + "-01" //2021-02-01
+		endDate := Date + "-31"   //2021-02-31
+
+		row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
+		if err != nil {
+			fmt.Print(err)
+		}
+		// Slice each row
+		for row.Next() {
+			var userID, itemID, amount int
+			var date, time string
+			err = row.Scan(&userID, &itemID, &amount, &date, &time)
+			if err != nil {
+				fmt.Print(err)
+			}
+			// Write each line
+			line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
+			buf.Write(line)
+		}
+		row.Close()
+
+		// name, _ := strconv.Atoi(filename)
+		go Save(name, buf.Bytes())
+		c.set(q, name, buf.Bytes())
+		return
+	}
+}
+
+// "year-month-date"
+func Save(filename int, data []byte) {
+	// Get current directory
+	// dir, err := os.Getwd()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// Remove file if storage is going to be full
+	// for (usage.Free() / (KB * KB)) < 100 {
+	// 	if Namelist.isEmpty() {
+	// 		return
+	// 	}
+	// 	err := os.Remove(strconv.Itoa(Namelist.Tail.key) + ".csv")
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// 	Namelist.deQ("Name")
+	// }
+
+	// Add new filename of the saving file to the list
+	Files[filename] = &Node{key: filename, next: nil, prev: nil}
+	Namelist.enQ(Files[filename])
+
+	// Create file in the same directory
+	file, err := os.Create(strconv.Itoa(filename) + ".csv") //dir + "/" +
+	if err != nil {
+		fmt.Println("An error encountered:", err)
+	}
+	file.Write(data)
+	file.Close()
+}
+
+func Read(c *Cache, q *Queue, filename string) {
+	// dir, err := os.Getwd()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	file, err := os.Open(filename + ".csv") //dir + "/" +
+	if err != nil {
+		fmt.Println(err)
+	}
+	size := 512
+	reader := bufio.NewReader(file)
+	chunk := make([]byte, size)
+	buf := bytes.NewBuffer(make([]byte, 0))
+	for {
+		n, err := reader.Read(chunk)
+		if err != nil {
+			break
+		}
+		buf.Write(chunk[:n])
+	}
+	file.Close()
+	name, _ := strconv.Atoi(filename)
+	// c.set(q, 202109, buf.Bytes())
+	c.set(q, name, buf.Bytes())
+}
+
+func history(daterequest int) []byte {
+	var err error
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	defer db.Close()
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
+	return Lfu.get(&Cache_queue, daterequest)
 }
-
-var Wg sync.WaitGroup
-
-func Main(itemID int, amount int, userID int) string {
-	// defer Db.Close()
-	var statement string
-	// Wg := sync.WaitGroup{}
-
-	Wg.Add(1)
-	go func() {
-		statement = addNew(itemID, amount, userID, &Wg)
-	}()
-	Wg.Wait()
-	return statement
-}
-
-func Main2(itemID int, amount int, userID int) string {
-	// defer Db.Close()
-	var statement string
-	// Wg := sync.WaitGroup{}
-
-	Wg.Add(1)
-	go func() {
-		statement = withdraw(itemID, amount*(-1), userID, &Wg)
-	}()
-	Wg.Wait()
-	return statement
-}
-
-func GetAmount(itemID int) int {
-	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
-
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	var amount int
-	for row.Next() {
-		err = row.Scan(&itemID, &amount)
-	}
-	return amount
-}
-
-func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
-	// For adding NEW items. For items NOT CURRENTLY in the database.
-	// If you add an existing item, it will die. Use addExist for items already in database
-	defer Wg.Done()
-	var checkID int
-	var statement string
-
-	check := Db.QueryRow("SELECT itemID FROM stock WHERE itemID = (?)", itemID).Scan(&checkID)
-
-	if check != nil {
-		insert, err := Db.Query("INSERT INTO stock VALUES (?, ?)", itemID, amount)
-
-		if err != nil {
-			fmt.Println(err)
-		}
-		statement = fmt.Sprint("Added %d to database (%d units) | Item in Stock: %d\n", itemID, amount, amount)
-		addHis(itemID, true, amount, userID)
-		insert.Close()
-
-	} else {
-		Wg.Add(1)
-		go func() {
-			addExist(itemID, amount, userID, Wg)
-		}()
-	}
-	return statement
-}
-
-func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
-	// For adding EXISTING items. For items CURRENTLY in the database.
-	// If you add a new item, it will die. Use addNew for items NOT in database
-	defer Wg.Done()
-	var checkID, stock int
-	var statement string
-
-	check := Db.QueryRow("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID).Scan(&checkID, &stock)
-
-	if check != nil {
-		fmt.Println("Error: Item does not exist in database")
-	} else {
-		add, err := Db.Query("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock+amount, itemID)
-
-		if err != nil {
-			fmt.Println(err)
-			return "error happended in addExist"
-		}
-		statement = fmt.Sprintf("Added %d to database (%d units) | Item in Stock: %d\n", itemID, amount, stock+amount)
-		addHis(itemID, true, amount, userID)
-		add.Close()
-
-	}
-	return statement
-}
-
-func withdraw(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
-	defer Wg.Done()
-	var checkID, stock int
-	var statement string
-
-	check := Db.QueryRow("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID).Scan(&checkID, &stock)
-
-	if check != nil {
-		fmt.Println("Error: No item in stock")
-
-	} else if amount > stock {
-		fmt.Println("Error: Amount exceeds stock")
-
-	} else {
-		with, err := Db.Query("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock-amount, itemID)
-
-		if err != nil {
-			fmt.Printf("\n")
-		}
-		statement = fmt.Sprintf("Withdrawn %d from database (%d units) | Item in Stock: %d\n", itemID, amount, stock-amount)
-		addHis(itemID, false, amount, userID)
-		with.Close()
-	}
-	return statement
-}
-
-func addHis(itemID int, action bool, amount int, userID int) {
-	// This already auto-adds itself to the history database, so no need to do anything here.
-	var datetime = time.Now()
-	date := datetime.Format("2006-01-02")
-	time := datetime.Format("15:04:05")
-	// fmt.Println("hi", action, userID, itemID, amount, date, time)
-	add, err := Db.Query("INSERT INTO history (action, userID, itemID, amount, date, time) VALUES(?, ?, ?, ?, ?, ?)", action, userID, itemID, amount, date, time)
-	if err != nil {
-		fmt.Println("Error: Cannot be added to history")
-	}
-
-	add.Close()
-}
-
-//จบ DB
-
-//เริ่ม cache
-//reference:https://medium.com/@fazlulkabir94/lru-cache-golang-implementation-92b7bafb76f0
-
-var i int
-var dateAndTime time.Time = time.Now()
-
-type cache struct {
-	//4
-	itemID        int
-	currentAmount int
-	Date          string
-	Time          string
-	prev, next    *cache
-}
-
-//มาแก้
-func addcache(itemID int, ItemAmount int) *cache {
-	return &cache{
-		itemID:        itemID,
-		currentAmount: ItemAmount,
-		Date:          dateAndTime.Format("2006-01-02"),
-		Time:          dateAndTime.Format("15:04:05 2006-01-02")[:8],
-		prev:          nil,
-		next:          nil,
-	}
-}
-
-type queue struct {
-	front *cache
-	rear  *cache
-}
-
-func (q *queue) isEmpty() bool {
-	return q.rear == nil
-}
-
-func (q *queue) addFrontPage(itemID int, ItemAmount int) *cache {
-	page := addcache(itemID, ItemAmount)
-	if q.front == nil && q.rear == nil {
-		q.front, q.rear = page, page
-	} else {
-		page.next = q.front
-		q.front.prev = page
-		q.front = page
-	}
-	return page
-}
-
-func (q *queue) bringToMostUsed(page *cache) {
-	if page == q.front {
-		return
-	} else if page == q.rear {
-		q.rear = q.rear.prev
-		q.rear.next = nil
-	} else {
-		page.prev.next = page.next
-		page.next.prev = page.prev
-	}
-	page.next = q.front
-	q.front.prev = page
-	q.front = page
-}
-
-func (q *queue) removeLeastUsed() {
-	if q.isEmpty() {
-		return
-	} else if q.front == q.rear {
-		q.front, q.rear = nil, nil
-	} else {
-		q.rear = q.rear.prev
-		q.rear.next = nil
-	}
-}
-
-func (q *queue) getRear() *cache {
-	return q.rear
-}
-
-type LRU struct {
-	capacity, size int
-	pageList       queue
-	PageMap        map[int]*cache
-}
-
-func (l *LRU) InitLRU(capacity int) {
-	l.capacity = capacity
-	l.PageMap = make(map[int]*cache)
-}
-
-func (l *LRU) Read(itemID int) (int, string) {
-	if _, found := l.PageMap[itemID]; !found {
-		fmt.Println("Miss")
-		page := l.pageList.addFrontPage(itemID, GetAmount(itemID))
-		l.size++
-		l.PageMap[itemID] = page
-		return GetAmount(itemID), "false"
-	}
-	fmt.Println("HIT")
-	val := l.PageMap[itemID].currentAmount
-	l.pageList.bringToMostUsed(l.PageMap[itemID])
-	return val, "true"
-}
-
-func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
-	_, found := l.PageMap[itemID]
-
-	if found {
-		l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
-		l.pageList.bringToMostUsed(l.PageMap[itemID])
-		return l.PageMap[itemID].currentAmount, found
-	}
-	if l.size == l.capacity {
-		key := l.pageList.getRear().itemID
-		l.pageList.removeLeastUsed()
-		l.size--
-		delete(l.PageMap, key)
-	}
-	if ItemAmount < 0 {
-		if GetAmount(itemID)+ItemAmount < 0 {
-			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-			return -1, found
-		} else {
-			page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
-			l.size++
-			l.PageMap[itemID] = page
-			return l.PageMap[itemID].currentAmount, found
-		}
-	}
-
-	if ItemAmount > 0 {
-		page := l.pageList.addFrontPage(itemID, GetAmount(itemID)+ItemAmount)
-		l.size++
-		l.PageMap[itemID] = page
-	}
-	return l.PageMap[itemID].currentAmount, found
-}
-
-// func main() {
-// 	var cache LRU
-// 	cache.InitLRU(10)
-
-// }
-
-//getItemAmount จาก TCP request
-func getAmountbyItem(itemID int) string {
-	amount, state := myCache.Read(itemID)
-	itemid := strconv.Itoa(itemID)
-	result := strconv.Itoa(amount)
-	fmt.Println(itemid + "-" + result + "*" + state + "\n")
-	return (itemid + "-" + result + "*" + state + "\n")
-}
-
-// add() request
-func addToDB(itemID int, amount int, userID int) string {
-	defer mutex.Unlock()
-	mutex.Lock()
-	val, state := myCache.Input(itemID, amount)
-	statement := Main(itemID, amount, userID)
-	// itemid := strconv.Itoa(itemID)
-	// result := strconv.Itoa(amount)
-	fmt.Println(statement + "\n")
-	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
-}
-
-//withdraw() tcp
-//withdraw()database จาก server
-func withDrawToDB(itemID int, amount int, userID int) string {
-	defer mutex.Unlock()
-	mutex.Lock()
-	eir, state := myCache.Input(itemID, amount)
-	if eir == -1 {
-		// return error ให้ users
-		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
-	}
-	statement := Main2(itemID, amount, userID)
-	// itemid := strconv.Itoa(itemID)
-	// result := strconv.Itoa(amount)
-	fmt.Println(statement + "\n")
-	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
-}
-
-//ถ้าจะรัน cache ใหม่ต่อวันต้อง while True init ใหม่

@@ -14,6 +14,7 @@ import (
 
 var mem1 int = 0
 var mem2 int = 0
+var mem3 int = 0
 var Lfu Cache = Cache{4000000, 0, make(map[int]*Node)}
 var Cache_queue Queue = Queue{nil, nil}
 var wg sync.WaitGroup
@@ -37,7 +38,23 @@ func main() {
 			return
 		}
 		fmt.Println(con.RemoteAddr())
-		if checkconnect("128.199.70.252:5001") == false {
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println("err4", err)
+			con.Close()
+			return
+		}
+		fmt.Println()
+		fmt.Print("Client: " + data)
+		msg := strings.Split(data, ":")
+		msg[0] = strings.TrimSpace(msg[0])
+		if msg[0] == "his" {
+			if checkconnect("139.59.116.139:5004") == false {
+				fmt.Println("History server is down")
+			} else {
+				go rec2(con)
+			}
+		} else if checkconnect("128.199.70.252:5001") == false {
 			if checkconnect("143.198.219.89:5002") == false {
 				fmt.Println("All server is down")
 				// return
@@ -68,6 +85,63 @@ func main() {
 		// wgcon.Wait()
 	}
 	wg.Wait()
+}
+
+func rec3(con net.Conn) {
+	mem3++
+	ser3, err := net.Dial("tcp", "139.59.116.139:5004")
+	if err != nil {
+		fmt.Println("err3", err)
+		mem3--
+		con.Close()
+		ser3.Close()
+		return
+	}
+	fmt.Println("server3", mem3)
+	for {
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println("err4", err)
+			con.Close()
+			ser3.Close()
+			mem3--
+			return
+		}
+		fmt.Println()
+		fmt.Print("Client: " + data)
+		msg := strings.Split(data, ":")
+		msg[0] = strings.TrimSpace(msg[0])
+		if msg[0] == "exit" {
+			ser3.Write([]byte("exit:\n"))
+			ser3.Close()
+			mem3--
+			fmt.Println("EOF")
+			con.Close()
+			return
+		} else {
+			ser3.Write([]byte(data))
+			go fb3(con, ser3)
+		}
+	}
+	// mem1--
+}
+
+func fb3(con net.Conn, ser3 net.Conn) {
+	for {
+		msg, err := bufio.NewReader(ser3).ReadString('.')
+		if err != nil {
+			// fmt.Println("err6", err)
+			// mem1--
+			con.Close()
+			ser3.Close()
+			return
+		}
+		fmt.Println("Forwarding response..")
+		fmt.Println()
+		// fmt.Println(msg)
+		// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
+		con.Write([]byte(msg + "`"))
+	}
 }
 
 // func rec(con net.Conn) {
@@ -108,16 +182,7 @@ func rec1(con net.Conn) {
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
 		msg[0] = strings.TrimSpace(msg[0])
-		if msg[0] == "his" {
-			msg[1] = strings.TrimSpace(msg[1])
-			date, err := strconv.Atoi(msg[1])
-			if err != nil {
-				fmt.Println("err5", err)
-				return
-			}
-			a, b := Lfu.get(&Cache_queue, date, "128.199.70.252:5001")
-			send1(con, a, b)
-		} else if msg[0] == "exit" {
+		if msg[0] == "exit" {
 			ser1.Write([]byte("exit:\n"))
 			ser1.Close()
 			mem1--
@@ -257,154 +322,154 @@ func send1(con net.Conn, msg []byte, state string) {
 	con.Write([]byte("`"))
 }
 
-type Cache struct {
-	capacity int //bytes unit
-	size     int //bytes unit
-	block    map[int]*Node
-}
+// type Cache struct {
+// 	capacity int //bytes unit
+// 	size     int //bytes unit
+// 	block    map[int]*Node
+// }
 
-type Node struct {
-	key   int
-	value []byte
-	count int
-	next  *Node
-	prev  *Node
-}
+// type Node struct {
+// 	key   int
+// 	value []byte
+// 	count int
+// 	next  *Node
+// 	prev  *Node
+// }
 
-type Queue struct {
-	Head *Node
-	Tail *Node
-}
+// type Queue struct {
+// 	Head *Node
+// 	Tail *Node
+// }
 
-func (q *Queue) initQ() {
-	q.Head, q.Tail = nil, nil
-}
+// func (q *Queue) initQ() {
+// 	q.Head, q.Tail = nil, nil
+// }
 
-func (q *Queue) isEmpty() bool {
-	return q.Head == nil
-}
+// func (q *Queue) isEmpty() bool {
+// 	return q.Head == nil
+// }
 
-func (q *Queue) enQ(n *Node) {
-	if q.Head == nil {
-		q.Head = n
-		q.Tail = q.Head
-	} else {
-		n.next = q.Tail
-		q.Tail.prev = n
-		q.Tail = n
-	}
-}
+// func (q *Queue) enQ(n *Node) {
+// 	if q.Head == nil {
+// 		q.Head = n
+// 		q.Tail = q.Head
+// 	} else {
+// 		n.next = q.Tail
+// 		q.Tail.prev = n
+// 		q.Tail = n
+// 	}
+// }
 
-func (q *Queue) deQ() {
-	if q.Head == nil {
-		return
-	} else if q.Head == q.Tail {
-		delete(Lfu.block, q.Tail.key)
-		Lfu.size -= len(q.Tail.value)
-		q.Head = q.Head.next
-		q.Tail = q.Head
-		return
-	} else {
-		delete(Lfu.block, q.Tail.key)
-		Lfu.size -= len(q.Tail.value)
-		q.Tail = q.Tail.next
-		q.Tail.prev = nil
-		return
-	}
-}
+// func (q *Queue) deQ() {
+// 	if q.Head == nil {
+// 		return
+// 	} else if q.Head == q.Tail {
+// 		delete(Lfu.block, q.Tail.key)
+// 		Lfu.size -= len(q.Tail.value)
+// 		q.Head = q.Head.next
+// 		q.Tail = q.Head
+// 		return
+// 	} else {
+// 		delete(Lfu.block, q.Tail.key)
+// 		Lfu.size -= len(q.Tail.value)
+// 		q.Tail = q.Tail.next
+// 		q.Tail.prev = nil
+// 		return
+// 	}
+// }
 
-func (q *Queue) update(n *Node) {
-	n.count++
-	for n.next != nil && n.count > n.next.count {
-		nt := n.next
-		if n.next.next != nil {
-			n.next.next.prev = n
-		} else {
-			q.Head = n
-		}
-		n.next = n.next.next
-		if n.prev != nil {
-			n.prev.next = nt
-		} else {
-			q.Tail = nt
-		}
-		nt.prev = n.prev
-		n.prev, nt.next = nt, n
-	}
-	return
-}
+// func (q *Queue) update(n *Node) {
+// 	n.count++
+// 	for n.next != nil && n.count > n.next.count {
+// 		nt := n.next
+// 		if n.next.next != nil {
+// 			n.next.next.prev = n
+// 		} else {
+// 			q.Head = n
+// 		}
+// 		n.next = n.next.next
+// 		if n.prev != nil {
+// 			n.prev.next = nt
+// 		} else {
+// 			q.Tail = nt
+// 		}
+// 		nt.prev = n.prev
+// 		n.prev, nt.next = nt, n
+// 	}
+// 	return
+// }
 
-func (q *Queue) printQ() {
-	c := q.Head
-	if c == nil {
-		fmt.Println("Queue Empty")
-		return
-	}
-	for c != nil {
-		fmt.Print(c.key, c.count, "\n")
-		c = c.prev
-	}
-	print("\n")
-	return
-}
+// func (q *Queue) printQ() {
+// 	c := q.Head
+// 	if c == nil {
+// 		fmt.Println("Queue Empty")
+// 		return
+// 	}
+// 	for c != nil {
+// 		fmt.Print(c.key, c.count, "\n")
+// 		c = c.prev
+// 	}
+// 	print("\n")
+// 	return
+// }
 
-func (c *Cache) set(q *Queue, itemId int, value []byte) {
-	valSize := len(value)
-	if _, ok := c.block[itemId]; ok {
-		c.block[itemId].value = value
-		q.update(c.block[itemId])
-		return
-	} else if c.size+valSize < c.capacity {
-		c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
-		q.enQ(c.block[itemId])
-		c.size += valSize
-		return
-	}
-	for c.size+valSize > c.capacity {
-		q.deQ()
-	}
-	c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
-	q.enQ(c.block[itemId])
-	c.size += valSize
-	return
-}
+// func (c *Cache) set(q *Queue, itemId int, value []byte) {
+// 	valSize := len(value)
+// 	if _, ok := c.block[itemId]; ok {
+// 		c.block[itemId].value = value
+// 		q.update(c.block[itemId])
+// 		return
+// 	} else if c.size+valSize < c.capacity {
+// 		c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
+// 		q.enQ(c.block[itemId])
+// 		c.size += valSize
+// 		return
+// 	}
+// 	for c.size+valSize > c.capacity {
+// 		q.deQ()
+// 	}
+// 	c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
+// 	q.enQ(c.block[itemId])
+// 	c.size += valSize
+// 	return
+// }
 
-func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
-	wg.Add(1)
-	state := "true"
-	mu.Lock()
-	defer mu.Unlock()
-	if _, ok := c.block[itemId]; ok {
-		q.update(c.block[itemId])
-		fmt.Println("----HIT----")
-		fmt.Println()
-	} else {
-		// read(c, q, strconv.Itoa(itemId))
-		filename := strconv.Itoa(itemId)
-		// a := time.Now()
-		retrieve(c, q, filename[0:4]+"-"+filename[4:6], filename, cn)
-		// fmt.Println(time.Since(a))
+// func (c *Cache) get(q *Queue, itemId int, cn string) ([]byte, string) {
+// 	wg.Add(1)
+// 	state := "true"
+// 	mu.Lock()
+// 	defer mu.Unlock()
+// 	if _, ok := c.block[itemId]; ok {
+// 		q.update(c.block[itemId])
+// 		fmt.Println("----HIT----")
+// 		fmt.Println()
+// 	} else {
+// 		// read(c, q, strconv.Itoa(itemId))
+// 		filename := strconv.Itoa(itemId)
+// 		// a := time.Now()
+// 		retrieve(c, q, filename[0:4]+"-"+filename[4:6], filename, cn)
+// 		// fmt.Println(time.Since(a))
 
-		fmt.Println("----MISS----")
-		fmt.Println()
-		state = "false"
-	}
-	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
-	wg.Done()
-	return c.block[itemId].value, state
-}
+// 		fmt.Println("----MISS----")
+// 		fmt.Println()
+// 		state = "false"
+// 	}
+// 	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
+// 	wg.Done()
+// 	return c.block[itemId].value, state
+// }
 
-// var db *sql.DB
+// // var db *sql.DB
 
-func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	con, err := net.Dial("tcp", cn)
-	if err != nil {
-		fmt.Println("err12", err)
-		return
-	}
-	defer con.Close()
-	con.Write([]byte("db :" + Date + "\n"))
-	data, err := bufio.NewReader(con).ReadBytes('.')
-	name, _ := strconv.Atoi(filename)
-	c.set(q, name, data)
-}
+// func retrieve(c *Cache, q *Queue, Date string, filename string, cn string) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+// 	con, err := net.Dial("tcp", cn)
+// 	if err != nil {
+// 		fmt.Println("err12", err)
+// 		return
+// 	}
+// 	defer con.Close()
+// 	con.Write([]byte("db :" + Date + "\n"))
+// 	data, err := bufio.NewReader(con).ReadBytes('.')
+// 	name, _ := strconv.Atoi(filename)
+// 	c.set(q, name, data)
+// }
