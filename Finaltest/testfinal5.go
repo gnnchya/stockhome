@@ -154,9 +154,9 @@ func main() {
 					switch {
 					case rdt <= 60: // 60% chance
 						dbtest(c1, ts)
-					case rdt <= 85: // 25% chance
+					case rdt <= 90: // 30% chance
 						histest(c1, ts)
-					case rdt <= 100: // 15% chance
+					case rdt <= 100: // 10% chance
 						anatest(c1, ts)
 					}
 				}
