@@ -13,7 +13,7 @@ var wg sync.WaitGroup
 var wg1 sync.WaitGroup
 
 func main() {
-	for i := 1; i <= 1000; i++ {
+	for i := 1; i <= 10000; i++ {
 		con, err := net.Dial("tcp", "128.199.70.176:9999")
 		if err != nil {
 			fmt.Println(err)
