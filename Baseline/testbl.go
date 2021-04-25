@@ -17,7 +17,7 @@ var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, hisavg, awgavg time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
-var count, countmiss, counthit, count2, count3, counthis, countawg, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+var count, count2, count3, counthis, countawg, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcountawg, opcounthis, opanaavg= make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 
