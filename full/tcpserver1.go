@@ -132,7 +132,7 @@ func send(con net.Conn, msg string) {
 
 }
 
-func his(msg string) {
+func his(msg string) string {
 	wghis.Add(1)
 	defer wghis.Done()
 	con, err := net.Dial("tcp", "139.59.116.139:5004")
@@ -145,7 +145,7 @@ func his(msg string) {
 	data, err := bufio.NewReader(con).ReadString('.')
 	if err != nil {
 		fmt.Println(err)
-		return
+		return "nil"
 	}
 	return data
 }
