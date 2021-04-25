@@ -67,19 +67,6 @@ func main() {
 	wg.Wait()
 }
 
-// func rec(con net.Conn) {
-// 	if mem1 <= mem2 {
-// 		mem1++
-// 		go rec1(con)
-// 		fmt.Println("server1", mem1, mem2)
-// 	} else if mem2 < mem1 {
-// 		mem2++
-// 		go rec2(con)
-// 		fmt.Println("server2", mem1, mem2)
-// 	}
-
-// }
-
 func rec1(con net.Conn) {
 
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
@@ -210,29 +197,3 @@ func checkconnect(port string) bool {
 	con.Close()
 	return true
 }
-
-func hc(port string) {
-	// reference code "https://kasvith.me/posts/lets-create-a-simple-lb-go/"
-	ticker := time.NewTicker(5 * time.Second)
-	done := make(chan bool)
-	for {
-		select {
-		case <-done:
-			return
-		case <-ticker.C:
-			checkconnect(port)
-		}
-	}
-}
-
-func send1(con net.Conn, msg []byte, state string) {
-	temp := append(msg, []byte("*")...)
-	temp1 := append(temp, []byte(state)...)
-	temp2 := append(temp1, []byte("*")...)
-	temp3 := append(temp2, []byte(strconv.Itoa(mem1))...)
-	temp4 := append(temp3, []byte("*")...)
-	temp5 := append(temp4, []byte(strconv.Itoa(mem2))...)
-	con.Write(temp5)
-	con.Write([]byte("`"))
-}
-

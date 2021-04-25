@@ -9,20 +9,10 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
-
-var wgadd sync.WaitGroup
-var wgdb sync.WaitGroup
-var wgana sync.WaitGroup
-var wgwd sync.WaitGroup
-var wgget sync.WaitGroup
-
-// var wgexit sync.WaitGroup
-// var wgall sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
@@ -41,12 +31,10 @@ func main() {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
-			// connect.Close()
 			return
 		}
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
-		// go send(con, rec(con))
 	}
 }
 
@@ -65,60 +53,37 @@ func rec(con net.Conn) {
 		msg[1] = strings.TrimSpace(msg[1])
 		switch msg[0] {
 		case "ana":
-			// wgana.Add(1)
 			date := strings.Split(msg[1], "-")
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
 			send(con, analysis(date[0], date[1], date[2]))
-			// wgana.Done()
 		case "his":
 			date := strings.Split(msg[1], "-")
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			sendhis(con, his(date[0], date[1]))
 		case "add":
-			// wgadd.Add(1)
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			send(con, add(id[0], id[1], id[2]))
-			// wgadd.Done()
 		case "wd":
-			// wgwd.Add(1)
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			send(con, withdraw(id[0], id[1], id[2]))
-			// wgwd.Done()
-		case "db":
-			// wgdb.Add(1)
-			//pulldb(con, msg[1])
-			// wgdb.Done()
 		case "get":
-			// wgget.Add(1)
 			send(con, getItemAmount(msg[1]))
-			// wgget.Done()
 		case "exit":
-			// wgexit.Add(1)
 			con.Close()
 			fmt.Println("EOF")
-			// wgexit.Done()
 			return
 		default:
-			// wgall.Add(1)
 			send(con, "Some How Error!")
-			// wgall.Done()
 		}
-		// wgall.Wait()
-		wgadd.Wait()
-		wgwd.Wait()
-		wgget.Wait()
-		wgana.Wait()
-		// wgexit.Wait()
-		wgdb.Wait()
 	}
 }
 
@@ -137,8 +102,6 @@ func sendhis(con net.Conn, msg []byte) {
 var db *sql.DB
 
 func analysis(year string, month string, day string) string {
-	wgana.Add(1)
-	defer wgana.Done()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 
@@ -330,10 +293,7 @@ func WithDate() string {
 	return txt.String()
 }
 
-
 func add(userID string, itemID string, itemAmount string) string {
-	wgadd.Add(1)
-	defer wgadd.Done()
 
 	var checkID, stock int
 	var statement string
@@ -370,8 +330,6 @@ func add(userID string, itemID string, itemAmount string) string {
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	wgwd.Add(1)
-	defer wgwd.Done()
 
 	var checkID, stock int
 	var statement string
@@ -400,10 +358,8 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 }
 
 func getItemAmount(itemID string) string {
-	wgget.Add(1)
-	defer wgget.Done()
 
-	row , err := db.Query("SELECT amount FROM stock WHERE itemID = (?)", itemID)
+	row, err := db.Query("SELECT amount FROM stock WHERE itemID = (?)", itemID)
 
 	if err != nil {
 		fmt.Print(err)
@@ -413,12 +369,12 @@ func getItemAmount(itemID string) string {
 	for row.Next() {
 		err = row.Scan(&itemID, &amount)
 	}
-	a := itemID+"-"+strconv.Itoa(amount)
+	a := itemID + "-" + strconv.Itoa(amount)
 	fmt.Println(a)
 	return a
 }
 
-func his(year string, month string) []byte{
+func his(year string, month string) []byte {
 	Date := year + "-" + month
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
