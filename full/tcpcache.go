@@ -60,7 +60,7 @@ func rec(con net.Conn) {
 			return
 		}
 		a := string(history(date))
-		wg.Wait()
+		// wg.Wait()
 		fmt.Println("hi")
 		con.Write([]byte(a + "."))
 
@@ -220,7 +220,7 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 }
 
 func (c *Cache) get(q *Queue, itemId int) []byte {
-	wg.Add(1)
+	// wg.Add(1)
 	//state := "true"
 	mu.Lock()
 	defer mu.Unlock()
@@ -240,7 +240,7 @@ func (c *Cache) get(q *Queue, itemId int) []byte {
 		//state = "false"
 	}
 	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
-	wg.Done()
+	// wg.Done()
 	return c.block[itemId].value //, state
 	// fmt.Println(Lfu)
 	// Cache_queue.printQ()

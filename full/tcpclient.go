@@ -219,7 +219,7 @@ func his(con net.Conn, com []string) {
 	// Receive data and writing the file
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
-		fmt.Pinrtln(err)
+		fmt.Println(err)
 		return
 	}
 	msg := strings.Split(data, "*")
