@@ -53,7 +53,7 @@ func main() {
 			if checkconnect("139.59.116.139:5004") == false {
 				fmt.Println("History server is down")
 			} else {
-				go rec2(con)
+				go rec3(con)
 			}
 		} else if checkconnect("128.199.70.252:5001") == false {
 			if checkconnect("143.198.219.89:5002") == false {
