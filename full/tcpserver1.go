@@ -51,7 +51,7 @@ func main() {
 
 func rec(con net.Conn) {
 	for {
-		wgall.Add(1)
+		// wgall.Add(1)
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
