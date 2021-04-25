@@ -16,11 +16,8 @@ import (
 var db *sql.DB
 
 func main() {
-	timeStart := time.Now()
 	ans := analysis("2021", "03", "30")
 	fmt.Println(ans)
-	done := time.Since(timeStart)
-	fmt.Println(done.String())
 }
 
 func analysis(year string, month string, day string) string {
