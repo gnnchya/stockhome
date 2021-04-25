@@ -10,7 +10,7 @@ import (
 )
 
 func DBcache(c chan string, ts int) (time.Duration, string, string, int, string) {
-	var mem1, mem2, output, state, rdact string
+	var mem1, mem2, state, rdact string
 	var ran int
 	var elapsed time.Duration
 
@@ -37,7 +37,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, int, string)
 
 		c <- rdact
 
-		output = <-c
+		_ = <-c
 		elapsed = time.Since(start)
 		mem1 = <-c
 		mem2 = <-c
