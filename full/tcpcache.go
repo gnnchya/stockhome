@@ -21,12 +21,12 @@ func main() {
 		return
 	}
 	defer connect.Close()
-	// var err error
-	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-	// defer db.Close()
+	var err error
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer db.Close()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -359,11 +359,11 @@ func Read(c *Cache, q *Queue, filename string) {
 }
 
 func history(daterequest int) []byte {
-	var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
-	defer db.Close()
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
+	// var err error
+	// db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
+	// defer db.Close()
+	// if err != nil {
+	// 	fmt.Println("Error: Cannot open database")
+	// }
 	return Lfu.get(&Cache_queue, daterequest)
 }
