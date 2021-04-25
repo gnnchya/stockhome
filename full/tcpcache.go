@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	//"github.com/ricochet2200/go-disk-usage/du"
+	"github.com/ricochet2200/go-disk-usage/du"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -284,6 +284,8 @@ func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDat
 	}
 }
 
+var KB = uint64(1024)
+
 // "year-month-date"
 func Save(filename int, data []byte) {
 	// Get current directory
@@ -291,18 +293,18 @@ func Save(filename int, data []byte) {
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
-
+	usage := du.NewDiskUsage("/")
 	// Remove file if storage is going to be full
-	// for (usage.Free() / (KB * KB)) < 100 {
-	// 	if Namelist.isEmpty() {
-	// 		return
-	// 	}
-	// 	err := os.Remove(strconv.Itoa(Namelist.Tail.key) + ".csv")
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// 	Namelist.deQ("Name")
-	// }
+	for (usage.Free() / (KB * KB)) < 100 {
+		if Namelist.isEmpty() {
+			return
+		}
+		err := os.Remove(strconv.Itoa(Namelist.Tail.key) + ".csv")
+		if err != nil {
+			fmt.Println(err)
+		}
+		Namelist.deQ("Name")
+	}
 
 	// Add new filename of the saving file to the list
 	Files[filename] = &Node{key: filename, next: nil, prev: nil}
