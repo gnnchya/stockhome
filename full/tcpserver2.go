@@ -15,13 +15,10 @@ import (
 )
 
 var wgadd sync.WaitGroup
-var wgdb sync.WaitGroup
 var wgana sync.WaitGroup
 var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
 var wghis sync.WaitGroup
-
-// var wgall sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
@@ -40,18 +37,15 @@ func main() {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
-			// connect.Close()
 			return
 		}
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
-		// go send(con, rec(con))
 	}
 }
 
 func rec(con net.Conn) {
 	for {
-		// wgall.Add(1)
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -65,7 +59,6 @@ func rec(con net.Conn) {
 		msg[1] = strings.TrimSpace(msg[1])
 		switch msg[0] {
 		case "ana":
-			// wgana.Add(1)
 			date := strings.Split(msg[1], "-")
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
@@ -73,9 +66,7 @@ func rec(con net.Conn) {
 			ana := analysis(date[0], date[1], date[2])
 			wgana.Wait()
 			send(con, ana)
-			// wgana.Done()
 		case "add":
-			// wgadd.Add(1)
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
@@ -83,9 +74,7 @@ func rec(con net.Conn) {
 			add := add(id[0], id[1], id[2])
 			wgadd.Wait()
 			send(con, add)
-			// wgadd.Done()
 		case "wd":
-			// wgwd.Add(1)
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
@@ -93,37 +82,21 @@ func rec(con net.Conn) {
 			wd := withdraw(id[0], id[1], id[2])
 			wgwd.Wait()
 			send(con, wd)
-			// wgwd.Done()
-		case "db":
-			// wgdb.Add(1)
-			pulldb(con, msg[1])
-			wgdb.Wait()
-			// wgdb.Done()
 		case "get":
-			// wgget.Add(1)
 			get := getItemAmount(msg[1])
 			wgget.Wait()
 			send(con, get)
-			// wgget.Done()
 		case "exit":
-			// wgexit.Add(1)
 			con.Close()
 			fmt.Println("EOF")
-			// wgexit.Done()
 			return
 		case "his":
 			his := his(data)
 			wghis.Wait()
 			send(con, his)
 		default:
-			// wgall.Add(1)
 			send(con, "Some How Error!")
-			// wgall.Done()
 		}
-		// wgall.Done()
-
-		// wgexit.Wait()
-
 	}
 }
 
@@ -155,41 +128,26 @@ var db *sql.DB
 func analysis(year string, month string, day string) string {
 	wgana.Add(1)
 	defer wgana.Done()
-	// var err error
-	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-
-	// defer db.Close()
-
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
-
 	Wg := sync.WaitGroup{}
-
 	Wg.Add(1)
 	go func() {
 		aWith = MostWithA(&Wg)
 	}()
-
 	Wg.Add(1)
 	go func() {
 		bWith = MostWithDate(start, &Wg)
 	}()
-
 	Wg.Add(1)
 	go func() {
 		cWith = WithTime(&Wg)
 	}()
-
 	Wg.Add(1)
 	go func() {
 		dWith = WithDate(&Wg)
 	}()
-
 	Wg.Wait()
-
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -377,49 +335,6 @@ func WithDate(Wg *sync.WaitGroup) string {
 	return txt.String()
 }
 
-func pulldb(con net.Conn, date string) {
-	wgdb.Add(1)
-	defer wgdb.Done()
-	// var err error
-	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-	// defer db.Close()
-	// buf := bytes.NewBuffer(make([]byte, 0))
-	col := []byte("userID,itemID,amount,date,time")
-	// buf.Write(col)
-	con.Write(col)
-	// str := "userID,itemID,amount,date,time"
-	// fmt.Println(Date)
-	// Get data from startDate to endDate
-	startDate := date + "-01" //2021-02-01
-	endDate := date + "-31"   //2021-02-31
-	fmt.Println(startDate)
-	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	// Slice each row
-	for row.Next() {
-		var userID, itemID, amount int
-		var date, time string
-		err = row.Scan(&userID, &itemID, &amount, &date, &time)
-		if err != nil {
-			fmt.Print(err)
-		}
-		// Write each line
-		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-		// str += ("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-		// buf.Write(line)
-		con.Write(line)
-	}
-	// con.Write(buf.Bytes())
-	con.Write([]byte("."))
-
-}
-
 func add(userID string, itemID string, itemAmount string) string {
 	wgadd.Add(1)
 	defer wgadd.Done()
@@ -437,7 +352,6 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-
 	return val
 }
 
@@ -458,7 +372,6 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-
 	return val
 }
 
