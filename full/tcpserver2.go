@@ -70,8 +70,8 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			// wgana.Wait()
 			ana := analysis(date[0], date[1], date[2])
+			wgana.Wait()
 			send(con, ana)
 			// wgana.Done()
 		case "add":
@@ -80,8 +80,8 @@ func rec(con net.Conn) {
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			// wgadd.Wait()
 			add := add(id[0], id[1], id[2])
+			wgadd.Wait()
 			send(con, add)
 			// wgadd.Done()
 		case "wd":
@@ -90,19 +90,19 @@ func rec(con net.Conn) {
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			// wgwd.Wait()
 			wd := withdraw(id[0], id[1], id[2])
+			wgwd.Wait()
 			send(con, wd)
 			// wgwd.Done()
 		case "db":
 			// wgdb.Add(1)
-			// wgdb.Wait()
 			pulldb(con, msg[1])
+			wgdb.Wait()
 			// wgdb.Done()
 		case "get":
 			// wgget.Add(1)
-			// wgget.Wait()
 			get := getItemAmount(msg[1])
+			wgget.Wait()
 			send(con, get)
 			// wgget.Done()
 		case "exit":
@@ -131,8 +131,8 @@ func send(con net.Conn, msg string) {
 var db *sql.DB
 
 func analysis(year string, month string, day string) string {
-	// wgana.Add(1)
-	// defer wgana.Done()
+	wgana.Add(1)
+	defer wgana.Done()
 	// var err error
 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	// if err != nil {
@@ -356,8 +356,8 @@ func WithDate(Wg *sync.WaitGroup) string {
 }
 
 func pulldb(con net.Conn, date string) {
-	// wgdb.Add(1)
-	// defer wgdb.Done()
+	wgdb.Add(1)
+	defer wgdb.Done()
 	// var err error
 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	// if err != nil {
@@ -399,8 +399,8 @@ func pulldb(con net.Conn, date string) {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	// wgadd.Add(1)
-	// defer wgadd.Done()
+	wgadd.Add(1)
+	defer wgadd.Done()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -420,8 +420,8 @@ func add(userID string, itemID string, itemAmount string) string {
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	// wgwd.Add(1)
-	// defer wgwd.Done()
+	wgwd.Add(1)
+	defer wgwd.Done()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -441,8 +441,8 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 }
 
 func getItemAmount(itemID string) string {
-	// wgget.Add(1)
-	// defer wgget.Done()
+	wgget.Add(1)
+	defer wgget.Done()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
