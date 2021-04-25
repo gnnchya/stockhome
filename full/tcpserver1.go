@@ -132,30 +132,24 @@ func analysis(year string, month string, day string) string {
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
-
 	buf := bytes.NewBuffer(make([]byte, 0))
 	s := rtDB(buf)
-
 	Wg.Add(1)
 	go func() {
 		aWith = MostWithA(&Wg, s)
 	}()
-
 	Wg.Add(1)
 	go func() {
 		bWith = MostWithDate(start, &Wg, s)
 	}()
-
 	Wg.Add(1)
 	go func() {
 		cWith = WithTime(&Wg, s)
 	}()
-
 	Wg.Add(1)
 	go func() {
 		dWith = WithDate(&Wg, s)
 	}()
-
 	Wg.Wait()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
