@@ -218,6 +218,10 @@ func his(con net.Conn, com []string) {
 
 	// Receive data and writing the file
 	data, err := bufio.NewReader(con).ReadString('`')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	msg := strings.Split(data, "*")
 	msg[0] = strings.TrimSpace(msg[0])
 	out.Write([]byte(msg[0]))
