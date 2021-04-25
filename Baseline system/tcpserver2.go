@@ -319,7 +319,7 @@ func add(userID string, itemID string, itemAmount string) string {
 				fmt.Println(err)
 				return "error happended in addExist"
 			}
-			statement = fmt.Sprintf("Added %s to database (%d units) | Item in Stock: %d\n", itemID, amount, stock+amount)
+			statement = fmt.Sprintf("Added %s to database (%d units) | Item in Stock: %d.", itemID, amount, stock+amount)
 		}
 	}
 	fmt.Println(statement)
@@ -347,7 +347,7 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		if err != nil {
 			fmt.Printf("\n")
 		}
-		statement = fmt.Sprintf("Withdrawn %s from database (%d units) | Item in Stock: %d\n", itemID, amount, stock-amount)
+		statement = fmt.Sprintf("Withdrawn %s from database (%d units) | Item in Stock: %d.", itemID, amount, stock-amount)
 	}
 	fmt.Println(statement)
 
@@ -366,7 +366,7 @@ func getItemAmount(itemID string) string {
 	for row.Next() {
 		err = row.Scan(&itemID, &amount)
 	}
-	a := itemID + "-" + strconv.Itoa(amount)
+	a := itemID + "-" + strconv.Itoa(amount) + "."
 	fmt.Println(a)
 	return a
 }
@@ -398,5 +398,6 @@ func his(filename string) []byte {
 	row.Close()
 
 	// Data that will be sent
-	return buf.Bytes()
+	temp := append(buf.Bytes(),[]byte(".")...)
+	return temp
 }
