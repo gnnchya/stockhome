@@ -2,26 +2,17 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
 	"fmt"
 	"net"
-	"sort"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
-
-var wgadd sync.WaitGroup
-var wgdb sync.WaitGroup
-var wgana sync.WaitGroup
-var wgwd sync.WaitGroup
-var wgget sync.WaitGroup
-
-// var wgexit sync.WaitGroup
-// var wgall sync.WaitGroup
 
 func main() {
 	connect, err := net.Listen("tcp", "139.59.116.139:5004")
@@ -64,14 +55,14 @@ func rec(con net.Conn) {
 		msg[0] = strings.TrimSpace(msg[0])
 		msg[1] = strings.TrimSpace(msg[1])
 		date, err := strconv.Atoi(msg[1])
-			if err != nil {
-				fmt.Println("err5", err)
-				return
-			}
-			a := history(date)
-			wg.Wait()
-			fmt.Println("hi")
-			send(con, a)
+		if err != nil {
+			fmt.Println("err5", err)
+			return
+		}
+		a := history(date)
+		wg.Wait()
+		fmt.Println("hi")
+		send(con, a)
 	}
 }
 
@@ -79,20 +70,6 @@ func send(con net.Conn, msg string) {
 	con.Write([]byte("Server: " + msg + "."))
 
 }
-
-package main
-
-import (
-	"bufio"
-	"bytes"
-	"database/sql"
-	"fmt"
-	"os"
-	"strconv"
-	"sync"
-
-	_ "github.com/go-sql-driver/mysql"
-)
 
 // var mem1 int = 0
 // var mem2 int = 0
@@ -107,7 +84,6 @@ var Namelist Queue = Queue{nil, nil}
 var Files = make(map[int]*Node)
 var wg sync.WaitGroup
 var mu sync.Mutex
-
 
 type Cache struct {
 	capacity int //bytes unit
