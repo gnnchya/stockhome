@@ -20,13 +20,12 @@ var wgana sync.WaitGroup
 var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
 var wghis sync.WaitGroup
-
-// var m sync.Mutex
+var m sync.Mutex
 
 // var wgall sync.WaitGroup
 
 func main() {
-	connect, err := net.Listen("tcp", "128.199.70.252:5001")
+	connect, err := net.Listen("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -44,7 +43,6 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		// wgall.Add(1)
 		go rec(con)
 		// wgall.Wait()
 		fmt.Println(con.RemoteAddr())
@@ -72,57 +70,50 @@ func rec(con net.Conn) {
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
 			// wgana.Wait()
-			// m.Lock()
+			m.Lock()
 			ana := analysis(date[0], date[1], date[2])
-			// m.Unlock()
+			m.Unlock()
 			send(con, ana)
-			// wgall.Done()
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			// wgadd.Wait()
-			// m.Lock()
+			m.Lock()
 			add := add(id[0], id[1], id[2])
-			// m.Unlock()
+			m.Unlock()
 			send(con, add)
-			// wgall.Done()
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			// wgwd.Wait()
-			// m.Lock()
+			m.Lock()
 			wd := withdraw(id[0], id[1], id[2])
-			// m.Unlock()
+			m.Unlock()
 			send(con, wd)
-			// wgall.Done()
 		case "get":
 			// wgget.Wait()
-			// m.Lock()
+			m.Lock()
 			get := getItemAmount(msg[1])
-			// m.Unlock()
+			m.Unlock()
 			send(con, get)
-			// wgall.Done()
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
-			// wgall.Done()
 			return
 		case "his":
 			// wghis.Wait()
-			// m.Lock()
+			m.Lock()
 			his := his(data)
-			// m.Unlock()
+			m.Unlock()
 			send(con, his)
-			// wgall.Done()
 		default:
 			send(con, "Some How Error!")
-			// wgall.Done()
 		}
-
+		// wgall.Done()
 	}
 }
 
@@ -157,24 +148,30 @@ func analysis(year string, month string, day string) string {
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
+
 	buf := bytes.NewBuffer(make([]byte, 0))
 	s := rtDB(buf)
+
 	Wg.Add(1)
 	go func() {
 		aWith = MostWithA(&Wg, s)
 	}()
+
 	Wg.Add(1)
 	go func() {
 		bWith = MostWithDate(start, &Wg, s)
 	}()
+
 	Wg.Add(1)
 	go func() {
 		cWith = WithTime(&Wg, s)
 	}()
+
 	Wg.Add(1)
 	go func() {
 		dWith = WithDate(&Wg, s)
 	}()
+
 	Wg.Wait()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }

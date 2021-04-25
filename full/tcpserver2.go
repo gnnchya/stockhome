@@ -20,7 +20,8 @@ var wgana sync.WaitGroup
 var wgwd sync.WaitGroup
 var wgget sync.WaitGroup
 var wghis sync.WaitGroup
-var m sync.Mutex
+
+// var m sync.Mutex
 
 // var wgall sync.WaitGroup
 
@@ -70,9 +71,9 @@ func rec(con net.Conn) {
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
 			// wgana.Wait()
-			m.Lock()
+			// m.Lock()
 			ana := analysis(date[0], date[1], date[2])
-			m.Unlock()
+			// m.Unlock()
 			send(con, ana)
 		case "add":
 			id := strings.Split(msg[1], "-")
@@ -80,9 +81,9 @@ func rec(con net.Conn) {
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			// wgadd.Wait()
-			m.Lock()
+			// m.Lock()
 			add := add(id[0], id[1], id[2])
-			m.Unlock()
+			// m.Unlock()
 			send(con, add)
 		case "wd":
 			id := strings.Split(msg[1], "-")
@@ -90,15 +91,15 @@ func rec(con net.Conn) {
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
 			// wgwd.Wait()
-			m.Lock()
+			// m.Lock()
 			wd := withdraw(id[0], id[1], id[2])
-			m.Unlock()
+			// m.Unlock()
 			send(con, wd)
 		case "get":
 			// wgget.Wait()
-			m.Lock()
+			// m.Lock()
 			get := getItemAmount(msg[1])
-			m.Unlock()
+			// m.Unlock()
 			send(con, get)
 		case "exit":
 			con.Close()
@@ -106,9 +107,9 @@ func rec(con net.Conn) {
 			return
 		case "his":
 			// wghis.Wait()
-			m.Lock()
+			// m.Lock()
 			his := his(data)
-			m.Unlock()
+			// m.Unlock()
 			send(con, his)
 		default:
 			send(con, "Some How Error!")
