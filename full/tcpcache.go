@@ -80,7 +80,7 @@ func send(con net.Conn, msg []byte, state string) {
 var db *sql.DB
 
 // capacity size in bytes
-var Lfu Cache = Cache{capacity: 4000000, size: 0, block: make(map[int]*Node)}
+var Lfu Cache = Cache{capacity: 10000000, size: 0, block: make(map[int]*Node)}
 var Cache_queue Queue = Queue{Head: nil, Tail: nil}
 
 // saved file filename
@@ -246,11 +246,11 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 
 func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	name := strconv.Itoa(filename)
-	// if _, ok := Files[filename]; ok {
-	// 	fmt.Println("From VM")
-	// 	Read(c, q, name)
-	// 	return
-	// } else {
+	if _, ok := Files[filename]; ok {
+		fmt.Println("From VM")
+		Read(c, q, name)
+		return
+	} else {
 	fmt.Println("From DB")
 	Date := name[0:4] + "-" + name[4:6]
 	buf := bytes.NewBuffer(make([]byte, 0))
