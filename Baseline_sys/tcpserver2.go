@@ -323,7 +323,7 @@ func add(userID string, itemID string, itemAmount string) string {
 		}
 	}
 	fmt.Println(statement)
-	return strconv.Itoa(amount)
+	return itemID + "-" + strconv.Itoa(amount)
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
@@ -351,7 +351,7 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 	}
 	fmt.Println(statement)
 
-	return strconv.Itoa(amount)
+	return itemID + "-" + strconv.Itoa(amount)
 }
 
 func getItemAmount(itemID string) string {
