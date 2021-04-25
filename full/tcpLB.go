@@ -242,16 +242,7 @@ func rec2(con net.Conn) {
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
 		msg[0] = strings.TrimSpace(msg[0])
-		if msg[0] == "his" {
-			msg[1] = strings.TrimSpace(msg[1])
-			date, err := strconv.Atoi(msg[1])
-			if err != nil {
-				fmt.Println("err9", err)
-				return
-			}
-			a, b := Lfu.get(&Cache_queue, date, "143.198.219.89:5002")
-			send1(con, a, b)
-		} else if msg[0] == "exit" {
+		if msg[0] == "exit" {
 			ser2.Write([]byte("exit:\n"))
 			ser2.Close()
 			mem2--
