@@ -52,13 +52,7 @@ func main() {
 func rec(con net.Conn) {
 
 	for {
-		// wgall.Wait()
-		wgadd.Wait()
-		wgwd.Wait()
-		wgget.Wait()
-		wgana.Wait()
-		// wgexit.Wait()
-		wgdb.Wait()
+
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -114,6 +108,13 @@ func rec(con net.Conn) {
 			send(con, "Some How Error!")
 			// wgall.Done()
 		}
+		// wgall.Wait()
+		wgadd.Wait()
+		wgwd.Wait()
+		wgget.Wait()
+		wgana.Wait()
+		// wgexit.Wait()
+		wgdb.Wait()
 
 	}
 }
