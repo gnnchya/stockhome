@@ -44,7 +44,7 @@ func main() {
 				fmt.Println("All server is down")
 				// return
 			} else {
-				fmt.Println("Server is down. Please try again.")
+				fmt.Println("Server 1 is down. Please try again.")
 				go rec2(con)
 
 			}
@@ -53,7 +53,7 @@ func main() {
 				fmt.Println("All server is down")
 				// return
 			} else {
-				fmt.Println("Server is down. Please try again.")
+				fmt.Println("Server 2 is down. Please try again.")
 				go rec1(con)
 
 			}
