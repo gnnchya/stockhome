@@ -121,6 +121,7 @@ func rec3(con net.Conn) {
 			return
 		} else {
 			ser3.Write([]byte(data))
+			fmt.Println("Already send history")
 			go fb3(con, ser3)
 		}
 	}

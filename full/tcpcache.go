@@ -51,7 +51,6 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
-
 		fmt.Println()
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
