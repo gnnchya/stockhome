@@ -59,11 +59,10 @@ func rec(con net.Conn) {
 			fmt.Println("err5", err)
 			return
 		}
-		a := history(date)
+		a := string(history(date))
 		wg.Wait()
 		fmt.Println("hi")
-		con.Write(a)
-		con.Write([]byte("."))
+		con.Write([]byte(a + "."))
 
 	}
 }
