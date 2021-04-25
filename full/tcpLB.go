@@ -75,11 +75,11 @@ func main() {
 		} else {
 			if mem1 <= mem2 {
 				// mem1++
-				go rec1(con)
+				go rec1(con, date)
 				// fmt.Println("server1", mem1, mem2)
 			} else if mem2 < mem1 {
 				// mem2++
-				go rec2(con)
+				go rec2(con, data)
 				// fmt.Println("server2", mem1, mem2)
 			}
 		}
