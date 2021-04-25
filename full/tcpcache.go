@@ -62,7 +62,7 @@ func rec(con net.Conn) {
 		a := history(date)
 		wg.Wait()
 		fmt.Println("hi")
-		send(con, a)
+		con.Write(a)
 	}
 }
 
