@@ -63,6 +63,8 @@ func rec(con net.Conn) {
 		wg.Wait()
 		fmt.Println("hi")
 		con.Write(a)
+		con.Write([]byte("."))
+
 	}
 }
 
