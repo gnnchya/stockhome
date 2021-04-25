@@ -62,14 +62,16 @@ func rec(con net.Conn) {
 			fmt.Println("err5", err)
 			return
 		}
+		fmt.Println("history")
 		a, b := Lfu.get(&Cache_queue, date)
+		fmt.Println("finish")
 		send(con, a, b)
 		fmt.Println("hi")
-
 	}
 }
 
 func send(con net.Conn, msg []byte, state string) {
+	fmt.Println("send")
 	temp := append(msg, []byte("*")...)
 	temp1 := append(temp, []byte(state)...)
 	temp2 := append(temp1, []byte(".")...)
