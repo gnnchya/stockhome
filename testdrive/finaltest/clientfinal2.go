@@ -7,11 +7,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	// "sync"
+	"sync"
 	"time"
 )
 
-func Client(c chan string) {
+func Client(c chan string, wg *sync.WaitGroup) {
 	var try int = 0
 	var con net.Conn
 	var err error
@@ -41,11 +41,11 @@ func Client(c chan string) {
 		case "add":
 			add(con, com, c)
 			c <- "done"
-			// wg.Done()
+			wg.Done()
 		case "wd":
 			wd(con, com, c)
 			c <- "done"
-			// wg.Done()
+			wg.Done()
 		case "his":
 			his(con, com, c)
 			c <- "done"
@@ -57,7 +57,7 @@ func Client(c chan string) {
 		case "get":
 			get(con, com, c)
 			c <- "done"
-			// wg.Done()
+			wg.Done()
 		case "exit":
 			fmt.Println("Client disconnected")
 			con.Close()
@@ -121,7 +121,7 @@ func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
-	//fmt.Println("Waiting for respond...")
+	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -138,7 +138,7 @@ func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 	c <- mem2
 	c <- state
 
-	//fmt.Println(msg[0])
+	fmt.Println(msg[0])
 }
 
 func wd(con net.Conn, com []string, c chan string) {
@@ -182,7 +182,7 @@ func wd(con net.Conn, com []string, c chan string) {
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
-	//fmt.Println("Waiting for respond...")
+	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -199,7 +199,7 @@ func wd(con net.Conn, com []string, c chan string) {
 	c <- mem2
 	c <- state
 
-	//fmt.Println(msg[0])
+	fmt.Println(msg[0])
 }
 
 func his(con net.Conn, com []string, c chan string) {
@@ -259,7 +259,7 @@ func his(con net.Conn, com []string, c chan string) {
 
 	con.Write([]byte(com[0] + ": " + since[0] + since[1] + "\n"))
 
-	//fmt.Println("Downloading...")
+	fmt.Println("Downloading...")
 
 	// Create a file that the client wants to download
 	dir, err := os.Getwd()
@@ -304,7 +304,7 @@ func his(con net.Conn, com []string, c chan string) {
 		return
 	}
 
-	//fmt.Println("Download completed")
+	fmt.Println("Download completed")
 	return
 }
 
@@ -377,7 +377,7 @@ func ana(con net.Conn, com []string, c chan string) {
 	}
 
 	con.Write([]byte(com[0] + ": " + since[0] + "-" + since[1] + "-" + since[2] + "\n"))
-	//fmt.Println("Waiting for respond...")
+	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -392,12 +392,12 @@ func ana(con net.Conn, com []string, c chan string) {
 	c <- mem1
 	c <- mem2
 	// fmt.Println(msg[0])
-	//fmt.Println("Server: Response sent")
+	fmt.Println("Server: Response sent")
 }
 
 func get(con net.Conn, com []string, c chan string) {
 	con.Write([]byte(com[0] + ": " + com[1] + "\n"))
-	//fmt.Println("Waiting for respond...")
+	fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -414,7 +414,7 @@ func get(con net.Conn, com []string, c chan string) {
 	c <- mem2
 	c <- state
 
-	//fmt.Println(msg[0])
+	fmt.Println(msg[0])
 
 }
 

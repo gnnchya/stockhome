@@ -15,22 +15,16 @@ import (
 
 var db *sql.DB
 var eir error
-var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
+var anaavg, missavg, hitavg, missavg2, hitavg2, countall time.Duration = 0, 0, 0, 0, 0, 0
 var mem1, mem2 string
-var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
-var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
+var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
-func init(){
+func main() {
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if eir != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-	db.SetMaxIdleConns(0)
-}
 
-func main() {
-	rand.Seed(22)
 	//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 	cli := flag.Int("cli", 10, "Number of clients")
 	rut := flag.Int("rmup", 30, "Time to spawn all clients")
@@ -44,8 +38,7 @@ func main() {
 		return
 	}
 
-	delay := (float64(*rut) / float64(*cli))*1000
-
+	delay := float64(*rut) / float64(*cli)
 	fmt.Printf("************************************\nClient : %d\nRamp up time : %d seconds\nTotal run time : %d minutes\n", *cli, *rut, *allt)
 	fmt.Println("************************************")
 
@@ -57,13 +50,13 @@ func main() {
 		//wg1 := sync.WaitGroup{}
 		for ti := 1; ti <= *cli; ti++ {
 			//wg1.Add(1)
-			time.Sleep(time.Duration(delay) * time.Millisecond)
 			c1 := make(chan string)
-			log.Println("\033[36m+++++++++++++++++++ Initiate client no.\u001B[0m", ti)
-			//log.Printf("Initiate client no. %d\u001B[0m", ti)
+			fmt.Println("\u001B[33m++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\u001B[0m")
+			log.Printf("Initiate client no. %d", ti)
 			go Client(c1)
 			c <- ti
 			cc <- c1
+			time.Sleep(time.Duration(delay) * time.Second)
 			cliCnt++
 			//wg1.Done()
 		}
@@ -73,11 +66,9 @@ func main() {
 	timeout := time.After(time.Duration(*allt*60) * time.Second)
 
 	for {
-
 		select {
 		case <-timeout:
 			defer db.Close()
-			time.Sleep(time.Duration(3) * time.Second)
 			fmt.Println()
 			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
@@ -90,7 +81,7 @@ func main() {
 			fmt.Println("Client distribution correct: ", (cliCnt)/2 == no)
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
-			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
+			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(cliCnt), "ms")
 			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
@@ -110,7 +101,7 @@ func main() {
 		case ts := <-c:
 			go func(ts int) {
 				c1 := <-cc
-				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
+				log.Printf("Client No %d started", ts)
 
 				//Add,WD,get test >> Initial request
 				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts)
@@ -118,140 +109,47 @@ func main() {
 					mem1, mem2 = temp1, temp2
 				}
 
-				opcount3 <- 1
-				//count3++
+				count3++
 				switch correct {
 				case "yes":
-					switch {
+					switch  {
 					case rd <= 20:
-						//countadd++
-						opcountadd <- countadd
+						countadd++
 					case rd <= 55:
-						opcountwd <- countwd
-						//countwd++
+						countwd++
 					case rd <= 100:
-						//countget++
-						opcountget <- countget
+						countget++
 					}
 
 					switch state {
 					case "true\n.":
-						opcounthit <- elapsed
-						//hitavg2 = hitavg2 + elapsed
-						//counthit2++
+						hitavg2 = hitavg2 + elapsed
+						counthit2++
 					case "false\n.":
-						opcountmiss <- elapsed
-						//missavg2 = missavg2 + elapsed
-						//countmiss2++
+						missavg2 = missavg2 + elapsed
+						countmiss2++
 					default:
-						opcount3 <- 0
-						//count3--
+						count3--
 					}
 				case "nil":
-					opcount3 <- 0
-					//count3--
+					count3--
 				}
 
 				// Additional request of the user
 				for{
 					time.Sleep(time.Duration(rand.Intn(60-20)+20) * time.Second) // random sleep time between 20 secs - 60 secs
-					rdt := rand.Intn(100-1)+1
+					rd := rand.Intn(100-1)+1
 					switch {
-					case rdt <= 60: // 60% chance
+					case rd <= 60: // 60% chance
 						dbtest(c1, ts)
-					case rdt <= 85: // 25% chance
+					case rd <= 85: // 25% chance
 						histest(c1, ts)
-					case rdt <= 100: // 15% chance
+					case rd <= 100: // 15% chance
 						anatest(c1, ts)
 					}
+
 				}
 			}(ts)
-			default:
-		}
-		select{
-		case t := <- opcount3:
-			switch t{
-			case 1:
-				count3++
-			case 0:
-				count3--
-			}
-		default:
-		}
-
-		select{
-		case <- opcountadd:
-			countadd++
-		default:
-		}
-
-		select{
-		case <- opcountwd:
-			countwd++
-		default:
-		}
-
-		select{
-		case <- opcountget:
-			countget++
-		default:
-		}
-
-		select{
-		case elapsed := <- opcounthit:
-			hitavg2 = hitavg2 + elapsed
-			counthit2++
-		default:
-		}
-
-		select{
-		case elapsed := <- opcountmiss:
-			missavg2 = missavg2 + elapsed
-			countmiss2++
-		default:
-		}
-
-		select{
-		case elapsed := <- opanaavg:
-			anaavg = anaavg + elapsed
-			countall++
-		default:
-		}
-
-		select{
-		case t:= <- opcount:
-			switch t{
-			case 1:
-				count++
-			case 0:
-				countall--
-			}
-		default:
-		}
-
-		select{
-		case elapsed := <- ophitavg:
-			hitavg = hitavg + elapsed
-			counthit++
-		default:
-		}
-
-		select{
-		case elapsed := <- opmissavg:
-			missavg = missavg + elapsed
-			countmiss++
-		default:
-		}
-
-		select{
-		case t:= <- opcount2:
-			switch t{
-			case 1:
-				count2++
-			case 0:
-				count2--
-			}
-		default:
 		}
 	}
 }
@@ -259,38 +157,31 @@ func main() {
 func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
 	elapsed, _, _, correct, rd, state := DBcache(c1, ts)
-	opcount3 <- 1
-	//count3++
+
+	count3++
 	switch correct {
 	case "yes":
 		switch {
 		case rd <= 20:
-			//countadd++
-			opcountadd <- countadd
+			countadd++
 		case rd <= 55:
-			opcountwd <- countwd
-			//countwd++
+			countwd++
 		case rd <= 100:
-			//countget++
-			opcountget <- countget
+			countget++
 		}
 
 		switch state {
 		case "true\n.":
-			opcounthit <- elapsed
-			//hitavg2 = hitavg2 + elapsed
-			//counthit2++
+			hitavg2 = hitavg2 + elapsed
+			counthit2++
 		case "false\n.":
-			opcountmiss <- elapsed
-			//missavg2 = missavg2 + elapsed
-			//countmiss2++
+			missavg2 = missavg2 + elapsed
+			countmiss2++
 		default:
-			opcount3 <- 0
-			//count3--
+			count3--
 		}
 	case "nil":
-		opcount3 <- 0
-		//count3--
+		count3--
 	}
 }
 
@@ -298,16 +189,13 @@ func anatest(c1 chan string, ts int){
 	//Analysis test
 	elapsed, _, _, correct := Analysis(c1, ts)
 
-	opanaavg <- elapsed
-	//anaavg = anaavg + elapsed
-	//countall++
+	anaavg = anaavg + elapsed
+	countall++
 	switch correct {
 	case "yes":
-		opcount <- 1
-		//count++
+		count++
 	case "nil":
-		opcount <- 0
-		//countall--
+		countall--
 	}
 }
 
@@ -315,21 +203,18 @@ func histest(c1 chan string, ts int){
 	//history test
 	elapsed, _, _, correct, state := LBcache(c1, ts)
 
-	opcount2 <- 1
+	count2++
 	switch correct {
 	case "yes":
 		switch state {
 		case "true":
-			ophitavg <- elapsed
-			//hitavg = hitavg + elapsed
-			//counthit++
+			hitavg = hitavg + elapsed
+			counthit++
 		case "false":
-			opmissavg <- elapsed
-			//missavg = missavg + elapsed
-			//countmiss++
+			missavg = missavg + elapsed
+			countmiss++
 		}
 	case "nil":
-		opcount2 <- 0
-		//count2--
+		count2--
 	}
 }

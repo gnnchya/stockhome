@@ -15,11 +15,11 @@ import (
 
 var db *sql.DB
 var eir error
-var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
+var anaavg, missavg, hitavg, hisavg, awgavg time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
-var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+var count, count2, count3, counthis, countawg, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
-var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
+var opcountawg, opcounthis, opanaavg= make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 
 func init(){
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -94,17 +94,13 @@ func main() {
 			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
-			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
-			fmt.Println("Hit count:", counthit, ">>Average hit time : ", (float64(hitavg)/float64(time.Millisecond))/float64(counthit), "ms")
-			fmt.Println(">>HIT RATE: ", (float64(counthit)/float64(countmiss+counthit))*100, "%")
-			fmt.Println("++History Data correctness: ", (float64(counthit+countmiss)/float64(count2))*100, "%")
+			fmt.Println(">>Average History time :", (float64(hisavg)/float64(time.Millisecond))/float64(counthis), "ms")
+			fmt.Println("++History Data correctness: ", (float64(counthis)/float64(count2))*100, "%")
 			fmt.Println()
 			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
 			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
-			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
-			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
-			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
-			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
+			fmt.Println(">>Average transaction time :", (float64(awgavg)/float64(time.Millisecond))/float64(countawg), "ms")
+			fmt.Println("++Cache Data correctness: ", (float64(countadd+countwd+countget)/float64(count3))*100, "%\033[0m")
 			return
 
 		case ts := <-c:
@@ -113,7 +109,7 @@ func main() {
 				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
 
 				//Add,WD,get test >> Initial request
-				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts)
+				elapsed, temp1, temp2, correct, rd := DBcache(c1, ts)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
@@ -134,19 +130,8 @@ func main() {
 						opcountget <- countget
 					}
 
-					switch state {
-					case "true\n.":
-						opcounthit <- elapsed
-						//hitavg2 = hitavg2 + elapsed
-						//counthit2++
-					case "false\n.":
-						opcountmiss <- elapsed
-						//missavg2 = missavg2 + elapsed
-						//countmiss2++
-					default:
-						opcount3 <- 0
-						//count3--
-					}
+					opcountawg <- elapsed
+
 				case "nil":
 					opcount3 <- 0
 					//count3--
@@ -166,7 +151,7 @@ func main() {
 					}
 				}
 			}(ts)
-			default:
+		default:
 		}
 		select{
 		case t := <- opcount3:
@@ -198,16 +183,16 @@ func main() {
 		}
 
 		select{
-		case elapsed := <- opcounthit:
-			hitavg2 = hitavg2 + elapsed
-			counthit2++
+		case elapsed := <- opcountawg:
+			awgavg = awgavg + elapsed
+			countawg++
 		default:
 		}
 
 		select{
-		case elapsed := <- opcountmiss:
-			missavg2 = missavg2 + elapsed
-			countmiss2++
+		case elapsed := <- opcounthis:
+			hisavg = hisavg + elapsed
+			counthis++
 		default:
 		}
 
@@ -230,20 +215,6 @@ func main() {
 		}
 
 		select{
-		case elapsed := <- ophitavg:
-			hitavg = hitavg + elapsed
-			counthit++
-		default:
-		}
-
-		select{
-		case elapsed := <- opmissavg:
-			missavg = missavg + elapsed
-			countmiss++
-		default:
-		}
-
-		select{
 		case t:= <- opcount2:
 			switch t{
 			case 1:
@@ -258,39 +229,23 @@ func main() {
 
 func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
-	elapsed, _, _, correct, rd, state := DBcache(c1, ts)
+	elapsed, _, _, correct, rd := DBcache(c1, ts)
 	opcount3 <- 1
-	//count3++
 	switch correct {
 	case "yes":
 		switch {
 		case rd <= 20:
-			//countadd++
 			opcountadd <- countadd
 		case rd <= 55:
 			opcountwd <- countwd
-			//countwd++
 		case rd <= 100:
-			//countget++
 			opcountget <- countget
 		}
 
-		switch state {
-		case "true\n.":
-			opcounthit <- elapsed
-			//hitavg2 = hitavg2 + elapsed
-			//counthit2++
-		case "false\n.":
-			opcountmiss <- elapsed
-			//missavg2 = missavg2 + elapsed
-			//countmiss2++
-		default:
-			opcount3 <- 0
-			//count3--
-		}
+		opcountawg <- elapsed
+
 	case "nil":
 		opcount3 <- 0
-		//count3--
 	}
 }
 
@@ -299,37 +254,26 @@ func anatest(c1 chan string, ts int){
 	elapsed, _, _, correct := Analysis(c1, ts)
 
 	opanaavg <- elapsed
-	//anaavg = anaavg + elapsed
-	//countall++
+
 	switch correct {
 	case "yes":
 		opcount <- 1
-		//count++
+
 	case "nil":
 		opcount <- 0
-		//countall--
+
 	}
 }
 
 func histest(c1 chan string, ts int){
 	//history test
-	elapsed, _, _, correct, state := LBcache(c1, ts)
+	elapsed, _, _, correct := LBcache(c1, ts)
 
 	opcount2 <- 1
 	switch correct {
 	case "yes":
-		switch state {
-		case "true":
-			ophitavg <- elapsed
-			//hitavg = hitavg + elapsed
-			//counthit++
-		case "false":
-			opmissavg <- elapsed
-			//missavg = missavg + elapsed
-			//countmiss++
-		}
+	opcounthis <- elapsed
 	case "nil":
 		opcount2 <- 0
-		//count2--
 	}
 }

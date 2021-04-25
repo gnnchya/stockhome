@@ -83,41 +83,41 @@ func help() {
 func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 	if len(com) < 4 {
 		fmt.Println("Not Enough Information.")
-		error4(c)
+		error3(c)
 		return
 	}
 	uid, err := strconv.Atoi(com[1])
 	if err != nil {
 		fmt.Println("Please Enter an Integer!")
-		error4(c)
+		error3(c)
 		return
 	}
 	iid, err := strconv.Atoi(com[2])
 	if err != nil {
 		fmt.Println("Please Enter an Integer!")
-		error4(c)
+		error3(c)
 		return
 	}
 	com[3] = strings.TrimSpace(com[3])
 	amt, err := strconv.Atoi(com[3])
 	if err != nil {
 		fmt.Println("Please Enter an Integer!")
-		error4(c)
+		error3(c)
 		return
 	}
 	if uid <= 0 {
 		fmt.Println("UserID cannot be zero or negative.")
-		error4(c)
+		error3(c)
 		return
 	}
 	if iid <= 0 {
 		fmt.Println("ItemID cannot be zero or negative.")
-		error4(c)
+		error3(c)
 		return
 	}
 	if amt <= 0 {
 		fmt.Println("Amount cannot be zero or negative.")
-		error4(c)
+		error3(c)
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
@@ -125,18 +125,16 @@ func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
-		error4(c)
+		error3(c)
 		return
 	}
 	msg := strings.Split(data, "*")
 	msg[0] = strings.TrimSpace(msg[0])
 	c <- msg[0]
-	state := strings.TrimSpace(msg[1])
-	mem1 := strings.TrimSpace(msg[2])
-	mem2 := strings.TrimSpace(msg[3])
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
 	c <- mem1
 	c <- mem2
-	c <- state
 
 	//fmt.Println(msg[0])
 }
@@ -192,12 +190,10 @@ func wd(con net.Conn, com []string, c chan string) {
 	msg := strings.Split(data, "*")
 	msg[0] = strings.TrimSpace(msg[0])
 	c <- msg[0]
-	state := strings.TrimSpace(msg[1])
-	mem1 := strings.TrimSpace(msg[2])
-	mem2 := strings.TrimSpace(msg[3])
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
 	c <- mem1
 	c <- mem2
-	c <- state
 
 	//fmt.Println(msg[0])
 }
@@ -205,30 +201,30 @@ func wd(con net.Conn, com []string, c chan string) {
 func his(con net.Conn, com []string, c chan string) {
 	if len(com) != 2 {
 		fmt.Println("Please input as the format.")
-		error4(c)
+		error3(c)
 		return
 	}
 	since := strings.Split(com[1], "-")
 	if len(since) != 2 {
 		fmt.Println("Please input as the format.")
-		error4(c)
+		error3(c)
 		return
 	}
 
 	yyyy, err := strconv.Atoi(since[0])
 	if err != nil {
 		fmt.Println("Please Enter year as an Integer!")
-		error4(c)
+		error3(c)
 		return
 	}
 	if len(since[0]) != 4 {
 		fmt.Println("Please Enter year as a 4 digits of int!")
-		error4(c)
+		error3(c)
 		return
 	}
 	if yyyy > time.Now().Year() {
 		fmt.Println("Cannot diplay the future!")
-		error4(c)
+		error3(c)
 		return
 	}
 
@@ -237,23 +233,23 @@ func his(con net.Conn, com []string, c chan string) {
 	mm, err := strconv.Atoi(since[1])
 	if err != nil {
 		fmt.Println("Please Enter month as an Integer!")
-		error4(c)
+		error3(c)
 		return
 	}
 	if len(since[1]) != 2 {
 		fmt.Println("Please Enter year as a 2 digits of int!")
-		error4(c)
+		error3(c)
 		return
 	}
 	mmt := time.Now().Month()
 	var immt int = int(mmt)
 	if mm > immt && yyyy == time.Now().Year() {
-		error4(c)
+		error3(c)
 		fmt.Println("Cannot diplay the future!")
 		return
 	} else if mm == immt && yyyy == time.Now().Year() {
 		fmt.Println("Cannot diplay the current month!")
-		error4(c)
+		error3(c)
 		return
 	}
 
@@ -264,14 +260,14 @@ func his(con net.Conn, com []string, c chan string) {
 	// Create a file that the client wants to download
 	dir, err := os.Getwd()
 	if err != nil {
-		error4(c)
+		error3(c)
 		fmt.Println(err)
 		return
 	}
 
 	out, err := os.Create(dir + "/" + since[0] + "-" + since[1] + ".tmp")
 	if err != nil {
-		error4(c)
+		error3(c)
 		return
 	}
 
@@ -285,12 +281,10 @@ func his(con net.Conn, com []string, c chan string) {
 	msg[0] = strings.TrimSpace(msg[0])
 	c <- msg[0]
 	out.Write([]byte(msg[0]))
-	state := strings.TrimSpace(msg[1])
-	mem1 := strings.TrimSpace(msg[2])
-	mem2 := strings.TrimSpace(msg[3])
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
 	c <- mem1
 	c <- mem2
-	c <- state
 
 	out.Close()
 
@@ -300,7 +294,6 @@ func his(con net.Conn, com []string, c chan string) {
 		c <- "error"
 		c <- mem1
 		c <- mem2
-		c <- state
 		return
 	}
 
@@ -401,18 +394,16 @@ func get(con net.Conn, com []string, c chan string) {
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
-		error4(c)
+		error3(c)
 		return
 	}
 	msg := strings.Split(data, "*")
 	msg[0] = strings.TrimSpace(msg[0])
 	c <- msg[0]
-	state := strings.TrimSpace(msg[1])
-	mem1 := strings.TrimSpace(msg[2])
-	mem2 := strings.TrimSpace(msg[3])
+	mem1 := strings.TrimSpace(msg[1])
+	mem2 := strings.TrimSpace(msg[2])
 	c <- mem1
 	c <- mem2
-	c <- state
 
 	//fmt.Println(msg[0])
 
@@ -424,9 +415,3 @@ func error3(c chan string) {
 	c <- "error"
 }
 
-func error4(c chan string) {
-	c <- "error"
-	c <- "error"
-	c <- "error"
-	c <- "error"
-}
