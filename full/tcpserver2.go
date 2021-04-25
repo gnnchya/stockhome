@@ -51,6 +51,7 @@ func main() {
 
 func rec(con net.Conn) {
 	for {
+		wgall.Add(1)
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -115,7 +116,7 @@ func rec(con net.Conn) {
 			send(con, "Some How Error!")
 			// wgall.Done()
 		}
-		// wgall.Wait()
+		wgall.Done()
 
 		// wgexit.Wait()
 
@@ -130,6 +131,7 @@ func send(con net.Conn, msg string) {
 var db *sql.DB
 
 func analysis(year string, month string, day string) string {
+	wgall.Wait()
 	wgana.Add(1)
 	// var err error
 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -354,6 +356,7 @@ func WithDate(Wg *sync.WaitGroup) string {
 }
 
 func pulldb(con net.Conn, date string) {
+	wgall.Wait()
 	wgdb.Add(1)
 	// var err error
 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -396,6 +399,7 @@ func pulldb(con net.Conn, date string) {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
+	wgall.Wait()
 	wgadd.Add(1)
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
@@ -416,6 +420,7 @@ func add(userID string, itemID string, itemAmount string) string {
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
+	wgall.Wait()
 	wgwd.Add(1)
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
@@ -436,6 +441,7 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 }
 
 func getItemAmount(itemID string) string {
+	wgall.Wait()
 	wgget.Add(1)
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
