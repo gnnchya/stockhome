@@ -59,7 +59,7 @@ func rec(con net.Conn) {
 			fmt.Println("err5", err)
 			return
 		}
-		a := Lfu.get(&Cache_queue, date, "143.198.219.89:5002")
+		a := Lfu.get(&Cache_queue, date)
 		send(con, a)
 		fmt.Println("hi")
 
