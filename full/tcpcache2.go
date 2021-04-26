@@ -422,7 +422,7 @@ func addToDB(itemID int, amount int, userID int) string{
 	var val int
 	var state bool
 	var statement string
-	Wg.Add(1)
+	// Wg.Add(1)
 	// go func() {
 		// defer Wg.Done()
 		val, state = myCache.Input(itemID, amount)
