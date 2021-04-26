@@ -19,9 +19,9 @@ var myCache LRU
 var mutex = &sync.Mutex{}
 
 // var wg sync.WaitGroup
-var madd sync.Mutex
-var mwd sync.Mutex
-var mget sync.Mutex
+// var madd sync.Mutex
+// var mwd sync.Mutex
+// var mget sync.Mutex
 
 func main() {
 	//ยังไม่รู้ค่าจริงของ init\
@@ -41,7 +41,6 @@ func main() {
 		}
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
-		// go send(con, rec(con))
 	}
 }
 
@@ -341,25 +340,9 @@ func (l *LRU) Read(itemID int) (int, string) {
 		l.PageMap[itemID] = page
 		return GetAmountVal, "false"
 	}
-	// if _, found := l.PageMap[itemID]; found {
-	// 	fmt.Println("HIT")
-	// 	val := l.PageMap[itemID].currentAmount
-	// 	l.pageList.bringToMostUsed(l.PageMap[itemID])
-	// 	return val, "true"
-	// } else {
-	// 	fmt.Println("Miss")
-	// 	page := l.pageList.addFrontPage(itemID, GetAmountVal)
-	// 	l.size++
-	// 	l.PageMap[itemID] = page
-	// 	return GetAmountVal, "false"
-	// }
-
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
-	// 	mutex.Lock()
-	// 	defer mutex.Unlock()
-
 	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 	fmt.Println(GetAmountVal)
 	_, found := l.PageMap[itemID]
@@ -429,14 +412,8 @@ func addToDB(itemID int, amount int, userID int) string {
 	var val int
 	var state bool
 	var statement string
-	// Wg.Add(1)
-	// go func() {
-	// defer Wg.Done()
 	val, state = myCache.Input(itemID, amount)
 	statement = addNew(itemID, amount, userID)
-	// } ()
-	// Wg.Wait()
-
 	fmt.Println(statement + "\n")
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
 
@@ -445,24 +422,16 @@ func addToDB(itemID int, amount int, userID int) string {
 //withdraw() tcp
 //withdraw()database จาก server
 func withDrawToDB(itemID int, amount int, userID int) string {
-	mwd.Lock()
 	var eir int
 	var state bool
 	var statement string
-	// Wg.Add(1)
-	// go func() {
-	// defer Wg.Done()
 	eir, state = myCache.Input(itemID, amount)
 	statement = withdraw(itemID, amount*(-1), userID)
-	// }()
-	// Wg.Wait()
 
 	if eir == -1 {
-		// return error ให้ users
 		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
 	fmt.Println(statement + "\n")
-	mwd.Unlock()
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
 }
 
