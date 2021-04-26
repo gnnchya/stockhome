@@ -17,7 +17,7 @@ import (
 var Db *sql.DB
 var myCache LRU
 var mutex = &sync.Mutex{}
-var wg sync.WaitGroup
+// var wg sync.WaitGroup
 var madd sync.Mutex
 var mwd sync.Mutex
 var mget sync.Mutex
@@ -146,7 +146,7 @@ func GetAmount(itemID int) string {
 	return strconv.Itoa(amount)
 }
 
-func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
+func addNew(itemID int, amount int, userID int) string {
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
 	
@@ -176,7 +176,7 @@ func addNew(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 	return statement
 }
 
-func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
+func addExist(itemID int, amount int, userID int) string {
 	// For adding EXISTING items. For items CURRENTLY in the database.
 	// If you add a new item, it will die. Use addNew for items NOT in database
 	// defer Wg.Done()
@@ -201,7 +201,7 @@ func addExist(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
 	return statement
 }
 
-func withdraw(itemID int, amount int, userID int, Wg *sync.WaitGroup) string {
+func withdraw(itemID int, amount int, userID int) string {
 	// defer Wg.Done()
 	var checkID, stock int
 	var statement string
@@ -426,7 +426,7 @@ func addToDB(itemID int, amount int, userID int) string{
 	// go func() {
 		// defer Wg.Done()
 		val, state = myCache.Input(itemID, amount)
-		statement = addNew(itemID, amount, userID, &Wg)
+		statement = addNew(itemID, amount, userID)
 	// } ()
 	// Wg.Wait()
 	
