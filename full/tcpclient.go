@@ -52,11 +52,12 @@ func main() {
 }
 
 func help() {
-	fmt.Println(" Features 		|\"Command\"						|\"Example\"")
+	fmt.Println(" Features 		|\"Command\"					|\"Example\"")
 	fmt.Println(" ---------------------------------------------------------------------------------------------- ")
-	fmt.Println(" Add Item		|\"add userID itemID Amount\"				|\"add 62011155 745345 12\"")
-	fmt.Println(" WithDraw Item		|\"wd userID itemID Amount\"				|\"wd 62011155 745345 12\"")
-	fmt.Println(" History Tracking	|\"his year-month\"	|\"his 2020-12\"")
+	fmt.Println(" Add Item		|\"add userID itemID amount\"			|\"add 62011155 745345 12\"")
+	fmt.Println(" WithDraw Item		|\"wd userID itemID amount\"			|\"wd 62011155 745345 12\"")
+	fmt.Println(" Get Item Amount	|\"get itemID\"					|\"get 12\"")
+	fmt.Println(" History Tracking	|\"his year-month\"				|\"his 2020-12\"")
 	fmt.Println(" Stock Analysis 	|\"ana year-month-day\"				|\"ana 2020-12-12\"")
 	fmt.Println(" Exit 			|\"exit\"")
 }
