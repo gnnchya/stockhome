@@ -1,3 +1,4 @@
+//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 package main
 
 import (
@@ -31,7 +32,6 @@ func init(){
 
 func main() {
 	rand.Seed(22)
-	//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 	cli := flag.Int("cli", 10, "Number of clients")
 	rut := flag.Int("rmup", 30, "Time to spawn all clients")
 	allt := flag.Int("rt", 1, "Client total execution time in minutes")
