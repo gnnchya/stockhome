@@ -21,8 +21,6 @@ var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
 
-// var wgall sync.WaitGroup
-
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
 	if err != nil {
@@ -324,13 +322,6 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB(buf *bytes.Buffer) []string {
-	// var err error
-	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-
-	// defer db.Close()
 
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
 	if err != nil {
