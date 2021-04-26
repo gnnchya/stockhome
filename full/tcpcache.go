@@ -441,7 +441,7 @@ func withDrawToDB(itemID int, amount int, userID int) string {
 		// return error ให้ users
 		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
-	statement = withdraw(itemID, amount*(-1), userID, &Wg)
+	statement = withdraw(itemID, amount*(-1), userID)
 
 	fmt.Println(statement + "\n")
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
