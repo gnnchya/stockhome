@@ -330,18 +330,29 @@ func (l *LRU) Read(itemID int) (int, string) {
 	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 
 	if _, found := l.PageMap[itemID]; found {
+		fmt.Println("HIT")
 		val := l.PageMap[itemID].currentAmount
 		l.pageList.bringToMostUsed(l.PageMap[itemID])
-		fmt.Println("HIT")
 		return val, "true"
-
 	} else {
+		fmt.Println("Miss")
 		page := l.pageList.addFrontPage(itemID, GetAmountVal)
 		l.size++
 		l.PageMap[itemID] = page
-		fmt.Println("Miss")
 		return GetAmountVal, "false"
 	}
+	// if _, found := l.PageMap[itemID]; found {
+	// 	fmt.Println("HIT")
+	// 	val := l.PageMap[itemID].currentAmount
+	// 	l.pageList.bringToMostUsed(l.PageMap[itemID])
+	// 	return val, "true"
+	// } else {
+	// 	fmt.Println("Miss")
+	// 	page := l.pageList.addFrontPage(itemID, GetAmountVal)
+	// 	l.size++
+	// 	l.PageMap[itemID] = page
+	// 	return GetAmountVal, "false"
+	// }
 
 }
 
@@ -434,21 +445,25 @@ func addToDB(itemID int, amount int, userID int) string {
 //withdraw() tcp
 //withdraw()database จาก server
 func withDrawToDB(itemID int, amount int, userID int) string {
+	mwd.Lock()
 	var eir int
 	var state bool
 	var statement string
-
+	// Wg.Add(1)
+	// go func() {
+	// defer Wg.Done()
 	eir, state = myCache.Input(itemID, amount)
+	statement = withdraw(itemID, amount*(-1), userID)
+	// }()
+	// Wg.Wait()
 
 	if eir == -1 {
 		// return error ให้ users
 		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
-	statement = withdraw(itemID, amount*(-1), userID)
-
 	fmt.Println(statement + "\n")
+	mwd.Unlock()
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
-
 }
 
 //ถ้าจะรัน cache ใหม่ต่อวันต้อง while True init ใหม่
