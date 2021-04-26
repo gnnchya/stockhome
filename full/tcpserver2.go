@@ -15,13 +15,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var wgadd sync.WaitGroup
-var wgana sync.WaitGroup
-var wgwd sync.WaitGroup
-var wgget sync.WaitGroup
-var wghis sync.WaitGroup
-
-// var m sync.Mutex
+var mana sync.Mutex
+var madd sync.Mutex
+var mwd sync.Mutex
+var mget sync.Mutex
+var mhis sync.Mutex
 
 // var wgall sync.WaitGroup
 
@@ -44,6 +42,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		// wgall.Add(1)
 		go rec(con)
 		// wgall.Wait()
 		fmt.Println(con.RemoteAddr())
@@ -52,7 +51,6 @@ func main() {
 
 func rec(con net.Conn) {
 	for {
-		// wgall.Add(1)
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -70,51 +68,36 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			// wgana.Wait()
-			// m.Lock()
 			ana := analysis(date[0], date[1], date[2])
-			// m.Unlock()
 			send(con, ana)
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			// wgadd.Wait()
-			// m.Lock()
 			add := add(id[0], id[1], id[2])
-			// m.Unlock()
 			send(con, add)
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			// wgwd.Wait()
-			// m.Lock()
 			wd := withdraw(id[0], id[1], id[2])
-			// m.Unlock()
 			send(con, wd)
 		case "get":
-			// wgget.Wait()
-			// m.Lock()
 			get := getItemAmount(msg[1])
-			// m.Unlock()
 			send(con, get)
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
 			return
 		case "his":
-			// wghis.Wait()
-			// m.Lock()
 			his := his(data)
-			// m.Unlock()
 			send(con, his)
 		default:
 			send(con, "Some How Error!")
 		}
-		// wgall.Done()
+
 	}
 }
 
@@ -124,8 +107,7 @@ func send(con net.Conn, msg string) {
 }
 
 func his(msg string) string {
-	wghis.Add(1)
-	defer wghis.Done()
+	mhis.Lock()
 	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
@@ -138,42 +120,37 @@ func his(msg string) string {
 		fmt.Println(err)
 		return "nil"
 	}
+	mhis.Unlock()
 	return data
 }
 
 var db *sql.DB
 
 func analysis(year string, month string, day string) string {
-	wgana.Add(1)
-	defer wgana.Done()
+	mana.Lock()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
-
 	buf := bytes.NewBuffer(make([]byte, 0))
 	s := rtDB(buf)
-
 	Wg.Add(1)
 	go func() {
 		aWith = MostWithA(&Wg, s)
 	}()
-
 	Wg.Add(1)
 	go func() {
 		bWith = MostWithDate(start, &Wg, s)
 	}()
-
 	Wg.Add(1)
 	go func() {
 		cWith = WithTime(&Wg, s)
 	}()
-
 	Wg.Add(1)
 	go func() {
 		dWith = WithDate(&Wg, s)
 	}()
-
 	Wg.Wait()
+	mana.Unlock()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -353,13 +330,13 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB(buf *bytes.Buffer) []string {
-	var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
+	// var err error
+	// db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	// if err != nil {
+	// 	fmt.Println("Error: Cannot open database")
+	// }
 
-	defer db.Close()
+	// defer db.Close()
 
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
 	if err != nil {
@@ -384,8 +361,7 @@ func rtDB(buf *bytes.Buffer) []string {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	wgadd.Add(1)
-	defer wgadd.Done()
+	madd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -400,12 +376,12 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
+	madd.Unlock()
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	wgwd.Add(1)
-	defer wgwd.Done()
+	mwd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -420,12 +396,12 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
+	mwd.Unlock()
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	wgget.Add(1)
-	defer wgget.Done()
+	mget.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -440,5 +416,6 @@ func getItemAmount(itemID string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
+	mget.Unlock()
 	return val
 }
