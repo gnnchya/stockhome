@@ -169,7 +169,7 @@ func addNew(itemID int, amount int, userID int) string {
 		// Wg.Add(1)
 		// go func() {
 			// defer Wg.Done()
-			addExist(itemID, amount, userID, Wg)
+			addExist(itemID, amount, userID)
 		// }()
 		// Wg.Wait()
 	}
@@ -446,7 +446,7 @@ func withDrawToDB(itemID int, amount int, userID int) string{
 	// go func() {
 		// defer Wg.Done()
 		eir, state = myCache.Input(itemID, amount)
-		statement = withdraw(itemID, amount * (-1), userID, &Wg)
+		statement = withdraw(itemID, amount * (-1), userID)
 	// }()
 	// Wg.Wait()
 	
