@@ -347,8 +347,8 @@ func (l *LRU) Read(itemID int) (int, string) {
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
+// 	mutex.Lock()
+// 	defer mutex.Unlock()
 
 	GetAmountVal,_ := strconv.Atoi(GetAmount(itemID))
 	fmt.Println(GetAmountVal)
