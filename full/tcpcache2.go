@@ -18,6 +18,9 @@ var Db *sql.DB
 var myCache LRU
 var mutex = &sync.Mutex{}
 var wg sync.WaitGroup
+var madd sync.Mutex
+var mwd sync.Mutex
+var mget sync.Mutex
 
 func main() {
 	//ยังไม่รู้ค่าจริงของ init\
@@ -332,7 +335,7 @@ func (l *LRU) InitLRU(capacity int) {
 func (l *LRU) Read(itemID int) (int, string) {
 	GetAmountVal,_ := strconv.Atoi(GetAmount(itemID))
 
-	if _, found := l.PageMap[itemID]; !found {
+	if _, found := l.PageMap[itemID]; found {
 		fmt.Println("Miss")
 		page := l.pageList.addFrontPage(itemID,  GetAmountVal)
 		l.size++
@@ -419,7 +422,7 @@ func addToDB(itemID int, amount int, userID int) string{
 	var val int
 	var state bool
 	var statement string
-	// Wg.Add(1)
+	Wg.Add(1)
 	// go func() {
 		// defer Wg.Done()
 		val, state = myCache.Input(itemID, amount)
@@ -435,6 +438,7 @@ func addToDB(itemID int, amount int, userID int) string{
 //withdraw() tcp
 //withdraw()database จาก server
 func withDrawToDB(itemID int, amount int, userID int) string{
+	mwd.Lock()
 	var eir int
 	var state bool
 	var statement string
@@ -451,8 +455,8 @@ func withDrawToDB(itemID int, amount int, userID int) string{
 		 return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
 	fmt.Println(statement + "\n")
+mwd.Unlock()
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
-	
 }
 
 //ถ้าจะรัน cache ใหม่ต่อวันต้อง while True init ใหม่
