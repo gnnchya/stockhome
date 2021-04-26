@@ -329,17 +329,20 @@ func (l *LRU) InitLRU(capacity int) {
 func (l *LRU) Read(itemID int) (int, string) {
 	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 
-	if _, found := l.PageMap[itemID]; !found {
+	if _, found := l.PageMap[itemID]; found {
+		val := l.PageMap[itemID].currentAmount
+		l.pageList.bringToMostUsed(l.PageMap[itemID])
+		fmt.Println("HIT")
+		return val, "true"
+
+	} else {
 		page := l.pageList.addFrontPage(itemID, GetAmountVal)
 		l.size++
 		l.PageMap[itemID] = page
 		fmt.Println("Miss")
 		return GetAmountVal, "false"
 	}
-	val := l.PageMap[itemID].currentAmount
-	l.pageList.bringToMostUsed(l.PageMap[itemID])
-	fmt.Println("HIT")
-	return val, "true"
+
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
