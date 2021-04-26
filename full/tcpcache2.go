@@ -329,7 +329,7 @@ func (l *LRU) InitLRU(capacity int) {
 func (l *LRU) Read(itemID int) (int, string) {
 	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 
-	if _, found := l.PageMap[itemID]; !found {
+	if _, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
 		val := l.PageMap[itemID].currentAmount
 		l.pageList.bringToMostUsed(l.PageMap[itemID])
