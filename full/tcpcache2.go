@@ -342,10 +342,13 @@ func (l *LRU) Read(itemID int) (int, string) {
 		l.PageMap[itemID] = page
 		return  GetAmountVal, "false"
 	}
-	fmt.Println("HIT")
+	else{
+		fmt.Println("HIT")
 	val := l.PageMap[itemID].currentAmount
 	l.pageList.bringToMostUsed(l.PageMap[itemID])
 	return val, "true"
+	}
+	
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
