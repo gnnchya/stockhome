@@ -18,11 +18,10 @@ var mem3 int = 0
 var wg1 sync.WaitGroup
 var wg2 sync.WaitGroup
 
-
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.176:9999")
 	if err != nil {
-		fmt.Println("err1", err)
+		// fmt.Println("err1", err)
 		return
 	}
 	defer connect.Close()
@@ -31,7 +30,7 @@ func main() {
 	for {
 		con, err := connect.Accept()
 		if err != nil {
-			fmt.Println("err2", err)
+			// fmt.Println("err2", err)
 			return
 		}
 		fmt.Println(con.RemoteAddr())
@@ -68,7 +67,7 @@ func rec1(con net.Conn) {
 	mem1++
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
-		fmt.Println("err3", err)
+		// fmt.Println("err3", err)
 		mem1--
 		con.Close()
 		ser1.Close()
@@ -80,7 +79,7 @@ func rec1(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			fmt.Println("err4", err)
+			// fmt.Println("err4", err)
 			con.Close()
 			ser1.Close()
 			mem1--
@@ -125,8 +124,7 @@ func rec2(con net.Conn) {
 	mem2++
 	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
-		fmt.Println("err7", err)
-		mem2--
+		// fmt.Println("err7", err)
 		con.Close()
 		ser2.Close()
 		return
@@ -137,7 +135,7 @@ func rec2(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			fmt.Println("err8", err)
+			// fmt.Println("err8", err)
 			con.Close()
 			ser2.Close()
 			mem2--
