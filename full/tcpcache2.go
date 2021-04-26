@@ -341,8 +341,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 		l.size++
 		l.PageMap[itemID] = page
 		return  GetAmountVal, "false"
-	}
-	else{
+	}else{
 		fmt.Println("HIT")
 	val := l.PageMap[itemID].currentAmount
 	l.pageList.bringToMostUsed(l.PageMap[itemID])
