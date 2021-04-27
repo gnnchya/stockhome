@@ -129,6 +129,7 @@ func init() {
 }
 
 func GetAmount(itemID int) string {
+
 	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
 
 	if err != nil {
