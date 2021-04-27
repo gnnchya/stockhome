@@ -94,8 +94,17 @@ func retrieve(Date string, clb chan string) {
 }
 
 func randate() string {
-	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
-	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	var min,max int64
+	chance := rand.Intn(100)
+	switch {
+	case chance <= 80: //80%
+		min = time.Date(2019, 3, 1, 0, 0, 0, 0, time.UTC).Unix()
+		max = time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	case chance <=100: //20%
+		min = time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+		max = time.Date(2019, 3, 30, 0, 0, 0, 0, time.UTC).Unix()
+	}
+
 	delta := max - min
 
 	//rand.Seed(time.Now().UTC().UnixNano())
