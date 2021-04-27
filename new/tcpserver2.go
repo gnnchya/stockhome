@@ -346,7 +346,7 @@ func rtDB(buf *bytes.Buffer) []string {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	madd.Lock()
+	// madd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -361,12 +361,12 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	madd.Unlock()
+	// madd.Unlock()
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	mwd.Lock()
+	// mwd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -381,12 +381,12 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	mwd.Unlock()
+	// mwd.Unlock()
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	mget.Lock()
+	// mget.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -401,6 +401,6 @@ func getItemAmount(itemID string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	mget.Unlock()
+	// mget.Unlock()
 	return val
 }
