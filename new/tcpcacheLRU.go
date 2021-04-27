@@ -19,9 +19,12 @@ var myCache LRU
 var mutex = &sync.Mutex{}
 
 // var wg sync.WaitGroup
-var madd sync.Mutex
-var mwd sync.Mutex
-var mget sync.Mutex
+// var madd sync.Mutex
+// var mwd sync.Mutex
+// var mget sync.Mutex
+var sadd = make(chan bool, 680)
+var swd = make(chan bool, 1200)
+var sget = make(chan bool, 1520)
 
 func main() {
 	//ยังไม่รู้ค่าจริงของ init\
@@ -56,6 +59,7 @@ func rec(con net.Conn) {
 		msg[0] = strings.TrimSpace(msg[0])
 		switch msg[0] {
 		case "add":
+			sadd <- true
 			msg[1] = strings.TrimSpace(msg[1])
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -78,6 +82,7 @@ func rec(con net.Conn) {
 			}
 			send(con, addToDB(iid, amt, uid))
 		case "wd":
+			swd <- true
 			msg[1] = strings.TrimSpace(msg[1])
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -100,6 +105,7 @@ func rec(con net.Conn) {
 			}
 			send(con, withDrawToDB(iid, amt*(-1), uid))
 		case "get":
+			sget <- true
 			msg[1] = strings.TrimSpace(msg[1])
 			iid, err := strconv.Atoi(msg[1])
 			if err != nil {
@@ -129,7 +135,7 @@ func init() {
 }
 
 func GetAmount(itemID int) string {
-
+	defer func() { <-sget }()
 	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
 
 	if err != nil {
@@ -144,6 +150,7 @@ func GetAmount(itemID int) string {
 }
 
 func addNew(itemID int, amount int, userID int) string {
+	defer func() { <-sadd }()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
 
@@ -199,6 +206,7 @@ func addExist(itemID int, amount int, userID int) string {
 }
 
 func withdraw(itemID int, amount int, userID int) string {
+	defer func() { <-swd }()
 	// defer Wg.Done()
 	var checkID, stock int
 	var statement string
@@ -327,6 +335,7 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
+	defer func() { <-sget }()
 	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 
 	if _, found := l.PageMap[itemID]; found {
@@ -401,8 +410,8 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 
 //getItemAmount จาก TCP request
 func getAmountbyItem(itemID int) string {
-	mget.Lock()
-	defer mget.Unlock()
+	// mget.Lock()
+	// defer mget.Unlock()
 	amount, state := myCache.Read(itemID)
 	itemid := strconv.Itoa(itemID)
 	result := strconv.Itoa(amount)
@@ -412,8 +421,8 @@ func getAmountbyItem(itemID int) string {
 
 // add() request
 func addToDB(itemID int, amount int, userID int) string {
-	madd.Lock()
-	defer madd.Unlock()
+	// madd.Lock()
+	// defer madd.Unlock()
 	var val int
 	var state bool
 	var statement string
@@ -427,8 +436,8 @@ func addToDB(itemID int, amount int, userID int) string {
 //withdraw() tcp
 //withdraw()database จาก server
 func withDrawToDB(itemID int, amount int, userID int) string {
-	mwd.Lock()
-	defer mwd.Unlock()
+	// mwd.Lock()
+	// defer mwd.Unlock()
 	var eir int
 	var state bool
 	var statement string

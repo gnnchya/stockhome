@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
 )
 
 func Analysis(c chan string, ts int) (time.Duration, string, string) {

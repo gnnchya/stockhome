@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
 )
 
 func LBcache(c chan string, ts int) (time.Duration, string, string, string) {

@@ -20,6 +20,7 @@ var madd sync.Mutex
 var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
+var sana = make(chan bool, 560)
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
@@ -58,6 +59,7 @@ func rec(con net.Conn) {
 		msg[1] = strings.TrimSpace(msg[1])
 		switch msg[0] {
 		case "ana":
+			sana <- true
 			date := strings.Split(msg[1], "-")
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
@@ -99,7 +101,7 @@ func send(con net.Conn, msg string) {
 }
 
 func his(msg string) string {
-	mhis.Lock()
+	// mhis.Lock()
 	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
@@ -112,14 +114,15 @@ func his(msg string) string {
 		fmt.Println(err)
 		return "nil"
 	}
-	mhis.Unlock()
+	// mhis.Unlock()
 	return data
 }
 
 var db *sql.DB
 
 func analysis(year string, month string, day string) string {
-	mana.Lock()
+	// mana.Lock()
+	defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
@@ -142,7 +145,7 @@ func analysis(year string, month string, day string) string {
 		dWith = WithDate(&Wg, s)
 	}()
 	Wg.Wait()
-	mana.Unlock()
+	// mana.Unlock()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 

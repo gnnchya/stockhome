@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
 )
 
 func DBcache(c chan string, ts int) (time.Duration, string, string, int, string) {
