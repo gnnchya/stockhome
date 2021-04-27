@@ -16,7 +16,7 @@ func main() {
 	for i := 1; i <= 20000; i++ {
 		con, err := net.Dial("tcp", "128.199.70.176:9999")
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(err, i)
 			return
 		}
 		// if i%4 == 0 {
