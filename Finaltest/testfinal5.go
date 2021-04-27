@@ -156,7 +156,8 @@ func main() {
 				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
 
 				//Add,WD,get test >> Initial request
-				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts)
+				uid, pid, amt, rdd := randdb()
+				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts, uid, pid, amt, rdd)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
