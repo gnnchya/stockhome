@@ -4,7 +4,7 @@ import (
 	"bytes"
 	//"database/sql"
 	"fmt"
-	"math/rand"
+	//"math/rand"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,12 +14,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
+func Analysis(c chan string, ts int, rd string) (time.Duration, string, string, string) {
 	var mem1, mem2, output string
 	var elapsed time.Duration
 	cana := make(chan string)
 	correct := "yes"
-	rd := randomTimestamp()
 	randate := "ana " + rd
 	go analysis1(rd, cana)
 
@@ -66,18 +65,6 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	return elapsed, mem1, mem2, correct
 }
 
-//ref :https://stackoverflow.com/questions/43495745/how-to-generate-random-date-in-go-lang/43497333
-func randomTimestamp() string {
-	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
-	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
-	delta := max - min
-
-	// rand.Seed(time.Now().UTC().UnixNano())
-	sec := rand.Int63n(delta) + min
-	date := time.Unix(sec, 0)
-	str := date.Format("2006-01-02")
-	return str
-}
 
 // analysis code ****************************************************
 func analysis1(start string, cana chan string){

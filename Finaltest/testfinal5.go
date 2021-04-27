@@ -294,7 +294,8 @@ func main() {
 
 func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
-	elapsed, _, _, correct, rd, state := DBcache(c1, ts)
+	uid, pid, amt, rdd := randdb()
+	elapsed, _, _, correct, rd, state := DBcache(c1, ts, uid, pid, amt, rdd)
 	opcount3 <- 1
 	switch correct {
 	case "yes":
@@ -322,7 +323,7 @@ func dbtest(c1 chan string, ts int){
 
 func anatest(c1 chan string, ts int){
 	//Analysis test
-	elapsed, _, _, correct := Analysis(c1, ts)
+	elapsed, _, _, correct := Analysis(c1, ts, randana())
 
 	opanaavg <- elapsed
 	switch correct {
@@ -335,7 +336,7 @@ func anatest(c1 chan string, ts int){
 
 func histest(c1 chan string, ts int){
 	//history test
-	elapsed, _, _, correct, state := LBcache(c1, ts)
+	elapsed, _, _, correct, state := LBcache(c1, ts, randhis())
 
 	opcount2 <- 1
 	switch correct {
@@ -349,4 +350,43 @@ func histest(c1 chan string, ts int){
 	case "nil":
 		opcount2 <- 0
 	}
+}
+
+
+//ref :https://stackoverflow.com/questions/43495745/how-to-generate-random-date-in-go-lang/43497333
+func randana() string {
+	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
+	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	delta := max - min
+
+	// rand.Seed(time.Now().UTC().UnixNano())
+	sec := rand.Int63n(delta) + min
+	date := time.Unix(sec, 0)
+	str := date.Format("2006-01-02")
+	return str
+}
+
+func randhis() string {
+	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
+	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	delta := max - min
+
+	//rand.Seed(time.Now().UTC().UnixNano())
+	sec := rand.Int63n(delta) + min
+	date := time.Unix(sec, 0)
+	str := date.Format("2006-01")
+	return str
+}
+func randdb() (string, string, string, int) {
+	var amt string
+	rd := rand.Intn(100-1) + 1
+	switch {
+	case rd <= 20: // 20% chance
+		amt = strconv.Itoa(rand.Intn(10-5)+5)
+	case rd <= 55: // 35% chance
+		amt = strconv.Itoa(rand.Intn(5-1)+1)
+	}
+	strconv.Itoa(rand.Intn(10-5) + 5)
+	return strconv.Itoa(rand.Intn(1000000)), strconv.Itoa(rand.Intn(10000-1) + 1), amt, rd
+
 }

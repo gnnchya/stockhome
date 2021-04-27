@@ -3,19 +3,18 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"math/rand"
+	//"math/rand"
 	"strconv"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func LBcache(c chan string, ts int) (time.Duration, string, string, string, string) {
+func LBcache(c chan string, ts int, rd string) (time.Duration, string, string, string, string) {
 	var mem1, mem2, output, state string
 	var elapsed time.Duration
 	clb := make(chan string)
 	correct := "yes"
-	rd := randate()
 	randate1 := "his " + rd
 
 	begin := <-c
@@ -89,14 +88,3 @@ func retrieve(Date string, clb chan string) {
 	clb <- "Server: "+ buf.String()
 }
 
-func randate() string {
-	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
-	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
-	delta := max - min
-
-	//rand.Seed(time.Now().UTC().UnixNano())
-	sec := rand.Int63n(delta) + min
-	date := time.Unix(sec, 0)
-	str := date.Format("2006-01")
-	return str
-}
