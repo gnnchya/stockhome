@@ -20,7 +20,7 @@ var madd sync.Mutex
 var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
-var sana = make(chan bool, 280)
+var sana = make(chan bool, 140)
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
