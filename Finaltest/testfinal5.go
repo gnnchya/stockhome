@@ -1,7 +1,6 @@
 package main
 
 import (
-
 	"database/sql"
 	"flag"
 	"fmt"
@@ -12,17 +11,15 @@ import (
 	"math/rand"
 
 	_ "github.com/go-sql-driver/mysql"
-
 )
 
 var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
-var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2, end = make(chan int),make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
+var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
-
 
 func init(){
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -65,10 +62,6 @@ func main() {
 			log.Println("\033[36m+++++++++++++++++++ Initiate client no.\u001B[0m", ti)
 			//log.Printf("Initiate client no. %d\u001B[0m", ti)
 			go Client(c1)
-			if "no" == <- c1{
-				end <- 0
-			}
-
 			c <- ti
 			cc <- c1
 			cliCnt++
@@ -116,48 +109,13 @@ func main() {
 			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
 			return
 
-		case <-end:
-			defer db.Close()
-			//time.Sleep(time.Duration(3) * time.Second)
-			fmt.Println()
-			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
-			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
-			fmt.Println("Expected number of client(s) :", *cli)
-			fmt.Println("Total number of spawned client(s) :", (cliCnt))
-
-			fmt.Println("Server 1 :", mem1, "user(s) / Server 2 : ", mem2[:len(mem2)-1], "user(s)") //[:len(mem2)-1])
-			no, _ := strconv.Atoi(mem2[:len(mem2)-1])
-			// no, _ := strconv.Atoi(mem2)
-			fmt.Println("Client distribution correct: ", (cliCnt)/2 == no)
-			fmt.Println()
-			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
-			fmt.Println("Analysis count: ", countall)
-			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
-			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
-			fmt.Println()
-			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
-			fmt.Println("History count: ", count2)
-			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
-			fmt.Println("Hit count:", counthit, ">>Average hit time : ", (float64(hitavg)/float64(time.Millisecond))/float64(counthit), "ms")
-			fmt.Println(">>HIT RATE: ", (float64(counthit)/float64(countmiss+counthit))*100, "%")
-			fmt.Println("++History Data correctness: ", (float64(counthit+countmiss)/float64(count2))*100, "%")
-			fmt.Println()
-			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
-			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
-			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
-			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
-			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
-			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
-			return
-
 		case ts := <-c:
 			go func(ts int) {
 				c1 := <-cc
 				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
 
 				//Add,WD,get test >> Initial request
-				uid, pid, amt, rdd := randdb()
-				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts, uid, pid, amt, rdd)
+				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
@@ -295,8 +253,7 @@ func main() {
 
 func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
-	uid, pid, amt, rdd := randdb()
-	elapsed, _, _, correct, rd, state := DBcache(c1, ts, uid, pid, amt, rdd)
+	elapsed, _, _, correct, rd, state := DBcache(c1, ts)
 	opcount3 <- 1
 	switch correct {
 	case "yes":
@@ -324,7 +281,7 @@ func dbtest(c1 chan string, ts int){
 
 func anatest(c1 chan string, ts int){
 	//Analysis test
-	elapsed, _, _, correct := Analysis(c1, ts, randana())
+	elapsed, _, _, correct := Analysis(c1, ts)
 
 	opanaavg <- elapsed
 	switch correct {
@@ -337,7 +294,7 @@ func anatest(c1 chan string, ts int){
 
 func histest(c1 chan string, ts int){
 	//history test
-	elapsed, _, _, correct, state := LBcache(c1, ts, randhis())
+	elapsed, _, _, correct, state := LBcache(c1, ts)
 
 	opcount2 <- 1
 	switch correct {
@@ -351,43 +308,4 @@ func histest(c1 chan string, ts int){
 	case "nil":
 		opcount2 <- 0
 	}
-}
-
-
-//ref :https://stackoverflow.com/questions/43495745/how-to-generate-random-date-in-go-lang/43497333
-func randana() string {
-	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
-	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
-	delta := max - min
-
-	// rand.Seed(time.Now().UTC().UnixNano())
-	sec := rand.Int63n(delta) + min
-	date := time.Unix(sec, 0)
-	str := date.Format("2006-01-02")
-	return str
-}
-
-func randhis() string {
-	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
-	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
-	delta := max - min
-
-	//rand.Seed(time.Now().UTC().UnixNano())
-	sec := rand.Int63n(delta) + min
-	date := time.Unix(sec, 0)
-	str := date.Format("2006-01")
-	return str
-}
-func randdb() (string, string, string, int) {
-	var amt string
-	rd := rand.Intn(100-1) + 1
-	switch {
-	case rd <= 20: // 20% chance
-		amt = strconv.Itoa(rand.Intn(10-5)+5)
-	case rd <= 55: // 35% chance
-		amt = strconv.Itoa(rand.Intn(5-1)+1)
-	}
-	strconv.Itoa(rand.Intn(10-5) + 5)
-	return strconv.Itoa(rand.Intn(1000000)), strconv.Itoa(rand.Intn(10000-1) + 1), amt, rd
-
 }
