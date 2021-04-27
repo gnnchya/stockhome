@@ -155,13 +155,13 @@ func main() {
 					rdt := rand.Intn(100-1)+1
 					switch {
 					case rdt <= 60: // 60% chance
-					slfu <- true
+					// slfu <- true
 						dbtest(c1, ts)
 					case rdt <= 90: // 30% chance
-					shis <- true
+					// shis <- true
 						histest(c1, ts)
 					case rdt <= 100: // 10% chance
-					sana <- true
+					// sana <- true
 						anatest(c1, ts)
 					}
 				}

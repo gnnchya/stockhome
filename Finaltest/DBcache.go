@@ -37,7 +37,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 	if begin == "begin" {
 		//fmt.Println(rdact)
 		start := time.Now()
-
+		slfu <- true
 		c <- rdact
 
 		output = <-c

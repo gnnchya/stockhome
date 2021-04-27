@@ -21,7 +21,7 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	correct := "yes"
 	rd := randomTimestamp()
 	randate := "ana " + rd
-	go analysis1(rd, cana)
+	
 
 	begin := <-c
 	if begin == "begin" {
@@ -32,6 +32,7 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 
 		output = <-c
 		elapsed = time.Since(start)
+		go analysis1(rd, cana)
 		mem1 = <-c
 		mem2 = <-c
 		done := <-c
@@ -81,6 +82,7 @@ func randomTimestamp() string {
 
 // analysis code ****************************************************
 func analysis1(start string, cana chan string){
+	sana <- true
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
 

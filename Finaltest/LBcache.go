@@ -22,13 +22,15 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 	if begin == "begin" {
 		fmt.Println("-------------------\u001B[48;5;208mHISTORY\u001B[0m------------------- Client no.", ts)
 		//fmt.Println(randate1)
-		go retrieve(rd, clb)
+		shis <- true
+		
 		start := time.Now()
 
 		c <- randate1
 
 		output = <-c
 		elapsed = time.Since(start)
+		go retrieve(rd, clb)
 		mem1 = <-c
 		mem2 = <-c
 		state = <-c
