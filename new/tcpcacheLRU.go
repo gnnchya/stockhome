@@ -62,7 +62,6 @@ func rec(con net.Conn) {
 		msg[0] = strings.TrimSpace(msg[0])
 		switch msg[0] {
 		case "add":
-			sadd <- true
 			msg[1] = strings.TrimSpace(msg[1])
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -83,9 +82,9 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
+			sadd <- true
 			send(con, addToDB(iid, amt, uid))
 		case "wd":
-			swd <- true
 			msg[1] = strings.TrimSpace(msg[1])
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -106,15 +105,16 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
+			swd <- true
 			send(con, withDrawToDB(iid, amt*(-1), uid))
 		case "get":
-			sget <- true
 			msg[1] = strings.TrimSpace(msg[1])
 			iid, err := strconv.Atoi(msg[1])
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
+			sget <- true
 			send(con, getAmountbyItem(iid))
 		case "exit":
 			con.Close()
