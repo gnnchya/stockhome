@@ -83,7 +83,7 @@ func send(con net.Conn, msg []byte, state string) {
 var db *sql.DB
 
 // capacity size in bytes
-var Lfu Cache = Cache{capacity: 10000000, size: 0, block: make(map[int]*Node)}
+var Lfu Cache = Cache{capacity: 8000000, size: 0, block: make(map[int]*Node)}
 var Cache_queue Queue = Queue{Head: nil, Tail: nil}
 
 // saved file filename
