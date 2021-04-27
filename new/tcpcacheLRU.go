@@ -22,9 +22,9 @@ var mutex = &sync.Mutex{}
 // var madd sync.Mutex
 // var mwd sync.Mutex
 // var mget sync.Mutex
-var sadd = make(chan bool, 680)
-var swd = make(chan bool, 1200)
-var sget = make(chan bool, 1520)
+var sadd = make(chan bool, 340)
+var swd = make(chan bool, 620)
+var sget = make(chan bool, 760)
 
 func main() {
 	//ยังไม่รู้ค่าจริงของ init\
