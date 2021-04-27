@@ -73,7 +73,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 }
 
 func show(itemID int, cdb chan string) {
-	defer func() { <-slfu }()
+	defer func() { <-scache }()
 	var amount int
 	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
