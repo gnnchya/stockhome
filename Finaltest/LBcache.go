@@ -22,7 +22,6 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 	if begin == "begin" {
 		fmt.Println("-------------------\u001B[48;5;208mHISTORY\u001B[0m------------------- Client no.", ts)
 		//fmt.Println(randate1)
-		shis <- true
 		
 		start := time.Now()
 

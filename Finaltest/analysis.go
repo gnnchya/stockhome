@@ -82,7 +82,6 @@ func randomTimestamp() string {
 
 // analysis code ****************************************************
 func analysis1(start string, cana chan string){
-	sana <- true
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
 
