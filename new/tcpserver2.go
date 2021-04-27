@@ -123,7 +123,7 @@ var db *sql.DB
 
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
-	defer func() { <-sana }()
+	// defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
