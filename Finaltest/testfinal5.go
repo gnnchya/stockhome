@@ -209,7 +209,6 @@ func main() {
 			switch t{
 			case 1:
 				count3++
-				counttp++
 			case 0:
 				count3--
 			}
@@ -252,7 +251,6 @@ func main() {
 		case elapsed := <- opanaavg:
 			anaavg = anaavg + elapsed
 			countall++
-			counttp++
 		default:
 		}
 
@@ -286,7 +284,6 @@ func main() {
 			switch t{
 			case 1:
 				count2++
-				counttp++
 			case 0:
 				count2--
 			}
