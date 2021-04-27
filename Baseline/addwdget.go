@@ -55,14 +55,8 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int)
 	if output != "None" {
 		a := <- cdb
 		if output == a {
-			fmt.Println(output)
-			fmt.Println(a)
-
 			//fmt.Println("\033[32m -->Correct output\033[0m")
 		} else {
-			fmt.Println(output)
-			fmt.Println(a)
-			fmt.Println("wrong")
 			//fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
 		}

@@ -1,6 +1,7 @@
 package main
 
 import (
+
 	"database/sql"
 	"flag"
 	"fmt"
@@ -11,15 +12,17 @@ import (
 	"math/rand"
 
 	_ "github.com/go-sql-driver/mysql"
+
 )
 
 var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
-var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
+var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2, end = make(chan int),make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
+
 
 func init(){
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -62,6 +65,10 @@ func main() {
 			log.Println("\033[36m+++++++++++++++++++ Initiate client no.\u001B[0m", ti)
 			//log.Printf("Initiate client no. %d\u001B[0m", ti)
 			go Client(c1)
+			if "no" == <- c1{
+				end <- 0
+			}
+
 			c <- ti
 			cc <- c1
 			cliCnt++
@@ -76,6 +83,40 @@ func main() {
 
 		select {
 		case <-timeout:
+			defer db.Close()
+			//time.Sleep(time.Duration(3) * time.Second)
+			fmt.Println()
+			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
+			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
+			fmt.Println("Expected number of client(s) :", *cli)
+			fmt.Println("Total number of spawned client(s) :", (cliCnt))
+
+			fmt.Println("Server 1 :", mem1, "user(s) / Server 2 : ", mem2[:len(mem2)-1], "user(s)") //[:len(mem2)-1])
+			no, _ := strconv.Atoi(mem2[:len(mem2)-1])
+			// no, _ := strconv.Atoi(mem2)
+			fmt.Println("Client distribution correct: ", (cliCnt)/2 == no)
+			fmt.Println()
+			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
+			fmt.Println("Analysis count: ", countall)
+			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
+			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
+			fmt.Println()
+			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
+			fmt.Println("History count: ", count2)
+			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
+			fmt.Println("Hit count:", counthit, ">>Average hit time : ", (float64(hitavg)/float64(time.Millisecond))/float64(counthit), "ms")
+			fmt.Println(">>HIT RATE: ", (float64(counthit)/float64(countmiss+counthit))*100, "%")
+			fmt.Println("++History Data correctness: ", (float64(counthit+countmiss)/float64(count2))*100, "%")
+			fmt.Println()
+			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
+			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
+			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
+			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
+			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
+			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
+			return
+
+		case <-end:
 			defer db.Close()
 			//time.Sleep(time.Duration(3) * time.Second)
 			fmt.Println()
@@ -168,6 +209,7 @@ func main() {
 			switch t{
 			case 1:
 				count3++
+				counttp++
 			case 0:
 				count3--
 			}
@@ -210,6 +252,7 @@ func main() {
 		case elapsed := <- opanaavg:
 			anaavg = anaavg + elapsed
 			countall++
+			counttp++
 		default:
 		}
 
@@ -243,6 +286,7 @@ func main() {
 			switch t{
 			case 1:
 				count2++
+				counttp++
 			case 0:
 				count2--
 			}

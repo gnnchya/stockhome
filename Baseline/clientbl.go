@@ -21,6 +21,7 @@ func Client(c chan string) {
 		con, err = net.Dial("tcp", "128.199.70.176:9999")
 		if err != nil && try >= 3 {
 			fmt.Println("error: ", err)
+			c <- "no"
 			error3(c)
 			return
 		} else if err != nil && try < 3 {
@@ -33,6 +34,7 @@ func Client(c chan string) {
 	// help()
 	for {
 		// fmt.Println("Command: ")
+		c <- "yes"
 		c <- "begin"
 		msg := <-c
 		com := strings.Split(msg, " ")
