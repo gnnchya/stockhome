@@ -13,7 +13,9 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 )
-
+var sana = make(chan bool, 1)
+var shis = make(chan bool, 1)
+var slfu = make(chan bool, 1)
 var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
@@ -153,10 +155,13 @@ func main() {
 					rdt := rand.Intn(100-1)+1
 					switch {
 					case rdt <= 60: // 60% chance
+					slfu <- true
 						dbtest(c1, ts)
 					case rdt <= 90: // 30% chance
+					shis <- true
 						histest(c1, ts)
 					case rdt <= 100: // 10% chance
+					sana <- true
 						anatest(c1, ts)
 					}
 				}
