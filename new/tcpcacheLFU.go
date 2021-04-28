@@ -39,8 +39,9 @@ func main() {
 			// connect.Close()
 			return
 		}
-		rec(con)
 		fmt.Println(con.RemoteAddr())
+		rec(con)
+		
 		// go send(con, rec(con))
 
 }
