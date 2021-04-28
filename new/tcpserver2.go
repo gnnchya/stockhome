@@ -22,6 +22,8 @@ var mget sync.Mutex
 var mhis sync.Mutex
 // var sana = make(chan bool, 140)
 var sana = make(chan bool, 1)
+var cs net.Conn
+var ch net.Conn
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
@@ -30,11 +32,32 @@ func main() {
 		return
 	}
 	defer connect.Close()
+if checkconnect("143.198.195.15:5003") == false{
+	con.Write([]byte"Cache-Database is down\n")
+	return
+}
+if checkconnect("139.59.116.139:5004") == false{
+	con.Write([]byte"Cache-History is down\n")
+	return
+}
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
 	defer db.Close()
+	cs, err = net.Dial("tcp", "143.198.195.15:5003")
+	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil" + "*" + "no" + "\n"
+	}
+	defer cs.Close()
+	ch, err = net.Dial("tcp", "139.59.116.139:5004")
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	defer ch.Close()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -101,16 +124,24 @@ func send(con net.Conn, msg string) {
 	con.Write([]byte("Server: " + msg + "."))
 }
 
+func checkconnect(port string) bool {
+	t := 600 * time.Second
+	con, err := net.DialTimeout("tcp", port, t)
+	if err != nil {
+		fmt.Println("Unhealthy: Server " + port + " is Down")
+		// fmt.Println(err)
+		return false
+	}
+	fmt.Println("Healthy: Server " + port + " is Up")
+	con.Close()
+	return true
+}
+
 func his(msg string) string {
 	// mhis.Lock()
-	con, err := net.Dial("tcp", "139.59.116.139:5004")
-	if err != nil {
-		fmt.Println(err)
-		return "nil"
-	}
-	defer con.Close()
-	con.Write([]byte(msg))
-	data, err := bufio.NewReader(con).ReadString('.')
+	
+	ch.Write([]byte(msg))
+	data, err := bufio.NewReader(ch).ReadString('.')
 	if err != nil {
 		fmt.Println(err)
 		return "nil"
@@ -351,18 +382,11 @@ func rtDB(buf *bytes.Buffer) []string {
 
 func add(userID string, itemID string, itemAmount string) string {
 	// madd.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
 	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
+		return "nil*no\n"
 	}
 	fmt.Println(val)
 	// madd.Unlock()
@@ -371,18 +395,11 @@ func add(userID string, itemID string, itemAmount string) string {
 
 func withdraw(userID string, itemID string, itemAmount string) string {
 	// mwd.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
 	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
+		return "nil*no\n"
 	}
 	fmt.Println(val)
 	// mwd.Unlock()
@@ -391,18 +408,11 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 
 func getItemAmount(itemID string) string {
 	// mget.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
 	cs.Write([]byte("get:" + itemID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
+		return "nil*no\n"
 	}
 	fmt.Println(val)
 	// mget.Unlock()
