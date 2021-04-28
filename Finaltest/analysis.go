@@ -21,17 +21,18 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	correct := "yes"
 	rd := randomTimestamp()
 	randate := "ana " + rd
-	go analysis1(rd, cana)
+
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println("-------------------\u001b[48;5;89mANALYSIS\u001b[0m------------------- Client no.", ts)
+		fmt.Println("-------------------ANALYSIS------------------- Client no.", ts)
 		//fmt.Println(randate)
 		start := time.Now()
 		c <- randate
 
 		output = <-c
 		elapsed = time.Since(start)
+		go analysis1(rd, cana)
 		mem1 = <-c
 		mem2 = <-c
 		done := <-c
@@ -53,10 +54,10 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 
 		if output == check {
 			//fmt.Println("\033[32m -->Correct output\033[0m")
-		   } else {
+		} else {
 			//fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
-		   }
+		}
 	} else {
 		//fmt.Println("## ERROR ##")
 		correct = "nil"
@@ -287,6 +288,7 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB(buf *bytes.Buffer) []string {
+	defer func() { sana <- true }()
 	var err error
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
 	if err != nil {

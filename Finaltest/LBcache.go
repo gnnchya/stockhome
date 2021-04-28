@@ -20,15 +20,16 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println("-------------------\u001B[48;5;208mHISTORY\u001B[0m------------------- Client no.", ts)
+		fmt.Println("-------------------HISTORY------------------- Client no.", ts)
 		//fmt.Println(randate1)
-		go retrieve(rd, clb)
+
 		start := time.Now()
 
 		c <- randate1
 
 		output = <-c
 		elapsed = time.Since(start)
+		go retrieve(rd, clb)
 		mem1 = <-c
 		mem2 = <-c
 		state = <-c
@@ -48,10 +49,10 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 
 		if output == check {
 			//fmt.Println("\033[32m -->Correct output\033[0m")
-		   } else {
+		} else {
 			//fmt.Println("\033[31m -->Incorrect output\033[0m")
 			correct = "no"
-		   }
+		}
 	} else {
 		//fmt.Println("## ERROR ##")
 		correct = "nil"
@@ -59,8 +60,10 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 	//fmt.Println("History time elapsed: ", elapsed)
 	return elapsed, mem1, mem2, correct, state
 }
+
 //
 func retrieve(Date string, clb chan string) {
+	defer func() { shis <- true }()
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	buf.Write(col)
@@ -86,12 +89,21 @@ func retrieve(Date string, clb chan string) {
 		buf.Write(line)
 	}
 	row.Close()
-	clb <- "Server: "+ buf.String()
+	clb <- "Server: " + buf.String()
 }
 
 func randate() string {
-	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
-	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	var min,max int64
+	chance := rand.Intn(100)
+	switch {
+	case chance <= 80: //80%
+		min = time.Date(2019, 3, 1, 0, 0, 0, 0, time.UTC).Unix()
+		max = time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	case chance <=100: //20%
+		min = time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+		max = time.Date(2019, 3, 30, 0, 0, 0, 0, time.UTC).Unix()
+	}
+
 	delta := max - min
 
 	//rand.Seed(time.Now().UTC().UnixNano())
