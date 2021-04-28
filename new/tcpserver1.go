@@ -32,14 +32,6 @@ func main() {
 		return
 	}
 	defer connect.Close()
-if checkconnect("143.198.195.15:5003") == false{
-	con.Write([]byte("Cache-Database is down\n"))
-	return
-}
-if checkconnect("139.59.116.139:5004") == false{
-	con.Write([]byte("Cache-History is down\n"))
-	return
-}
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -122,19 +114,6 @@ func rec(con net.Conn) {
 
 func send(con net.Conn, msg string) {
 	con.Write([]byte("Server: " + msg + "."))
-}
-
-func checkconnect(port string) bool {
-	t := 600 * time.Second
-	con, err := net.DialTimeout("tcp", port, t)
-	if err != nil {
-		fmt.Println("Unhealthy: Server " + port + " is Down")
-		// fmt.Println(err)
-		return false
-	}
-	fmt.Println("Healthy: Server " + port + " is Up")
-	con.Close()
-	return true
 }
 
 func his(msg string) string {
