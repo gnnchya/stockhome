@@ -37,17 +37,15 @@ func main() {
 		fmt.Println(con.RemoteAddr())
 		if checkconnect("128.199.70.252:5001") == false {
 			if checkconnect("143.198.219.89:5002") == false {
-				fmt.Println("All server is down")
+				con.Write([]byte("All server is down. Please try again"))
 			} else {
-				fmt.Println("Server 1 is down. Please try again.")
 				go rec2(con)
 				wg2.Wait()
 			}
 		} else if checkconnect("143.198.219.89:5002") == false {
 			if checkconnect("128.199.70.252:5001") == false {
-				fmt.Println("All server is down")
+				con.Write([]byte("All server is down. Please try again"))
 			} else {
-				fmt.Println("Server 2 is down. Please try again.")
 				go rec1(con)
 				wg1.Wait()
 			}
@@ -109,6 +107,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser1).ReadString('.')
 		if err != nil {
+			con.Write([]byte("Server is down. Please try again!"))
 			con.Close()
 			ser1.Close()
 			return
@@ -165,16 +164,13 @@ func fb2(con net.Conn, ser2 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser2).ReadString('.')
 		if err != nil {
-			// fmt.Println("err10", err)
-			// mem2--
+			con.Write([]byte("Server is down. Please try again!"))
 			con.Close()
 			ser2.Close()
 			return
 		}
 		fmt.Println("Forwarding response..")
 		fmt.Println()
-		// fmt.Println(msg)
-		// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
 		con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
 		con.Write([]byte("`"))
 	}
