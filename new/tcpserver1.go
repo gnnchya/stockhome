@@ -33,11 +33,11 @@ func main() {
 	}
 	defer connect.Close()
 if checkconnect("143.198.195.15:5003") == false{
-	con.Write([]byte"Cache-Database is down\n")
+	con.Write([]byte("Cache-Database is down\n"))
 	return
 }
 if checkconnect("139.59.116.139:5004") == false{
-	con.Write([]byte"Cache-History is down\n")
+	con.Write([]byte("Cache-History is down\n"))
 	return
 }
 	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
