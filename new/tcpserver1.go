@@ -22,8 +22,6 @@ var mget sync.Mutex
 var mhis sync.Mutex
 // var sana = make(chan bool, 140)
 var sana = make(chan bool, 1)
-var cs net.Conn
-var ch net.Conn
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
@@ -37,19 +35,6 @@ func main() {
 		fmt.Println("Error: Cannot open database")
 	}
 	defer db.Close()
-	cs, err = net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return
-	}
-	defer cs.Close()
-	ch, err = net.Dial("tcp", "139.59.116.139:5004")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer ch.Close()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -118,9 +103,14 @@ func send(con net.Conn, msg string) {
 
 func his(msg string) string {
 	// mhis.Lock()
-	
-	ch.Write([]byte(msg))
-	data, err := bufio.NewReader(ch).ReadString('.')
+	con, err := net.Dial("tcp", "139.59.116.139:5004")
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	defer con.Close()
+	con.Write([]byte(msg))
+	data, err := bufio.NewReader(con).ReadString('.')
 	if err != nil {
 		fmt.Println(err)
 		return "nil"
@@ -361,11 +351,18 @@ func rtDB(buf *bytes.Buffer) []string {
 
 func add(userID string, itemID string, itemAmount string) string {
 	// madd.Lock()
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil" + "*" + "no" + "\n"
+	}
+	defer cs.Close()
 	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil*no\n"
+		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
 	// madd.Unlock()
@@ -374,11 +371,18 @@ func add(userID string, itemID string, itemAmount string) string {
 
 func withdraw(userID string, itemID string, itemAmount string) string {
 	// mwd.Lock()
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil" + "*" + "no" + "\n"
+	}
+	defer cs.Close()
 	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil*no\n"
+		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
 	// mwd.Unlock()
@@ -387,11 +391,18 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 
 func getItemAmount(itemID string) string {
 	// mget.Lock()
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil" + "*" + "no" + "\n"
+	}
+	defer cs.Close()
 	cs.Write([]byte("get:" + itemID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
-		return "nil*no\n"
+		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
 	// mget.Unlock()

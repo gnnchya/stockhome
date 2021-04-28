@@ -38,17 +38,16 @@ func main() {
 		return
 	}
 	defer connect.Close()
-	
+	for {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
 			// connect.Close()
 			return
 		}
+		go rec(con)
 		fmt.Println(con.RemoteAddr())
-		rec(con)
-		
-	
+	}
 }
 
 func rec(con net.Conn) {

@@ -32,18 +32,17 @@ func main() {
 		fmt.Println("Error: Cannot open database")
 	}
 	defer db.Close()
-	
+	for {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
 			// connect.Close()
 			return
 		}
+		go rec(con)
 		fmt.Println(con.RemoteAddr())
-		rec(con)
-		
 		// go send(con, rec(con))
-
+	}
 }
 
 func rec(con net.Conn) {
