@@ -20,6 +20,7 @@ var madd sync.Mutex
 var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
+
 // var sana = make(chan bool, 140)
 var sana = make(chan bool, 1)
 
@@ -30,11 +31,7 @@ func main() {
 		return
 	}
 	defer connect.Close()
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer db.Close()
+
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -118,8 +115,6 @@ func his(msg string) string {
 	// mhis.Unlock()
 	return data
 }
-
-var db *sql.DB
 
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
@@ -327,6 +322,11 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 
 func rtDB(buf *bytes.Buffer) []string {
 	defer func() { <-sana }()
+	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer db.Close()
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
 	if err != nil {
 		fmt.Print(err)
