@@ -31,7 +31,7 @@ func init() {
 	if eir != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-	db.SetMaxIdleConns(10)
+	db.SetMaxIdleConns(0)
 	db.SetMaxOpenConns(10)
 	db.SetConnMaxLifetime(time.Minute * 3)
 }
