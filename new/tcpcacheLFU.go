@@ -10,7 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
+	// "sync"
 
 	"github.com/ricochet2200/go-disk-usage/du"
 
