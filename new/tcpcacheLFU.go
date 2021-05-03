@@ -285,7 +285,7 @@ func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDat
 		}
 		row.Close()
 
-		wg.Add(1)
+		// wg.Add(1)
 		go Save(filename, buf.Bytes())
 		c.set(q, filename, buf.Bytes())
 		return
@@ -325,7 +325,7 @@ func Save(filename int, data []byte) {
 	}
 	file.Write(data)
 	file.Close()
-	wg.Done()
+	// wg.Done()
 }
 
 func Read(c *Cache, q *Queue, filename string) {
