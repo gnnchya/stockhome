@@ -14,7 +14,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var Db *sql.DB
 var myCache LRU
 var mutex = &sync.Mutex{}
 
@@ -22,9 +21,9 @@ var mutex = &sync.Mutex{}
 // var madd sync.Mutex
 // var mwd sync.Mutex
 // var mget sync.Mutex
-var sadd = make(chan bool, 1360)
-var swd = make(chan bool, 2380)
-var sget = make(chan bool, 3060)
+var sadd = make(chan bool, 5916)
+var swd = make(chan bool, 19353)
+var sget = make(chan bool, 24882)
 
 // var sadd = make(chan bool, 1)
 // var swd = make(chan bool, 1)
@@ -83,7 +82,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			sadd <- true
+			
 			send(con, addToDB(iid, amt, uid))
 		case "wd":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -106,7 +105,6 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			swd <- true
 			send(con, withDrawToDB(iid, amt*(-1), uid))
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -115,7 +113,6 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			sget <- true
 			send(con, getAmountbyItem(iid))
 		case "exit":
 			con.Close()
@@ -130,16 +127,15 @@ func send(con net.Conn, msg string) {
 	con.Write([]byte("Database: " + msg))
 }
 
-func init() {
+func GetAmount(itemID int) string {
+	sget <- true
+	defer func() { <-sget }()
 	var err error
 	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-}
-
-func GetAmount(itemID int) string {
-	defer func() { <-sget }()
+	defer Db.Close()
 	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
 
 	if err != nil {
@@ -154,10 +150,15 @@ func GetAmount(itemID int) string {
 }
 
 func addNew(itemID int, amount int, userID int) string {
-	// defer func() { <-sadd }()
+	sadd <- true
+	defer func() { <-sadd }()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
-
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer Db.Close()
 	var checkID int
 	var statement string
 
@@ -177,14 +178,14 @@ func addNew(itemID int, amount int, userID int) string {
 		// Wg.Add(1)
 		// go func() {
 		// defer Wg.Done()
-		addExist(itemID, amount, userID)
+		addExist(itemID, amount, userID, Db)
 		// }()
 		// Wg.Wait()
 	}
 	return statement
 }
 
-func addExist(itemID int, amount int, userID int) string {
+func addExist(itemID int, amount int, userID int, Db *sql.DB ) string {
 	// For adding EXISTING items. For items CURRENTLY in the database.
 	// If you add a new item, it will die. Use addNew for items NOT in database
 	// defer Wg.Done()
@@ -210,7 +211,13 @@ func addExist(itemID int, amount int, userID int) string {
 }
 
 func withdraw(itemID int, amount int, userID int) string {
-	// defer func() { <-swd }()
+	swd <- true
+	defer func() { <-swd }()
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer Db.Close()
 	// defer Wg.Done()
 	var checkID, stock int
 	var statement string
@@ -230,13 +237,13 @@ func withdraw(itemID int, amount int, userID int) string {
 			fmt.Printf("\n")
 		}
 		statement = fmt.Sprintf("Withdrawn %d from database (%d units) | Item in Stock: %d\n", itemID, amount, stock-amount)
-		addHis(itemID, false, amount, userID)
+		addHis(itemID, false, amount, userID, Db)
 		with.Close()
 	}
 	return statement
 }
 
-func addHis(itemID int, action bool, amount int, userID int) {
+func addHis(itemID int, action bool, amount int, userID int, Db *sql.DB) {
 	// This already auto-adds itself to the history database, so no need to do anything here.
 	var datetime = time.Now()
 	date := datetime.Format("2006-01-02")

@@ -21,7 +21,7 @@ var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
 
-var sana = make(chan bool, 1120)
+var sana = make(chan bool, 4607)
 
 // var sana = make(chan bool, 1)
 
@@ -320,8 +320,8 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB(buf *bytes.Buffer) []string {
-	// sana <- true
-	// defer func() { <-sana }()
+	sana <- true
+	defer func() { <-sana }()
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
