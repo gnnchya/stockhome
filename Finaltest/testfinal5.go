@@ -15,9 +15,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var sana = make(chan bool, 2240)
+var sana = make(chan bool, 1120)
 var shis = make(chan bool, 1)
-var scache = make(chan bool, 13600)
+var scache = make(chan bool, 6800)
 var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
