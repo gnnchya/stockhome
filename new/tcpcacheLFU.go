@@ -17,7 +17,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var shis = make(chan bool, 1)
+// var shis = make(chan bool, 1)
+var m sync.Mutex
 
 func main() {
 	connect, err := net.Listen("tcp", "139.59.116.139:5004")
@@ -64,7 +65,7 @@ func rec(con net.Conn) {
 			return
 		}
 		// fmt.Println("history")
-		shis <- true
+		// shis <- true
 		a, b := Lfu.get(&Cache_queue, date)
 		// fmt.Println("finish")
 		send(con, a, b)
@@ -223,9 +224,10 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 }
 
 func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
+	m.Lock()
+	defer m.Unlock()
 	wg.Add(1)
 	state := "true"
-	defer func() { <-shis }()
 	// mu.Lock()
 	// defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
