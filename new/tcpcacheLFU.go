@@ -10,7 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
+	// "sync"
 
 	"github.com/ricochet2200/go-disk-usage/du"
 
@@ -90,8 +90,8 @@ var Cache_queue Queue = Queue{Head: nil, Tail: nil}
 // saved file filename
 var Namelist Queue = Queue{nil, nil}
 var Files = make(map[int]*Node)
-var wg sync.WaitGroup
-var mu sync.Mutex
+// var wg sync.WaitGroup
+// var mu sync.Mutex
 
 type Cache struct {
 	capacity int //bytes unit
@@ -227,7 +227,7 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 	defer func() { <-shis }() 
 	// m.Lock()
 	// defer m.Unlock()
-	wg.Add(1)
+	// wg.Add(1)
 	state := "true"
 	// mu.Lock()
 	// defer mu.Unlock()
@@ -246,7 +246,7 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 	}
 	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
 	c.printCache()
-	wg.Done()
+	// wg.Done()
 	return c.block[itemId].value, state
 	// fmt.Println("Final", c.size, "\n")
 	// fmt.Println(c.block[itemId].value)
@@ -285,7 +285,7 @@ func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDat
 		}
 		row.Close()
 
-		wg.Add(1)
+		// wg.Add(1)
 		go Save(filename, buf.Bytes())
 		c.set(q, filename, buf.Bytes())
 		return
@@ -325,7 +325,7 @@ func Save(filename int, data []byte) {
 	}
 	file.Write(data)
 	file.Close()
-	wg.Done()
+	// wg.Done()
 }
 
 func Read(c *Cache, q *Queue, filename string) {
