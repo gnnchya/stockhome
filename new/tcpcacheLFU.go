@@ -242,6 +242,7 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 		state = "false"
 	}
 	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
+	c.printCache()
 	wg.Done()
 	return c.block[itemId].value, state
 	// fmt.Println("Final", c.size, "\n")
@@ -349,6 +350,15 @@ func Read(c *Cache, q *Queue, filename string) {
 	// c.set(q, 202109, buf.Bytes())
 	c.set(q, name, buf.Bytes())
 }
+
+func (c *Cache) printCache() {
+	txt := "Cache["
+	for k, _ := range c.block {
+	 txt += strconv.Itoa(k) + " "
+	}
+	txt = txt[:len(txt)-1] + "]"
+	fmt.Println(txt)
+   }
 
 // func history(daterequest int) []byte {
 // 	// var err error

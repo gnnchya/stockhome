@@ -21,7 +21,7 @@ var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
 
-var sana = make(chan bool, 140)
+var sana = make(chan bool, 2240)
 
 // var sana = make(chan bool, 1)
 
@@ -32,7 +32,6 @@ func main() {
 		return
 	}
 	defer connect.Close()
-
 	for {
 		con, err := connect.Accept()
 		if err != nil {

@@ -22,9 +22,9 @@ var mutex = &sync.Mutex{}
 // var madd sync.Mutex
 // var mwd sync.Mutex
 // var mget sync.Mutex
-var sadd = make(chan bool, 340)
-var swd = make(chan bool, 620)
-var sget = make(chan bool, 760)
+var sadd = make(chan bool, 2720)
+var swd = make(chan bool, 4760)
+var sget = make(chan bool, 6120)
 
 // var sadd = make(chan bool, 1)
 // var swd = make(chan bool, 1)
