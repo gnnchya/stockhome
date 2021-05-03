@@ -130,8 +130,7 @@ func send(con net.Conn, msg string) {
 func GetAmount(itemID int) string {
 	sget <- true
 	defer func() { <-sget }()
-	var err error
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
@@ -154,7 +153,7 @@ func addNew(itemID int, amount int, userID int) string {
 	defer func() { <-sadd }()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
@@ -213,7 +212,7 @@ func addExist(itemID int, amount int, userID int, Db *sql.DB ) string {
 func withdraw(itemID int, amount int, userID int) string {
 	swd <- true
 	defer func() { <-swd }()
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
