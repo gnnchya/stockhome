@@ -83,7 +83,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			sadd <- true
+			// sadd <- true
 			send(con, addToDB(iid, amt, uid))
 		case "wd":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -106,7 +106,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			swd <- true
+			// swd <- true
 			send(con, withDrawToDB(iid, amt*(-1), uid))
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -115,7 +115,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			sget <- true
+			// sget <- true
 			send(con, getAmountbyItem(iid))
 		case "exit":
 			con.Close()
@@ -139,7 +139,7 @@ func init() {
 }
 
 func GetAmount(itemID int) string {
-	defer func() { <-sget }()
+	// defer func() { <-sget }()
 	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
 
 	if err != nil {
@@ -154,7 +154,7 @@ func GetAmount(itemID int) string {
 }
 
 func addNew(itemID int, amount int, userID int) string {
-	defer func() { <-sadd }()
+	// defer func() { <-sadd }()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
 
@@ -210,7 +210,7 @@ func addExist(itemID int, amount int, userID int) string {
 }
 
 func withdraw(itemID int, amount int, userID int) string {
-	defer func() { <-swd }()
+	// defer func() { <-swd }()
 	// defer Wg.Done()
 	var checkID, stock int
 	var statement string
