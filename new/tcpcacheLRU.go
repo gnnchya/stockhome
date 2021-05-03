@@ -170,7 +170,7 @@ func addNew(itemID int, amount int, userID int) string {
 			fmt.Println(err)
 		}
 		statement = fmt.Sprint("Added %d to database (%d units) | Item in Stock: %d\n", itemID, amount, amount)
-		addHis(itemID, true, amount, userID)
+		addHis(itemID, true, amount, userID, Db)
 		insert.Close()
 
 	} else {
@@ -203,7 +203,7 @@ func addExist(itemID int, amount int, userID int, Db *sql.DB ) string {
 			return "error happended in addExist"
 		}
 		statement = fmt.Sprintf("Added %d to database (%d units) | Item in Stock: %d\n", itemID, amount, stock+amount)
-		addHis(itemID, true, amount, userID)
+		addHis(itemID, true, amount, userID, Db)
 		add.Close()
 	}
 	return statement
