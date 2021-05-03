@@ -63,7 +63,7 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 
 //
 func retrieve(Date string, clb chan string) {
-	defer func() { <-shis }()
+	// defer func() { <-shis }()
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	buf.Write(col)

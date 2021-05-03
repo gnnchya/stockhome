@@ -83,7 +83,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			// sadd <- true
+			sadd <- true
 			send(con, addToDB(iid, amt, uid))
 		case "wd":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -106,7 +106,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			// swd <- true
+			swd <- true
 			send(con, withDrawToDB(iid, amt*(-1), uid))
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -115,7 +115,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			// sget <- true
+			sget <- true
 			send(con, getAmountbyItem(iid))
 		case "exit":
 			con.Close()
@@ -139,7 +139,7 @@ func init() {
 }
 
 func GetAmount(itemID int) string {
-	// defer func() { <-sget }()
+	defer func() { <-sget }()
 	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
 
 	if err != nil {
@@ -339,7 +339,6 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
-	defer func() { <-sget }()
 	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 
 	if _, found := l.PageMap[itemID]; found {
