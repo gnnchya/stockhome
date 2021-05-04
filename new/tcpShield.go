@@ -368,6 +368,10 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 	if found {
 		if ItemAmount < 0 {
 			if  l.PageMap[itemID].currentAmount + ItemAmount < 0 {
+				fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
+				return -1, found
+			}else{
+				
 				l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
 				l.pageList.bringToMostUsed(l.PageMap[itemID])
 				return l.PageMap[itemID].currentAmount, found
