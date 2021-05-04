@@ -84,7 +84,7 @@ func rec(con net.Conn) {
 			}
 			
 			send(con, addToDB(iid, amt, uid))
-			addNew(itemID, amount, userID)
+			addNew(iid, amt, uid)
 		case "wd":
 			msg[1] = strings.TrimSpace(msg[1])
 			id := strings.Split(msg[1], "-")
@@ -107,7 +107,7 @@ func rec(con net.Conn) {
 				return
 			}
 			send(con, withDrawToDB(iid, amt*(-1), uid))
-			withdraw(itemID, amount*(-1), userID)
+			withdraw(iid, amt*(-1), uid)
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
 			iid, err := strconv.Atoi(msg[1])
