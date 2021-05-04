@@ -65,7 +65,7 @@ func rec(con net.Conn) {
 			return
 		}
 		// fmt.Println("history")
-		shis <- true
+		// shis <- true
 		a, b := Lfu.get(&Cache_queue, date)
 		// fmt.Println("finish")
 		send(con, a, b)
@@ -204,6 +204,7 @@ func (q *Queue) printQ() {
 
 func (c *Cache) set(q *Queue, itemId int, value []byte) {
 	defer func() { <-shis }() 
+	shis <- true
 	valSize := len(value)
 	if _, ok := c.block[itemId]; ok {
 		c.block[itemId].value = value
