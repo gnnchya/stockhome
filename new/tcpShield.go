@@ -30,7 +30,7 @@ var sget = make(chan bool, 2)
 // var sget = make(chan bool, 1)
 
 func main() {
-	//ยังไม่รู้ค่าจริงของ init\
+
 	myCache.InitLRU(380000)
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
