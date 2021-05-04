@@ -245,7 +245,7 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 		state = "false"
 	}
 	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
-	c.printCache()
+	// c.printCache()
 	// wg.Done()
 	return c.block[itemId].value, state
 	// fmt.Println("Final", c.size, "\n")
