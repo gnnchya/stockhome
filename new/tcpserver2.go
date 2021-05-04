@@ -21,7 +21,7 @@ var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
 
-var sana = make(chan bool, 1)
+var sana = make(chan bool, 2)
 
 // var sana = make(chan bool, 1)
 
