@@ -349,10 +349,10 @@ func (l *LRU) InitLRU(capacity int) {
 
 func (l *LRU) Read(itemID int) (int, string) {
 	
-	if _, found := l.PageMap[itemID]; found {
+	if find, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
-		val := l.PageMap[itemID].currentAmount
-		l.pageList.bringToMostUsed(l.PageMap[itemID])
+		val := find.currentAmount
+		l.pageList.bringToMostUsed(find)
 		return val, "true"
 	} else {
 		if l.size == l.capacity {
@@ -372,15 +372,15 @@ func (l *LRU) Read(itemID int) (int, string) {
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 	
-	_, found := l.PageMap[itemID]
+	find, found := l.PageMap[itemID]
 	if found {
-		if  l.PageMap[itemID].currentAmount + ItemAmount < 0 {
+		if  find.currentAmount + ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
 			return -1, found
 		}else{
-			l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
-			l.pageList.bringToMostUsed(l.PageMap[itemID])
-			return l.PageMap[itemID].currentAmount, found
+			find.currentAmount = find.currentAmount + ItemAmount
+			l.pageList.bringToMostUsed(find)
+			return find.currentAmount, found
 		}
 	}else{
 		if l.size == l.capacity {
@@ -397,8 +397,8 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		} else {
 			page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
 			l.size++
-			l.PageMap[itemID] = page
-			return l.PageMap[itemID].currentAmount, found
+			find = page
+			return find.currentAmount, found
 		}
 	}
 }
