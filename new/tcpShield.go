@@ -347,6 +347,12 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
+	if l.size == l.capacity {
+		key := l.pageList.getRear().itemID
+		l.pageList.removeLeastUsed()
+		l.size--
+		delete(l.PageMap, key)
+	}
 	
 	if _, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
@@ -364,6 +370,12 @@ func (l *LRU) Read(itemID int) (int, string) {
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
+	if l.size == l.capacity {
+		key := l.pageList.getRear().itemID
+		l.pageList.removeLeastUsed()
+		l.size--
+		delete(l.PageMap, key)
+	}
 	_, found := l.PageMap[itemID]
 	if found {
 		if ItemAmount < 0 {
@@ -381,35 +393,23 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 			l.pageList.bringToMostUsed(l.PageMap[itemID])
 			return l.PageMap[itemID].currentAmount, found
 		}
-	}
-
-	if l.size == l.capacity {
-		key := l.pageList.getRear().itemID
-		l.pageList.removeLeastUsed()
-		l.size--
-		delete(l.PageMap, key)
-	}
-
-	// itemamount  เป็นลบแล้วไม่ found
-	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
-	if ItemAmount < 0 {
-		if GetAmountVal+ItemAmount < 0 {
-			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-			return -1, found
-		} else {
-			page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
-			l.size++
-			l.PageMap[itemID] = page
-			return l.PageMap[itemID].currentAmount, found
+	}else{
+		// itemamount  เป็นลบแล้วไม่ found
+		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
+		if ItemAmount < 0 {
+			if GetAmountVal+ItemAmount < 0 {
+				fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
+				return -1, found
+			} else {
+				page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
+				l.size++
+				l.PageMap[itemID] = page
+				return l.PageMap[itemID].currentAmount, found
+			}
 		}
 	}
 
-	if ItemAmount > 0 {
-		page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
-		l.size++
-		l.PageMap[itemID] = page
-		return l.PageMap[itemID].currentAmount, found
-	}
+	
 
 	return l.PageMap[itemID].currentAmount, found
 }
