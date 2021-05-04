@@ -166,24 +166,7 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 	var end = time.Now()
 
 	withMap := make(map[int]int)
-	// for count <= len(s) {
-	// 	if count+1 >= len(s) {
-	// 		break
-	// 	}
-	// 	amount, _ := strconv.Atoi(s[count+1])
-	// 	id, _ := strconv.Atoi(s[count])
-	// 	check, _ := time.Parse("2006-01-02", s[count+2])
-	// 	if check.After(startDate) && check.Before(end) {
-	// 		if val, ok := withMap[id]; ok {
-	// 			withMap[id] = amount + val
-	// 		} else {
-	// 			withMap[id] = amount
-	// 		}
-	// 	}
-
-	// 	count = count + 4
-	// }
-	for count < len(s) {
+	for count <= len(s) {
 		if count+1 >= len(s) {
 			break
 		}
@@ -269,21 +252,7 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 
 	// Make map for keeping
 	withMap := make(map[string]int)
-	// for count <= len(s) {
-	// 	if count+1 >= len(s) {
-	// 		break
-	// 	}
-	// 	amount, _ := strconv.Atoi(s[count+1])
-	// 	date := s[count+2]
-	// 	if val, ok := withMap[date]; ok {
-	// 		withMap[date] = amount + val
-	// 	} else {
-	// 		withMap[date] = amount
-	// 	}
-
-	// 	count = count + 4
-	// }
-	for count < len(s) {
+	for count <= len(s) {
 		if count+1 >= len(s) {
 			break
 		}
