@@ -84,6 +84,7 @@ func rec(con net.Conn) {
 			}
 			
 			send(con, addToDB(iid, amt, uid))
+			addNew(itemID, amount, userID))
 		case "wd":
 			msg[1] = strings.TrimSpace(msg[1])
 			id := strings.Split(msg[1], "-")
@@ -106,6 +107,7 @@ func rec(con net.Conn) {
 				return
 			}
 			send(con, withDrawToDB(iid, amt*(-1), uid))
+			withdraw(itemID, amount*(-1), userID)
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
 			iid, err := strconv.Atoi(msg[1])
@@ -431,10 +433,7 @@ func addToDB(itemID int, amount int, userID int) string {
 	// defer madd.Unlock()
 	var val int
 	var state bool
-	var statement string
-	val, state = myCache.Input(itemID, amount)
-	statement = addNew(itemID, amount, userID)
-	fmt.Println(statement + "\n")
+	val, state = myCache.Input(itemID, amount) 
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
 
 }
@@ -446,13 +445,10 @@ func withDrawToDB(itemID int, amount int, userID int) string {
 	// defer mwd.Unlock()
 	var eir int
 	var state bool
-	var statement string
 	eir, state = myCache.Input(itemID, amount)
-	statement = withdraw(itemID, amount*(-1), userID)
 
 	if eir == -1 {
 		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
-	fmt.Println(statement + "\n")
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
 }
