@@ -107,7 +107,8 @@ func rec(con net.Conn) {
 				return
 			}
 			send(con, withDrawToDB(iid, amt*(-1), uid))
-			withdraw(iid, amt*(-1), uid)
+			
+			withdraw(iid, amt, uid)
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
 			iid, err := strconv.Atoi(msg[1])
@@ -348,12 +349,18 @@ func (l *LRU) InitLRU(capacity int) {
 
 func (l *LRU) Read(itemID int) (int, string) {
 	
-	if _, found := l.PageMap[itemID]; found {
+	if find, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
-		val := l.PageMap[itemID].currentAmount
-		l.pageList.bringToMostUsed(l.PageMap[itemID])
+		val := find.currentAmount
+		l.pageList.bringToMostUsed(find)
 		return val, "true"
 	} else {
+		if l.size == l.capacity {
+			key := l.pageList.getRear().itemID
+			l.pageList.removeLeastUsed()
+			l.size--
+			delete(l.PageMap, key)
+		}
 		fmt.Println("Miss")
 		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		page := l.pageList.addFrontPage(itemID, GetAmountVal)
@@ -364,59 +371,38 @@ func (l *LRU) Read(itemID int) (int, string) {
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
-	_, found := l.PageMap[itemID]
+	
+	find, found := l.PageMap[itemID]
 	if found {
-		if ItemAmount < 0 {
-			if  l.PageMap[itemID].currentAmount + ItemAmount < 0 {
-				l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
-				l.pageList.bringToMostUsed(l.PageMap[itemID])
-				return l.PageMap[itemID].currentAmount, found
-			}
-		} else {
-			l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
-			l.pageList.bringToMostUsed(l.PageMap[itemID])
-			return l.PageMap[itemID].currentAmount, found
+		if  find.currentAmount + ItemAmount < 0 {
+			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
+			return -1, found
+		}else{
+			find.currentAmount = find.currentAmount + ItemAmount
+			l.pageList.bringToMostUsed(find)
+			return find.currentAmount, found
 		}
-	}
-
-	if l.size == l.capacity {
-		key := l.pageList.getRear().itemID
-		l.pageList.removeLeastUsed()
-		l.size--
-		delete(l.PageMap, key)
-	}
-
-	// itemamount  เป็นลบแล้วไม่ found
-	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
-	if ItemAmount < 0 {
+	}else{
+		if l.size == l.capacity {
+			key := l.pageList.getRear().itemID
+			l.pageList.removeLeastUsed()
+			l.size--
+			delete(l.PageMap, key)
+		}
+		// itemamount  เป็นลบแล้วไม่ found
+		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		if GetAmountVal+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
 			return -1, found
 		} else {
 			page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
 			l.size++
-			l.PageMap[itemID] = page
-			return l.PageMap[itemID].currentAmount, found
+			find = page
+			return find.currentAmount, found
 		}
 	}
-
-	if ItemAmount > 0 {
-		page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
-		l.size++
-		l.PageMap[itemID] = page
-		return l.PageMap[itemID].currentAmount, found
-	}
-
-	return l.PageMap[itemID].currentAmount, found
 }
 
-// func main() {
-// 	var cache LRU
-// 	cache.InitLRU(10)
-
-// }
-
-//getItemAmount จาก TCP request
 func getAmountbyItem(itemID int) string {
 	// mget.Lock()
 	// defer mget.Unlock()

@@ -24,7 +24,7 @@ var mutex = &sync.Mutex{}
 // var mget sync.Mutex
 
 func main() {
-	myCache.InitLRU(380000)
+	myCache.InitLRU(1000)
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
