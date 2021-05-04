@@ -117,6 +117,7 @@ func his(msg string) string {
 }
 
 func analysis(year string, month string, day string) string {
+	defer func() { <-sana }()
 	// mana.Lock()
 	// defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
@@ -321,7 +322,6 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB(buf *bytes.Buffer) []string {
-	defer func() { <-sana }()
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
