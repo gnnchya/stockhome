@@ -393,7 +393,7 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		if GetAmountVal+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-			return -1, foundreturn -1, found
+			return -1, found
 		} else {
 			page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
 			l.size++
