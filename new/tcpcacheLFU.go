@@ -267,8 +267,9 @@ func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, s
 	name := strconv.Itoa(filename)
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
-		Read(c, q, name)
-		return
+		// Read(c, q, name)
+		// return 
+		return Read(c, q, name)
 	} else {
 		fmt.Println("From DB")
 		Date := name[0:4] + "-" + name[4:6]
@@ -339,7 +340,7 @@ func Save(filename int, data []byte) {
 	// wg.Done()
 }
 
-func Read(c *Cache, q *Queue, filename string) {
+func Read(c *Cache, q *Queue, filename string) []byte {
 	// dir, err := os.Getwd()
 	// if err != nil {
 	// 	fmt.Println(err)
@@ -362,7 +363,8 @@ func Read(c *Cache, q *Queue, filename string) {
 	file.Close()
 	name, _ := strconv.Atoi(filename)
 	// c.set(q, 202109, buf.Bytes())
-	c.set(q, name, buf.Bytes())
+	go c.set(q, name, buf.Bytes())
+	return buf.Bytes()
 }
 
 func (c *Cache) printCache() {
