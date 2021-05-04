@@ -24,7 +24,6 @@ var mutex = &sync.Mutex{}
 // var mget sync.Mutex
 
 func main() {
-	//ยังไม่รู้ค่าจริงของ init\
 	myCache.InitLRU(380000)
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
@@ -198,7 +197,7 @@ func addExist(itemID int, amount int, userID int) string {
 }
 
 func withdraw(itemID int, amount int, userID int) string {
-	// defer Wg.Done()
+	
 	var checkID, stock int
 	var statement string
 
@@ -326,8 +325,6 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
-	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
-
 	if _, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
 		val := l.PageMap[itemID].currentAmount
@@ -335,6 +332,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 		return val, "true"
 	} else {
 		fmt.Println("Miss")
+		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		page := l.pageList.addFrontPage(itemID, GetAmountVal)
 		l.size++
 		l.PageMap[itemID] = page
@@ -343,8 +341,6 @@ func (l *LRU) Read(itemID int) (int, string) {
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
-	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
-	fmt.Println(GetAmountVal)
 	_, found := l.PageMap[itemID]
 	if found {
 		if ItemAmount < 0 {
@@ -369,8 +365,9 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		l.size--
 		delete(l.PageMap, key)
 	}
-
+	
 	// itemamount  เป็นลบแล้วไม่ found
+	GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 	if ItemAmount < 0 {
 		if GetAmountVal+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
