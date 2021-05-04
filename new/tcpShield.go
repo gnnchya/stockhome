@@ -389,19 +389,16 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		}
 		// itemamount  เป็นลบแล้วไม่ found
 		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
-		if ItemAmount < 0 {
-			if GetAmountVal+ItemAmount < 0 {
-				fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-				return -1, found
-			} else {
-				page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
-				l.size++
-				l.PageMap[itemID] = page
-				return l.PageMap[itemID].currentAmount, found
-			}
+		if GetAmountVal+ItemAmount < 0 {
+			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
+			return -1, found
+		} else {
+			page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
+			l.size++
+			l.PageMap[itemID] = page
+			return l.PageMap[itemID].currentAmount, found
 		}
 	}
-	return l.PageMap[itemID].currentAmount, found
 }
 
 // func main() {
