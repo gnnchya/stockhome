@@ -236,7 +236,7 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 	// m.Lock()
 	// defer m.Unlock()
 	// wg.Add(1)
-	state := "true"
+	// state := "true"
 	// mu.Lock()
 	// defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
