@@ -252,7 +252,7 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 		// fmt.Println(time.Since(a))
 		// fmt.Println("CS:", len(c.block))
 		// fmt.Println("----MISS----")
-		fmt.Println()
+		// fmt.Println()
 		// state = "false"
 	}
 	// fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
