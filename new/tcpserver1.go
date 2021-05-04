@@ -21,7 +21,7 @@ var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
 
-var sana = make(chan bool, 2300)
+var sana = make(chan bool, 1)
 
 // var sana = make(chan bool, 1)
 
@@ -117,9 +117,8 @@ func his(msg string) string {
 }
 
 func analysis(year string, month string, day string) string {
-	defer func() { <-sana }()
 	// mana.Lock()
-	// defer func() { <-sana }()
+	defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
