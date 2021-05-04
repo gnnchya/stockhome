@@ -84,7 +84,7 @@ func rec(con net.Conn) {
 			}
 			
 			send(con, addToDB(iid, amt, uid))
-			addNew(itemID, amount, userID))
+			addNew(itemID, amount, userID)
 		case "wd":
 			msg[1] = strings.TrimSpace(msg[1])
 			id := strings.Split(msg[1], "-")
