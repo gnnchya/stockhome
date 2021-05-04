@@ -83,7 +83,7 @@ func rec(con net.Conn) {
 				return
 			}
 			
-			send(con, addToDB(iid, amt, uid))
+			send(con, myCache.Input(iid, amt))
 			addNew(iid, amt, uid)
 		case "wd":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -106,7 +106,8 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, withDrawToDB(iid, amt*(-1), uid))
+			send(con, myCache.Input(iid, amt*(-1)))
+			
 			withdraw(iid, amt, uid)
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -115,7 +116,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			send(con, getAmountbyItem(iid))
+			send(con, myCache.Read(iid))
 		case "exit":
 			con.Close()
 		default:
@@ -347,11 +348,12 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
+	
 	if _, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
 		val := l.PageMap[itemID].currentAmount
 		l.pageList.bringToMostUsed(l.PageMap[itemID])
-		return val, "true"
+		return (strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + "true" + "\n")
 	} else {
 		if l.size == l.capacity {
 			key := l.pageList.getRear().itemID
@@ -364,7 +366,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 		page := l.pageList.addFrontPage(itemID, GetAmountVal)
 		l.size++
 		l.PageMap[itemID] = page
-		return GetAmountVal, "false"
+		return (strconv.Itoa(itemID) + "-" + strconv.Itoa(GetAmountVal) + "*" + "false" + "\n")
 	}
 }
 
@@ -374,11 +376,11 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 	if found {
 		if  l.PageMap[itemID].currentAmount + ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-			return -1, found
+			return strconv.Itoa(itemID) + "-" + "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(found) + "\n"
 		}else{
 			l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
 			l.pageList.bringToMostUsed(l.PageMap[itemID])
-			return l.PageMap[itemID].currentAmount, found
+			return strconv.Itoa(itemID) + "-" + strconv.Itoa(l.PageMap[itemID].currentAmount) + "*" + strconv.FormatBool(found) + "\n"
 		}
 	}else{
 		if l.size == l.capacity {
@@ -391,55 +393,12 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		if GetAmountVal+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
-			return -1, found
+			return strconv.Itoa(itemID) + "-" + "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(found) + "\n"
 		} else {
 			page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
 			l.size++
 			l.PageMap[itemID] = page
-			return l.PageMap[itemID].currentAmount, found
+			return strconv.Itoa(itemID) + "-" + strconv.Itoa(l.PageMap[itemID].currentAmount) + "*" + strconv.FormatBool(found) + "\n"
 		}
 	}
-}
-
-// func main() {
-// 	var cache LRU
-// 	cache.InitLRU(10)
-
-// }
-
-//getItemAmount จาก TCP request
-func getAmountbyItem(itemID int) string {
-	// mget.Lock()
-	// defer mget.Unlock()
-	amount, state := myCache.Read(itemID)
-	itemid := strconv.Itoa(itemID)
-	result := strconv.Itoa(amount)
-	fmt.Println(itemid + "-" + result + "*" + state + "\n")
-	return (itemid + "-" + result + "*" + state + "\n")
-}
-
-// add() request
-func addToDB(itemID int, amount int, userID int) string {
-	// madd.Lock()
-	// defer madd.Unlock()
-	var val int
-	var state bool
-	val, state = myCache.Input(itemID, amount) 
-	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
-
-}
-
-//withdraw() tcp
-//withdraw()database จาก server
-func withDrawToDB(itemID int, amount int, userID int) string {
-	// mwd.Lock()
-	// defer mwd.Unlock()
-	var eir int
-	var state bool
-	eir, state = myCache.Input(itemID, amount)
-
-	if eir == -1 {
-		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
-	}
-	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
 }
