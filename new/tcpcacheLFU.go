@@ -203,6 +203,7 @@ func (q *Queue) printQ() {
 }
 
 func (c *Cache) set(q *Queue, itemId int, value []byte) {
+	defer func() { <-shis }() 
 	valSize := len(value)
 	if _, ok := c.block[itemId]; ok {
 		c.block[itemId].value = value
@@ -224,7 +225,7 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 }
 
 func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
-	defer func() { <-shis }() 
+	// defer func() { <-shis }() 
 	// m.Lock()
 	// defer m.Unlock()
 	// wg.Add(1)
