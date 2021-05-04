@@ -373,6 +373,7 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		} else {
 			l.PageMap[itemID].currentAmount = l.PageMap[itemID].currentAmount + ItemAmount
 			l.pageList.bringToMostUsed(l.PageMap[itemID])
+			return l.PageMap[itemID].currentAmount, found
 		}
 	}
 
@@ -401,6 +402,7 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		page := l.pageList.addFrontPage(itemID, GetAmountVal+ItemAmount)
 		l.size++
 		l.PageMap[itemID] = page
+		return l.PageMap[itemID].currentAmount, found
 	}
 
 	return l.PageMap[itemID].currentAmount, found
