@@ -18,6 +18,8 @@ import (
 )
 
 var shis = make(chan bool, 1)
+var supd = make(chan bool, 1)
+
 // var m sync.Mutex
 
 func main() {
@@ -69,6 +71,8 @@ func rec(con net.Conn) {
 		a, b := Lfu.get(&Cache_queue, date)
 		// fmt.Println("finish")
 		send(con, a, b)
+		fmt.Println("Cache cap:", Lfu.capacity, "bytes, Cache used:", Lfu.size, "bytes\n")
+		Lfu.printCache()
 		// fmt.Println("hi")
 	}
 }
@@ -168,6 +172,8 @@ func (q *Queue) deQ(list string) {
 }
 
 func (q *Queue) update(n *Node) {
+	defer func() { <-supd }() 
+	supd <- true
 	n.count++
 	for n.next != nil && n.count > n.next.count {
 		nt := n.next
@@ -234,27 +240,30 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 	// mu.Lock()
 	// defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
-		q.update(c.block[itemId])
+		go q.update(c.block[itemId])
 		fmt.Println("----HIT----")
 		fmt.Println()
+		return c.block[itemId].value, "true"
 	} else {
 		// filename := strconv.Itoa(itemId)
-		retrieve(c, q, itemId)
+		// retrieve(c, q, itemId)
+		fmt.Println("----MISS----\n")
+		return retrieve(c, q, itemId), "false"
 		// fmt.Println(time.Since(a))
 		// fmt.Println("CS:", len(c.block))
-		fmt.Println("----MISS----")
+		// fmt.Println("----MISS----")
 		fmt.Println()
-		state = "false"
+		// state = "false"
 	}
-	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
+	// fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
 	// c.printCache()
 	// wg.Done()
-	return c.block[itemId].value, state
+	//// return c.block[itemId].value, state
 	// fmt.Println("Final", c.size, "\n")
 	// fmt.Println(c.block[itemId].value)
 }
 
-func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	name := strconv.Itoa(filename)
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
@@ -289,8 +298,8 @@ func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDat
 
 		// wg.Add(1)
 		go Save(filename, buf.Bytes())
-		c.set(q, filename, buf.Bytes())
-		return
+		go c.set(q, filename, buf.Bytes())
+		return buf.Bytes()
 	}
 }
 
