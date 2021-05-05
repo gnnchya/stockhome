@@ -104,7 +104,7 @@ func access(msg string) string {
 	}
 	con.Write([]byte(msg))
 	defer con.Close()
-	val, err := bufio.NewReader(con).ReadString('\n')
+	val, err := bufio.NewReader(con).ReadString('.')
 	if err != nil {
 		fmt.Println(err)
 		return "nil"
