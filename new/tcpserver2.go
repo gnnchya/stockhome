@@ -317,19 +317,19 @@ func rtDB(buf *bytes.Buffer) []string {
 	defer row.Close()
 	// Slice each row
 	for row.Next() {
-		var itemID, amount int
-		var date, time string
-		err = row.Scan(&itemID, &amount, &date, &time)
+		var itemID, amount *int
+		var date, tim *string
+		err = row.Scan(&itemID, &amount, &date, &tim)
 		if err != nil {
 			fmt.Print(err)
 		}
 		// Write each line
-		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
+		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + tim + ",")
 		buf.Write(line)
 	}
 
 	s := strings.Split(buf.String(), ",")
-	*itemID, *amount, *date, *time = nil, nil, nil, nil
+	*itemID, *amount, *date, *tim = nil, nil, nil, nil
 	return s
 }
 
