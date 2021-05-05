@@ -329,6 +329,7 @@ func rtDB(buf *bytes.Buffer) []string {
 	}
 
 	s := strings.Split(buf.String(), ",")
+	&itemID, &amount, &date, &time = nil, nil, nil, nil
 	return s
 }
 
