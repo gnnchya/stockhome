@@ -7,8 +7,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"strconv"
 	"math/rand"
+	"strconv"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -20,9 +20,9 @@ import (
 
 var points plotter.XYs
 var p = plot.New()
-var sana = make(chan bool, 1120)
-var shis = make(chan bool, 1000)
-var scache = make(chan bool, 6800)
+var sana = make(chan bool, 3000)
+var shis = make(chan bool, 1)
+var scache = make(chan bool, 23000)
 var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
