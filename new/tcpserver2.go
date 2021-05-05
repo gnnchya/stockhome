@@ -20,20 +20,10 @@ var madd sync.Mutex
 var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
-var db *sql.DB
-var err error
 
 var sana = make(chan bool, 2)
 
 // var sana = make(chan bool, 1)
-
-func init() {
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	// 	defer Db.close()
-}
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
@@ -71,7 +61,7 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-
+			sana <- true
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 		case "add":
@@ -128,7 +118,7 @@ func his(msg string) string {
 
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
-
+	defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
@@ -331,13 +321,11 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB(buf *bytes.Buffer) []string {
-	// db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-	// defer db.Close()
-	sana <- true
-	defer func() { <-sana }()
+	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer db.Close()
 	day := time.Now().AddDate(0, 0, -1)
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
 	if err != nil {
