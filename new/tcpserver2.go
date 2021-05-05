@@ -23,7 +23,7 @@ var mhis sync.Mutex
 var db *sql.DB
 var err error
 
-var sana = make(chan bool, 4607)
+var sana = make(chan bool, 2)
 
 // var sana = make(chan bool, 1)
 
