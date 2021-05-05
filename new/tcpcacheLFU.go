@@ -73,6 +73,7 @@ func rec(con net.Conn) {
 		fmt.Println("err5", err)
 		return
 	}
+	shis <- true
 	a, b := Lfu.get(&Cache_queue, date)
 	send(con, a, b)
 	fmt.Println("Cache cap:", Lfu.capacity, "bytes, Cache used:", Lfu.size, "bytes\n")
