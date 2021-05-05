@@ -140,6 +140,7 @@ func analysis(year string, month string, day string) string {
 	}()
 	Wg.Wait()
 	// mana.Unlock()
+	s = nil
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
