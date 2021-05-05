@@ -139,7 +139,8 @@ func analysis(year string, month string, day string) string {
 		dWith = WithDate(&Wg, s)
 	}()
 	Wg.Wait()
-	s, buf, aWith, bWith, cWith, dWith = nil
+	s = nil
+	buf = nil
 	// mana.Unlock()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
