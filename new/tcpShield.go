@@ -21,7 +21,6 @@ var sadd = make(chan bool, 2)
 var swd = make(chan bool, 2)
 var sget = make(chan bool, 2)
 
-
 func main() {
 
 	myCache.InitLRU(1000)
@@ -75,7 +74,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			
+			sadd <- true
 			send(con, addToDB(iid, amt, uid))
 			addNew(iid, amt, uid)
 		case "wd":
@@ -99,8 +98,8 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
+			swd <- true
 			send(con, withDrawToDB(iid, amt*(-1), uid))
-			
 			withdraw(iid, amt, uid)
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -109,6 +108,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
+			sget <- true
 			send(con, getAmountbyItem(iid))
 		case "exit":
 			con.Close()
@@ -124,7 +124,7 @@ func send(con net.Conn, msg string) {
 }
 
 func GetAmount(itemID int) string {
-	sget <- true
+
 	defer func() { <-sget }()
 	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
@@ -145,7 +145,7 @@ func GetAmount(itemID int) string {
 }
 
 func addNew(itemID int, amount int, userID int) string {
-	sadd <- true
+
 	defer func() { <-sadd }()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
@@ -175,7 +175,7 @@ func addNew(itemID int, amount int, userID int) string {
 	return statement
 }
 
-func addExist(itemID int, amount int, userID int, Db *sql.DB ) string {
+func addExist(itemID int, amount int, userID int, Db *sql.DB) string {
 	// For adding EXISTING items. For items CURRENTLY in the database.
 	// If you add a new item, it will die. Use addNew for items NOT in database
 	var checkID, stock int
@@ -200,7 +200,7 @@ func addExist(itemID int, amount int, userID int, Db *sql.DB ) string {
 }
 
 func withdraw(itemID int, amount int, userID int) string {
-	swd <- true
+
 	defer func() { <-swd }()
 	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
@@ -334,7 +334,7 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
-	
+
 	if find, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
 		val := find.currentAmount
@@ -357,18 +357,18 @@ func (l *LRU) Read(itemID int) (int, string) {
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
-	
+
 	find, found := l.PageMap[itemID]
 	if found {
-		if  find.currentAmount + ItemAmount < 0 {
+		if find.currentAmount+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
 			return -1, found
-		}else{
+		} else {
 			find.currentAmount = find.currentAmount + ItemAmount
 			l.pageList.bringToMostUsed(find)
 			return find.currentAmount, found
 		}
-	}else{
+	} else {
 		if l.size == l.capacity {
 			key := l.pageList.getRear().itemID
 			l.pageList.removeLeastUsed()
@@ -401,7 +401,7 @@ func getAmountbyItem(itemID int) string {
 func addToDB(itemID int, amount int, userID int) string {
 	var val int
 	var state bool
-	val, state = myCache.Input(itemID, amount) 
+	val, state = myCache.Input(itemID, amount)
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
 
 }
