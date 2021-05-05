@@ -18,9 +18,9 @@ var myCache LRU
 var mutex = &sync.Mutex{}
 var Db *sql.DB
 var err error
-var sadd = make(chan bool, 500)
-var swd = make(chan bool, 500)
-var sget = make(chan bool, 500)
+var sadd = make(chan bool, 1000)
+var swd = make(chan bool, 1000)
+var sget = make(chan bool, 1000)
 
 func init(){
 	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
