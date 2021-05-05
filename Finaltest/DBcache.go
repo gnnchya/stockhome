@@ -16,7 +16,6 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 	cdb := make(chan string)
 	correct := "yes"
 
-	// rand.Seed(time.Now().UTC().UnixNano())
 	chance := rand.Intn(100-1) + 1
 	switch{
 	case chance <= 70: //70%
@@ -45,12 +44,9 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 		fmt.Println("-------------------ACQUIRE------------------- Client no.", ts)
 
 	}
-
 	begin := <-c
 	if begin == "begin" {
-		//fmt.Println(rdact)
 		start := time.Now()
-
 		c <- rdact
 
 		output = <-c
@@ -67,17 +63,12 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 	}
 
 	if output != "None" {
-		if output == <-cdb {
-			//fmt.Println("\033[32m -->Correct output\033[0m")
-		} else {
-			//fmt.Println("\033[31m -->Incorrect output\033[0m")
+		if output != <-cdb {
 			correct = "no"
 		}
 	} else {
-		//fmt.Println("## ERROR ##")
 		correct = "nil"
 	}
-	//fmt.Println("Time elapsed: ", elapsed)
 	done := <-c
 	if done == "done" {
 		return elapsed, mem1, mem2, correct, rd, state
@@ -87,7 +78,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 }
 
 func show(itemID int, cdb chan string) {
-	defer func() { scache <- true }()
+	defer func() { <-scache }()
 	var amount int
 	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 

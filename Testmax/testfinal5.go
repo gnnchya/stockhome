@@ -1,3 +1,5 @@
+// ref https://www.programmersought.com/article/93955119235/
+// ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 package main
 
 import (
@@ -6,22 +8,25 @@ import (
 	"log"
 	"math/rand"
 	"strconv"
-	//"sync"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/plotutil"
+	"gonum.org/v1/plot/vg"
 )
 
+var points plotter.XYs
+var p = plot.New()
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
 var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
-
+var counttana, countthis, counttget, counttadd, counttwd int = 0, 0, 0, 0, 0
 
 func main() {
-	rand.Seed(22)
-	//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
+	rand.Seed(69)
 	cli := flag.Int("cli", 10, "Number of clients")
 	rut := flag.Int("rmup", 30, "Time to spawn all clients")
 	allt := flag.Int("rt", 1, "Client total execution time in minutes")
@@ -44,21 +49,33 @@ func main() {
 
 	var cliCnt int = 0
 	go func(c chan<- int) {
-		//wg1 := sync.WaitGroup{}
 		for ti := 1; ti <= *cli; ti++ {
-			//wg1.Add(1)
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 			c1 := make(chan string)
 			log.Println("\033[36m+++++++++++++++++++ Initiate client no.\u001B[0m", ti)
-			//log.Printf("Initiate client no. %d\u001B[0m", ti)
 			go Client(c1)
 			c <- ti
 			cc <- c1
 			cliCnt++
-			//wg1.Done()
 		}
-		//wg1.Wait()
 	}(c)
+
+	go func() {
+		min := *allt * 60
+		temp := 0
+		points = make(plotter.XYs, min)
+		p.Title.Text = "Throughput"
+		p.X.Label.Text = "Time(s)"
+		p.Y.Label.Text = "Transactions(time)"
+
+		for i := 0; i < min; i-- {
+			time.Sleep(time.Second)
+			temp3 := counttana + countthis + counttget
+			points[i].X = float64(i)
+			points[i].Y = float64(temp3 - temp)
+			temp = temp3
+		}
+	}()
 
 	timeout := time.After(time.Duration((*allt*60)+5) * time.Second)
 
@@ -66,7 +83,13 @@ func main() {
 
 		select {
 		case <-timeout:
-			//time.Sleep(time.Duration(3) * time.Second)
+			err := plotutil.AddLinePoints(p, "Throuhput/s", points)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err := p.Save(5*vg.Inch, 5*vg.Inch, "ThroughputfinalMax.pdf"); err != nil {
+				panic(err)
+			}
 			fmt.Println()
 			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
@@ -75,7 +98,6 @@ func main() {
 
 			fmt.Println("Server 1 :", mem1, "user(s) / Server 2 : ", mem2[:len(mem2)-1], "user(s)") //[:len(mem2)-1])
 			no, _ := strconv.Atoi(mem2[:len(mem2)-1])
-			// no, _ := strconv.Atoi(mem2)
 			fmt.Println("Client distribution correct: ", (cliCnt)/2 == no)
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
@@ -135,10 +157,13 @@ func main() {
 					rdt := rand.Intn(100-1)+1
 					switch {
 					case rdt <= 60: // 60% chance
+						counttget++
 						dbtest(c1, ts)
 					case rdt <= 90: // 30% chance
+						countthis++
 						histest(c1, ts)
 					case rdt <= 100: // 10% chance
+						counttana++
 						anatest(c1, ts)
 					}
 				}

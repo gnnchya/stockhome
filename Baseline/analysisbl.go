@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	//"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -24,7 +23,6 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------\u001b[48;5;89mANALYSIS\u001b[0m------------------- Client no.", ts)
-		//fmt.Println(randate)
 		start := time.Now()
 		c <- randate
 
@@ -45,32 +43,21 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	}
 
 	if output != "None" {
-		check := "Server: " + <-cana
-		//fmt.Println(check)
-		//fmt.Println(output)
-
-		if output == check {
-			//fmt.Println("\033[32m -->Correct output\033[0m")
-		} else {
-			//fmt.Println("\033[31m -->Incorrect output\033[0m")
+		if output != "Server: " + <-cana {
 			correct = "no"
 		}
 	} else {
-		//fmt.Println("## ERROR ##")
 		correct = "nil"
 	}
 
-	//fmt.Println("Analysis time elapsed: ", elapsed)
 	return elapsed, mem1, mem2, correct
 }
 
-//ref :https://stackoverflow.com/questions/43495745/how-to-generate-random-date-in-go-lang/43497333
 func randomTimestamp() string {
 	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
 	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
 	delta := max - min
 
-	// rand.Seed(time.Now().UTC().UnixNano())
 	sec := rand.Int63n(delta) + min
 	date := time.Unix(sec, 0)
 	str := date.Format("2006-01-02")
