@@ -27,7 +27,7 @@ func init(){
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-	defer Db.close()
+// 	defer Db.close()
 }
 
 func main() {
@@ -139,7 +139,7 @@ func GetAmount(itemID int) string {
 	check := Db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
 	if check != nil {
-		fmt.Print(err)
+		fmt.Print(check)
 	}
 	return strconv.Itoa(amount)
 }
