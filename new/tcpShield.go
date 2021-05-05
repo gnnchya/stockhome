@@ -17,17 +17,10 @@ import (
 var myCache LRU
 var mutex = &sync.Mutex{}
 
-// var wg sync.WaitGroup
-// var madd sync.Mutex
-// var mwd sync.Mutex
-// var mget sync.Mutex
 var sadd = make(chan bool, 2)
 var swd = make(chan bool, 2)
 var sget = make(chan bool, 2)
 
-// var sadd = make(chan bool, 1)
-// var swd = make(chan bool, 1)
-// var sget = make(chan bool, 1)
 
 func main() {
 
@@ -177,12 +170,7 @@ func addNew(itemID int, amount int, userID int) string {
 		insert.Close()
 
 	} else {
-		// Wg.Add(1)
-		// go func() {
-		// defer Wg.Done()
 		addExist(itemID, amount, userID, Db)
-		// }()
-		// Wg.Wait()
 	}
 	return statement
 }
@@ -190,7 +178,6 @@ func addNew(itemID int, amount int, userID int) string {
 func addExist(itemID int, amount int, userID int, Db *sql.DB ) string {
 	// For adding EXISTING items. For items CURRENTLY in the database.
 	// If you add a new item, it will die. Use addNew for items NOT in database
-	// defer Wg.Done()
 	var checkID, stock int
 	var statement string
 
@@ -220,7 +207,6 @@ func withdraw(itemID int, amount int, userID int) string {
 		fmt.Println("Error: Cannot open database")
 	}
 	defer Db.Close()
-	// defer Wg.Done()
 	var checkID, stock int
 	var statement string
 
@@ -404,8 +390,6 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 }
 
 func getAmountbyItem(itemID int) string {
-	// mget.Lock()
-	// defer mget.Unlock()
 	amount, state := myCache.Read(itemID)
 	itemid := strconv.Itoa(itemID)
 	result := strconv.Itoa(amount)
@@ -413,10 +397,8 @@ func getAmountbyItem(itemID int) string {
 	return (itemid + "-" + result + "*" + state + "\n")
 }
 
-// add() request
+// add()
 func addToDB(itemID int, amount int, userID int) string {
-	// madd.Lock()
-	// defer madd.Unlock()
 	var val int
 	var state bool
 	val, state = myCache.Input(itemID, amount) 
@@ -424,11 +406,8 @@ func addToDB(itemID int, amount int, userID int) string {
 
 }
 
-//withdraw() tcp
-//withdraw()database จาก server
+//withdraw()
 func withDrawToDB(itemID int, amount int, userID int) string {
-	// mwd.Lock()
-	// defer mwd.Unlock()
 	var eir int
 	var state bool
 	eir, state = myCache.Input(itemID, amount)
