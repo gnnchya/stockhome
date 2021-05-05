@@ -21,6 +21,10 @@ var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
 
+var sana = make(chan bool, 2)
+
+// var sana = make(chan bool, 1)
+
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
 	if err != nil {
@@ -28,11 +32,6 @@ func main() {
 		return
 	}
 	defer connect.Close()
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer db.Close()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -62,6 +61,7 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
+			sana <- true
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 		case "add":
@@ -99,7 +99,7 @@ func send(con net.Conn, msg string) {
 }
 
 func his(msg string) string {
-	mhis.Lock()
+	// mhis.Lock()
 	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
@@ -112,14 +112,13 @@ func his(msg string) string {
 		fmt.Println(err)
 		return "nil"
 	}
-	mhis.Unlock()
+	// mhis.Unlock()
 	return data
 }
 
-var db *sql.DB
-
 func analysis(year string, month string, day string) string {
-	mana.Lock()
+	// mana.Lock()
+	defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
@@ -142,7 +141,7 @@ func analysis(year string, month string, day string) string {
 		dWith = WithDate(&Wg, s)
 	}()
 	Wg.Wait()
-	mana.Unlock()
+	// mana.Unlock()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -200,7 +199,24 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 	var end = time.Now()
 
 	withMap := make(map[int]int)
-	for count <= len(s) {
+	// for count <= len(s) {
+	// 	if count+1 >= len(s) {
+	// 		break
+	// 	}
+	// 	amount, _ := strconv.Atoi(s[count+1])
+	// 	id, _ := strconv.Atoi(s[count])
+	// 	check, _ := time.Parse("2006-01-02", s[count+2])
+	// 	if check.After(startDate) && check.Before(end) {
+	// 		if val, ok := withMap[id]; ok {
+	// 			withMap[id] = amount + val
+	// 		} else {
+	// 			withMap[id] = amount
+	// 		}
+	// 	}
+
+	// 	count = count + 4
+	// }
+	for count < len(s) {
 		if count+1 >= len(s) {
 			break
 		}
@@ -286,7 +302,22 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 
 	// Make map for keeping
 	withMap := make(map[string]int)
-	for count <= len(s) {
+	// for count <= len(s) {
+	// 	if count+1 >= len(s) {
+	// 		break
+	// 	}
+	// 	amount, _ := strconv.Atoi(s[count+1])
+	// 	date := s[count+2]
+	// 	if val, ok := withMap[date]; ok {
+	// 		withMap[date] = amount + val
+	// 	} else {
+	// 		withMap[date] = amount
+	// 	}
+
+	// 	count = count + 4
+	// }
+
+	for count < len(s) {
 		if count+1 >= len(s) {
 			break
 		}
@@ -322,8 +353,13 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB(buf *bytes.Buffer) []string {
-
-	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
+	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer db.Close()
+	day := time.Now().AddDate(0, 0, -1)
+	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -346,7 +382,7 @@ func rtDB(buf *bytes.Buffer) []string {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	madd.Lock()
+	// madd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -361,12 +397,12 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	madd.Unlock()
+	// madd.Unlock()
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	mwd.Lock()
+	// mwd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -381,12 +417,12 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	mwd.Unlock()
+	// mwd.Unlock()
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	mget.Lock()
+	// mget.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -401,6 +437,6 @@ func getItemAmount(itemID string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	mget.Unlock()
+	// mget.Unlock()
 	return val
 }

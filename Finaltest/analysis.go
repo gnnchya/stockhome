@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
-	"database/sql"
+	//"database/sql"
 	"fmt"
-	"net"
+	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,135 +14,102 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var mana sync.Mutex
-var madd sync.Mutex
-var mwd sync.Mutex
-var mget sync.Mutex
-var mhis sync.Mutex
+func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
+	var mem1, mem2, output string
+	var elapsed time.Duration
+	cana := make(chan string)
+	correct := "yes"
+	rd := randomTimestamp()
+	randate := "ana " + rd
+	
 
-func main() {
-	connect, err := net.Listen("tcp", "143.198.219.89:5002")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer connect.Close()
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer db.Close()
-	for {
-		con, err := connect.Accept()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		go rec(con)
-		fmt.Println(con.RemoteAddr())
-	}
-}
+	begin := <-c
+	if begin == "begin" {
+		fmt.Println("-------------------\u001b[48;5;89mANALYSIS\u001b[0m------------------- Client no.", ts)
+		//fmt.Println(randate)
+		start := time.Now()
+		c <- randate
 
-func rec(con net.Conn) {
-	for {
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println()
-		fmt.Print("Client: " + data)
-		msg := strings.Split(data, ":")
-		msg[0] = strings.TrimSpace(msg[0])
-		msg[1] = strings.TrimSpace(msg[1])
-		switch msg[0] {
-		case "ana":
-			date := strings.Split(msg[1], "-")
-			date[0] = strings.TrimSpace(date[0])
-			date[1] = strings.TrimSpace(date[1])
-			date[2] = strings.TrimSpace(date[2])
-			ana := analysis(date[0], date[1], date[2])
-			send(con, ana)
-		case "add":
-			id := strings.Split(msg[1], "-")
-			id[0] = strings.TrimSpace(id[0])
-			id[1] = strings.TrimSpace(id[1])
-			id[2] = strings.TrimSpace(id[2])
-			add := add(id[0], id[1], id[2])
-			send(con, add)
-		case "wd":
-			id := strings.Split(msg[1], "-")
-			id[0] = strings.TrimSpace(id[0])
-			id[1] = strings.TrimSpace(id[1])
-			id[2] = strings.TrimSpace(id[2])
-			wd := withdraw(id[0], id[1], id[2])
-			send(con, wd)
-		case "get":
-			get := getItemAmount(msg[1])
-			send(con, get)
-		case "exit":
-			con.Close()
-			fmt.Println("EOF")
-			return
-		case "his":
-			his := his(data)
-			send(con, his)
+		output = <-c
+		elapsed = time.Since(start)
+		go analysis1(rd, cana)
+		mem1 = <-c
+		mem2 = <-c
+		done := <-c
+
+		switch done {
+		case "done":
+			if output == "error" {
+				output = "None"
+			}
 		default:
-			send(con, "Some How Error!")
+			output = "None"
 		}
 	}
-}
 
-func send(con net.Conn, msg string) {
-	con.Write([]byte("Server: " + msg + "."))
-}
+	if output != "None" {
+		check := "Server: " + <-cana
+		//fmt.Println(check)
+		//fmt.Println(output)
 
-func his(msg string) string {
-	mhis.Lock()
-	con, err := net.Dial("tcp", "139.59.116.139:5004")
-	if err != nil {
-		fmt.Println(err)
-		return "nil"
+		if output == check {
+			//fmt.Println("\033[32m -->Correct output\033[0m")
+		   } else {
+			//fmt.Println("\033[31m -->Incorrect output\033[0m")
+			correct = "no"
+		   }
+	} else {
+		//fmt.Println("## ERROR ##")
+		correct = "nil"
 	}
-	defer con.Close()
-	con.Write([]byte(msg))
-	data, err := bufio.NewReader(con).ReadString('.')
-	if err != nil {
-		fmt.Println(err)
-		return "nil"
-	}
-	mhis.Unlock()
-	return data
+
+	//fmt.Println("Analysis time elapsed: ", elapsed)
+	return elapsed, mem1, mem2, correct
 }
 
-var db *sql.DB
+//ref :https://stackoverflow.com/questions/43495745/how-to-generate-random-date-in-go-lang/43497333
+func randomTimestamp() string {
+	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
+	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	delta := max - min
 
-func analysis(year string, month string, day string) string {
-	mana.Lock()
-	var start string = year + "-" + month + "-" + day
+	// rand.Seed(time.Now().UTC().UnixNano())
+	sec := rand.Int63n(delta) + min
+	date := time.Unix(sec, 0)
+	str := date.Format("2006-01-02")
+	return str
+}
+
+// analysis code ****************************************************
+func analysis1(start string, cana chan string){
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
+
 	buf := bytes.NewBuffer(make([]byte, 0))
 	s := rtDB(buf)
+
 	Wg.Add(1)
 	go func() {
 		aWith = MostWithA(&Wg, s)
 	}()
+
 	Wg.Add(1)
 	go func() {
 		bWith = MostWithDate(start, &Wg, s)
 	}()
+
 	Wg.Add(1)
 	go func() {
 		cWith = WithTime(&Wg, s)
 	}()
+
 	Wg.Add(1)
 	go func() {
 		dWith = WithDate(&Wg, s)
 	}()
+
 	Wg.Wait()
-	mana.Unlock()
-	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
+	cana <-  (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
 func MostWithA(Wg *sync.WaitGroup, s []string) string {
@@ -200,7 +166,24 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 	var end = time.Now()
 
 	withMap := make(map[int]int)
-	for count <= len(s) {
+	// for count <= len(s) {
+	// 	if count+1 >= len(s) {
+	// 		break
+	// 	}
+	// 	amount, _ := strconv.Atoi(s[count+1])
+	// 	id, _ := strconv.Atoi(s[count])
+	// 	check, _ := time.Parse("2006-01-02", s[count+2])
+	// 	if check.After(startDate) && check.Before(end) {
+	// 		if val, ok := withMap[id]; ok {
+	// 			withMap[id] = amount + val
+	// 		} else {
+	// 			withMap[id] = amount
+	// 		}
+	// 	}
+
+	// 	count = count + 4
+	// }
+	for count < len(s) {
 		if count+1 >= len(s) {
 			break
 		}
@@ -286,7 +269,21 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 
 	// Make map for keeping
 	withMap := make(map[string]int)
-	for count <= len(s) {
+	// for count <= len(s) {
+	// 	if count+1 >= len(s) {
+	// 		break
+	// 	}
+	// 	amount, _ := strconv.Atoi(s[count+1])
+	// 	date := s[count+2]
+	// 	if val, ok := withMap[date]; ok {
+	// 		withMap[date] = amount + val
+	// 	} else {
+	// 		withMap[date] = amount
+	// 	}
+
+	// 	count = count + 4
+	// }
+	for count < len(s) {
 		if count+1 >= len(s) {
 			break
 		}
@@ -322,7 +319,8 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB(buf *bytes.Buffer) []string {
-
+	// defer func() { <-sana }()
+	var err error
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
 	if err != nil {
 		fmt.Print(err)
@@ -343,64 +341,4 @@ func rtDB(buf *bytes.Buffer) []string {
 
 	s := strings.Split(buf.String(), ",")
 	return s
-}
-
-func add(userID string, itemID string, itemAmount string) string {
-	madd.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
-	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
-	val, err := bufio.NewReader(cs).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
-	}
-	fmt.Println(val)
-	madd.Unlock()
-	return val
-}
-
-func withdraw(userID string, itemID string, itemAmount string) string {
-	mwd.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
-	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
-	val, err := bufio.NewReader(cs).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
-	}
-	fmt.Println(val)
-	mwd.Unlock()
-	return val
-}
-
-func getItemAmount(itemID string) string {
-	mget.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
-	cs.Write([]byte("get:" + itemID + "\n"))
-	val, err := bufio.NewReader(cs).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
-	}
-	fmt.Println(val)
-	mget.Unlock()
-	return val
 }
