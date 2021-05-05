@@ -18,6 +18,8 @@ import (
 )
 
 var shis = make(chan bool, 1)
+var supd = make(chan bool, 1)
+
 // var m sync.Mutex
 
 func main() {
@@ -65,10 +67,12 @@ func rec(con net.Conn) {
 			return
 		}
 		// fmt.Println("history")
-		shis <- true
+		// shis <- true
 		a, b := Lfu.get(&Cache_queue, date)
 		// fmt.Println("finish")
 		send(con, a, b)
+		fmt.Println("Cache cap:", Lfu.capacity, "bytes, Cache used:", Lfu.size, "bytes\n")
+		Lfu.printCache()
 		// fmt.Println("hi")
 	}
 }
@@ -168,6 +172,8 @@ func (q *Queue) deQ(list string) {
 }
 
 func (q *Queue) update(n *Node) {
+	defer func() { <-supd }() 
+	supd <- true
 	n.count++
 	for n.next != nil && n.count > n.next.count {
 		nt := n.next
@@ -203,6 +209,8 @@ func (q *Queue) printQ() {
 }
 
 func (c *Cache) set(q *Queue, itemId int, value []byte) {
+	defer func() { <-shis }() 
+	shis <- true
 	valSize := len(value)
 	if _, ok := c.block[itemId]; ok {
 		c.block[itemId].value = value
@@ -224,40 +232,44 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 }
 
 func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
-	defer func() { <-shis }() 
+	// defer func() { <-shis }() 
 	// m.Lock()
 	// defer m.Unlock()
 	// wg.Add(1)
-	state := "true"
+	// state := "true"
 	// mu.Lock()
 	// defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
-		q.update(c.block[itemId])
+		go q.update(c.block[itemId])
 		fmt.Println("----HIT----")
 		fmt.Println()
+		return c.block[itemId].value, "true"
 	} else {
 		// filename := strconv.Itoa(itemId)
-		retrieve(c, q, itemId)
+		// retrieve(c, q, itemId)
+		fmt.Println("----MISS----\n")
+		return retrieve(c, q, itemId), "false"
 		// fmt.Println(time.Since(a))
 		// fmt.Println("CS:", len(c.block))
-		fmt.Println("----MISS----")
-		fmt.Println()
-		state = "false"
+		// fmt.Println("----MISS----")
+		// fmt.Println()
+		// state = "false"
 	}
-	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
-	c.printCache()
+	// fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
+	// c.printCache()
 	// wg.Done()
-	return c.block[itemId].value, state
+	//// return c.block[itemId].value, state
 	// fmt.Println("Final", c.size, "\n")
 	// fmt.Println(c.block[itemId].value)
 }
 
-func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	name := strconv.Itoa(filename)
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
-		Read(c, q, name)
-		return
+		// Read(c, q, name)
+		// return 
+		return Read(c, q, name)
 	} else {
 		fmt.Println("From DB")
 		Date := name[0:4] + "-" + name[4:6]
@@ -287,8 +299,8 @@ func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDat
 
 		// wg.Add(1)
 		go Save(filename, buf.Bytes())
-		c.set(q, filename, buf.Bytes())
-		return
+		go c.set(q, filename, buf.Bytes())
+		return buf.Bytes()
 	}
 }
 
@@ -328,7 +340,7 @@ func Save(filename int, data []byte) {
 	// wg.Done()
 }
 
-func Read(c *Cache, q *Queue, filename string) {
+func Read(c *Cache, q *Queue, filename string) []byte {
 	// dir, err := os.Getwd()
 	// if err != nil {
 	// 	fmt.Println(err)
@@ -351,7 +363,8 @@ func Read(c *Cache, q *Queue, filename string) {
 	file.Close()
 	name, _ := strconv.Atoi(filename)
 	// c.set(q, 202109, buf.Bytes())
-	c.set(q, name, buf.Bytes())
+	go c.set(q, name, buf.Bytes())
+	return buf.Bytes()
 }
 
 func (c *Cache) printCache() {
