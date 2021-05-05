@@ -20,10 +20,19 @@ var madd sync.Mutex
 var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
+var db *sql.DB
 
 var sana = make(chan bool, 2)
 
 // var sana = make(chan bool, 1)
+
+func init() {
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	// 	defer Db.close()
+}
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
@@ -199,24 +208,7 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 	var end = time.Now()
 
 	withMap := make(map[int]int)
-	// for count <= len(s) {
-	// 	if count+1 >= len(s) {
-	// 		break
-	// 	}
-	// 	amount, _ := strconv.Atoi(s[count+1])
-	// 	id, _ := strconv.Atoi(s[count])
-	// 	check, _ := time.Parse("2006-01-02", s[count+2])
-	// 	if check.After(startDate) && check.Before(end) {
-	// 		if val, ok := withMap[id]; ok {
-	// 			withMap[id] = amount + val
-	// 		} else {
-	// 			withMap[id] = amount
-	// 		}
-	// 	}
-
-	// 	count = count + 4
-	// }
-	for count < len(s) {
+	for count <= len(s) {
 		if count+1 >= len(s) {
 			break
 		}
@@ -302,22 +294,7 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 
 	// Make map for keeping
 	withMap := make(map[string]int)
-	// for count <= len(s) {
-	// 	if count+1 >= len(s) {
-	// 		break
-	// 	}
-	// 	amount, _ := strconv.Atoi(s[count+1])
-	// 	date := s[count+2]
-	// 	if val, ok := withMap[date]; ok {
-	// 		withMap[date] = amount + val
-	// 	} else {
-	// 		withMap[date] = amount
-	// 	}
-
-	// 	count = count + 4
-	// }
-
-	for count < len(s) {
+	for count <= len(s) {
 		if count+1 >= len(s) {
 			break
 		}
@@ -353,11 +330,11 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB(buf *bytes.Buffer) []string {
-	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer db.Close()
+	// db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	// if err != nil {
+	// 	fmt.Println("Error: Cannot open database")
+	// }
+	// defer db.Close()
 	day := time.Now().AddDate(0, 0, -1)
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
 	if err != nil {
