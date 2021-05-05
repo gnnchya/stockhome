@@ -23,7 +23,7 @@ var mem1, mem2 string
 var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
-var counttana, countthis, counttget, counttadd, counttwd int = 0, 0, 0, 0, 0
+var counttana, countthis, counttget int = 0, 0, 0
 
 func main() {
 	rand.Seed(69)
@@ -101,16 +101,20 @@ func main() {
 			fmt.Println("Client distribution correct: ", (cliCnt)/2 == no)
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
+			fmt.Println("Analysis request: ", counttana)
 			fmt.Println("Analysis count: ", countall)
 			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
+			fmt.Println("History request: ", countthis)
 			fmt.Println("History count: ", count2)
 			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
 			fmt.Println("Hit count:", counthit, ">>Average hit time : ", (float64(hitavg)/float64(time.Millisecond))/float64(counthit), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit)/float64(countmiss+counthit))*100, "%")
 			fmt.Println()
 			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
+			fmt.Println("Transaction request: ", counttget)
+			fmt.Println("Transaction count: ", countadd+countwd+countget)
 			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
 			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
 			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
