@@ -339,7 +339,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 		fmt.Println("HIT")
 		val := find.currentAmount
 		l.pageList.bringToMostUsed(find)
-		return val, "hello"
+		return val, "true"
 	} else {
 		if l.size == l.capacity {
 			key := l.pageList.getRear().itemID
