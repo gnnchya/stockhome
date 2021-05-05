@@ -1,4 +1,5 @@
-//ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
+// ref https://www.programmersought.com/article/93955119235/
+// ref https://www.codementor.io/@aniketg21/writing-a-load-testing-tool-in-go-ymph1kwo4
 package main
 
 import (
@@ -13,18 +14,27 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	// "gonum.org/v1/plot"
+	// "gonum.org/v1/plot/plotter"
+	// "gonum.org/v1/plot/plotutil"
+	// "gonum.org/v1/plot/vg"
 )
 
+// var points plotter.XYs
+// var p = plot.New()
 var sana = make(chan bool, 1120)
-var shis = make(chan bool, 1)
+var shis = make(chan bool, 1000) // 1
 var scache = make(chan bool, 6800)
 var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
 var count, countmiss, counthit, count2, count3, countmiss2, counthit2, countadd, countwd, countget, countall int = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
+var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2, counttotal = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
 var opcounthit, opcountmiss, opanaavg, ophitavg, opmissavg = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
+var counttana, countthis, counttget, counttadd, counttwd int = 0, 0, 0, 0, 0
+
+// var temp, min int = 0, 0
 
 func init() {
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -37,11 +47,10 @@ func init() {
 }
 
 func main() {
-	rand.Seed(22)
+	rand.Seed(69) //22
 	cli := flag.Int("cli", 10, "Number of clients")
 	rut := flag.Int("rmup", 30, "Time to spawn all clients")
 	allt := flag.Int("rt", 1, "Client total execution time in minutes")
-
 	flag.Parse()
 
 	if *allt*60 < *rut {
@@ -76,13 +85,37 @@ func main() {
 		//wg1.Wait()
 	}(c)
 
+	// go func() {
+	// 	min := *allt * 60
+	// 	t := 0
+	// 	points = make(plotter.XYs, min)
+	// 	p.Title.Text = "Throughput"
+	// 	p.X.Label.Text = "Time(s)"
+	// 	p.Y.Label.Text = "Transactions(time)"
+
+	// 	for i := 0; i < min; i++ {
+	// 		time.Sleep(time.Second)
+	// 		t3 := counttana + countthis + counttget
+	// 		points[i].X = float64(i)
+	// 		points[i].Y = float64(t3 - t)
+	// 		t = t3
+	// 	}
+	// }()
+
 	timeout := time.After(time.Duration((*allt*60)+5) * time.Second)
 
 	for {
 
 		select {
 		case <-timeout:
-			defer db.Close()
+			// fmt.Println(points)
+			// err := plotutil.AddLinePoints(p, "Throuhput/s", points)
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// if err := p.Save(6*vg.Inch, 6*vg.Inch, "Throughput.pdf"); err != nil {
+			// 	panic(err)
+			// }
 			//time.Sleep(time.Duration(3) * time.Second)
 			fmt.Println()
 			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
@@ -96,11 +129,13 @@ func main() {
 			fmt.Println("Client distribution correct: ", (cliCnt)/2 == no)
 			fmt.Println()
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
+			fmt.Println("Analysis request: ", counttana)
 			fmt.Println("Analysis count: ", countall)
 			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
 			fmt.Println("++Analysis data correctness: ", (float64(count)/float64(countall))*100, "%")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
+			fmt.Println("History request: ", countthis)
 			fmt.Println("History count: ", count2)
 			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
 			fmt.Println("Hit count:", counthit, ">>Average hit time : ", (float64(hitavg)/float64(time.Millisecond))/float64(counthit), "ms")
@@ -108,11 +143,16 @@ func main() {
 			fmt.Println("++History Data correctness: ", (float64(counthit+countmiss)/float64(count2))*100, "%")
 			fmt.Println()
 			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
+			fmt.Println("Transaction count: ", counttget)
 			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
 			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
 			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
 			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
+			// err = db.Close()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
 			return
 
 		case ts := <-c:
@@ -121,9 +161,11 @@ func main() {
 				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
 
 				//Add,WD,get test >> Initial request
-				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts)
-				if temp1 != "error" {
-					mem1, mem2 = temp1, temp2
+				//counttotal <- 2
+				counttget++
+				elapsed, t1, t2, correct, rd, state := DBcache(c1, ts)
+				if t1 != "error" {
+					mem1, mem2 = t1, t2
 				}
 
 				opcount3 <- 1
@@ -160,13 +202,19 @@ func main() {
 
 					switch {
 					case rdt <= 60: // 60% chance
-						// scache <- true
+						scache <- true
+						//counttotal <- 2
+						counttget++
 						dbtest(c1, ts)
 					case rdt <= 90: // 30% chance
-						// shis <- true
+						shis <- true
+						//counttotal <- 1
+						countthis++
 						histest(c1, ts)
 					case rdt <= 100: // 10% chance
-						// sana <- true
+						sana <- true
+						//counttotal <- 0
+						counttana++
 						anatest(c1, ts)
 					}
 				}
