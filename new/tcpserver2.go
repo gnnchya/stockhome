@@ -15,12 +15,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var mana sync.Mutex
-var madd sync.Mutex
-var mwd sync.Mutex
-var mget sync.Mutex
-var mhis sync.Mutex
-
 var sana = make(chan bool, 2300)
 
 func main() {
