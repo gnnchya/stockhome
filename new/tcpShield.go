@@ -17,13 +17,13 @@ import (
 var myCache LRU
 var mutex = &sync.Mutex{}
 
-var sadd = make(chan bool, 100)
-var swd = make(chan bool, 100)
-var sget = make(chan bool, 100)
+var sadd = make(chan bool, 500)
+var swd = make(chan bool, 500)
+var sget = make(chan bool, 500)
 
 func main() {
 
-	myCache.InitLRU(5000)
+	myCache.InitLRU(2500)
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
