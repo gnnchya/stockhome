@@ -43,7 +43,7 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string) {
 	}
 
 	if output != "None" {
-		if output != <-clb + "."{
+		if output != <-clb+"." {
 			correct = "no"
 		}
 	} else {
@@ -78,17 +78,17 @@ func retrieve(Date string, clb chan string) {
 		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
 		buf.Write(line)
 	}
-	clb <- "Server: "+ buf.String()
+	clb <- "Server: " + buf.String()
 }
 
 func randate() string {
-	var min,max int64
+	var min, max int64
 	chance := rand.Intn(100)
 	switch {
 	case chance <= 80: //80%
 		min = time.Date(2019, 3, 1, 0, 0, 0, 0, time.UTC).Unix()
 		max = time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
-	case chance <=100: //20%
+	case chance <= 100: //20%
 		min = time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
 		max = time.Date(2019, 3, 30, 0, 0, 0, 0, time.UTC).Unix()
 	}

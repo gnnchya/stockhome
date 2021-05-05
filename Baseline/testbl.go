@@ -20,19 +20,19 @@ import (
 
 var points plotter.XYs
 var p = plot.New()
-var sana = make(chan bool, 1120)
-var shis = make(chan bool, 1000)
-var scache = make(chan bool, 6800)
+var sana = make(chan bool, 3000)
+var shis = make(chan bool, 1)
+var scache = make(chan bool, 23000)
 var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, hisavg, awgavg time.Duration = 0, 0, 0, 0, 0
 var mem1, mem2 string
-var count, count2, count3, counthis, countawg, countadd, countwd, countget, countall int =  0, 0, 0, 0, 0, 0, 0, 0, 0
+var count, count2, count3, counthis, countawg, countadd, countwd, countget, countall int = 0, 0, 0, 0, 0, 0, 0, 0, 0
 var opcountadd, opcount3, opcountwd, opcountget, opcount, opcount2 = make(chan int), make(chan int), make(chan int), make(chan int), make(chan int), make(chan int)
-var opcountawg, opcounthis, opanaavg, opcountawg2, opcounthis2= make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
+var opcountawg, opcounthis, opanaavg, opcountawg2, opcounthis2 = make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration), make(chan time.Duration)
 var counttana, countthis, counttget, counttadd, counttwd int = 0, 0, 0, 0, 0
 
-func init(){
+func init() {
 	db, eir = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if eir != nil {
 		fmt.Println("Error: Cannot open database")
@@ -56,7 +56,7 @@ func main() {
 		return
 	}
 
-	delay := (float64(*rut) / float64(*cli))*1000
+	delay := (float64(*rut) / float64(*cli)) * 1000
 
 	fmt.Printf("************************************\nClient : %d\nRamp up time : %d seconds\nTotal run time : %d minutes\n", *cli, *rut, *allt)
 	fmt.Println("************************************")
@@ -168,9 +168,9 @@ func main() {
 				}
 
 				// Additional request of the user
-				for{
+				for {
 					time.Sleep(time.Duration(rand.Intn(60-20)+20) * time.Second) // random sleep time between 20 secs - 60 secs
-					rdt := rand.Intn(100-1)+1
+					rdt := rand.Intn(100-1) + 1
 					switch {
 					case rdt <= 60: // 60% chance
 						scache <- true
@@ -276,7 +276,7 @@ func main() {
 	}
 }
 
-func dbtest(c1 chan string, ts int){
+func dbtest(c1 chan string, ts int) {
 	//Add,WD,get test
 	elapsed, _, _, correct, rd := DBcache(c1, ts)
 	opcount3 <- 1
@@ -299,7 +299,7 @@ func dbtest(c1 chan string, ts int){
 	}
 }
 
-func anatest(c1 chan string, ts int){
+func anatest(c1 chan string, ts int) {
 	//Analysis test
 	elapsed, _, _, correct := Analysis(c1, ts)
 	opanaavg <- elapsed
@@ -314,7 +314,7 @@ func anatest(c1 chan string, ts int){
 	}
 }
 
-func histest(c1 chan string, ts int){
+func histest(c1 chan string, ts int) {
 	//history test
 	elapsed, _, _, correct := LBcache(c1, ts)
 	opcount2 <- 1

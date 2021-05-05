@@ -43,7 +43,7 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	}
 
 	if output != "None" {
-		if output != "Server: " + <-cana {
+		if output != "Server: "+<-cana {
 			correct = "no"
 		}
 	} else {
@@ -66,7 +66,7 @@ func randomTimestamp() string {
 
 // analysis code ****************************************************
 func analysis1(start string, cana chan string) {
-	defer func(){ <-sana }()
+	defer func() { <-sana }()
 	var aWith, bWith, cWith, dWith string
 
 	aWith = MostWithA()
@@ -74,7 +74,7 @@ func analysis1(start string, cana chan string) {
 	cWith = WithTime()
 	dWith = WithDate()
 
-	cana <-  (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
+	cana <- (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
 func MostWithA() string {
