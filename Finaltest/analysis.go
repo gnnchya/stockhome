@@ -21,7 +21,6 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	correct := "yes"
 	rd := randomTimestamp()
 	randate := "ana " + rd
-	
 
 	begin := <-c
 	if begin == "begin" {
@@ -47,9 +46,9 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	}
 
 	if output != "None" {
-		if output != "Server: " + <-cana {
+		if output != "Server: "+<-cana {
 			correct = "no"
-		   }
+		}
 	} else {
 		correct = "nil"
 	}
@@ -68,7 +67,7 @@ func randomTimestamp() string {
 }
 
 // analysis code ****************************************************
-func analysis1(start string, cana chan string){
+func analysis1(start string, cana chan string) {
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
 
@@ -96,7 +95,7 @@ func analysis1(start string, cana chan string){
 	}()
 
 	Wg.Wait()
-	cana <-  (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
+	cana <- (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
 func MostWithA(Wg *sync.WaitGroup, s []string) string {
@@ -273,8 +272,8 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 }
 
 // ---------------------------------------------------------------------------------------------------
-func rtDB(buf *bytes.Buffer) []string{
-	defer func(){ <-sana }()
+func rtDB(buf *bytes.Buffer) []string {
+	defer func() { <-sana }()
 
 	var err error
 	day := time.Now().AddDate(0, 0, -1)

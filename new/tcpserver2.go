@@ -14,7 +14,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var sana = make(chan bool, 2300)
+var sana = make(chan bool, 1600)
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")

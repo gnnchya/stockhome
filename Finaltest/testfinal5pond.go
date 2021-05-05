@@ -20,9 +20,9 @@ import (
 
 var points plotter.XYs
 var p = plot.New()
-var sana = make(chan bool, 4600)
-var shis = make(chan bool, 1)
-var scache = make(chan bool, 23000)
+var sana = make(chan bool, 3200)
+var shis = make(chan bool, 9600)
+var scache = make(chan bool, 19200)
 var db *sql.DB
 var eir error
 var anaavg, missavg, hitavg, missavg2, hitavg2 time.Duration = 0, 0, 0, 0, 0

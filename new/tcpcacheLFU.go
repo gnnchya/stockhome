@@ -18,7 +18,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// var shis = make(chan bool, 1)
+var shis = make(chan bool, 9600)
+
 // var supd = make(chan bool, 1)
 // var en = make(chan bool, 1)
 // var de = make(chan bool, 1)
@@ -268,6 +269,7 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 }
 
 func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, startDate string, endDate string, filename string
+	defer func() { <-shis }()
 	name := strconv.Itoa(filename)
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
