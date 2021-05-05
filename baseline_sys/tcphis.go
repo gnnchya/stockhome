@@ -61,12 +61,12 @@ func rec(con net.Conn) {
 }
 
 func send(con net.Conn, msg string) {
-	con.Write([]byte("Server: " + msg + "."))
+	con.Write([]byte(msg + "."))
 
 }
 
 func sendhis(con net.Conn, msg []byte) {
-	temp := append([]byte("Server: "), msg...)
+	temp := append(msg...)
 	temp1 := append(temp, []byte(".")...)
 	con.Write(temp1)
 
