@@ -73,7 +73,6 @@ func rec(con net.Conn) {
 		fmt.Println("err5", err)
 		return
 	}
-	shis <- true
 	a, b := Lfu.get(&Cache_queue, date)
 	send(con, a, b)
 	fmt.Println("Cache cap:", Lfu.capacity, "bytes, Cache used:", Lfu.size, "bytes\n")
@@ -270,7 +269,6 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 }
 
 func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, startDate string, endDate string, filename string
-	defer func() { <-shis }()
 	name := strconv.Itoa(filename)
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
@@ -278,6 +276,7 @@ func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, s
 		// return
 		return Read(c, q, name)
 	} else {
+		shis <- true
 		fmt.Println("From DB")
 		Date := name[0:4] + "-" + name[4:6]
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -303,7 +302,7 @@ func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, s
 			buf.Write(line)
 		}
 		row.Close()
-
+		<-shis
 		go Save(filename, buf.Bytes())
 		go c.set(q, filename, buf.Bytes())
 		return buf.Bytes()
