@@ -339,7 +339,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 		fmt.Println("HIT")
 		val := find.currentAmount
 		l.pageList.bringToMostUsed(find)
-		return val, "true"
+		return val, "hello"
 	} else {
 		if l.size == l.capacity {
 			key := l.pageList.getRear().itemID
@@ -352,7 +352,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 		page := l.pageList.addFrontPage(itemID, GetAmountVal)
 		l.size++
 		l.PageMap[itemID] = page
-		return GetAmountVal, "false"
+		return GetAmountVal, "world"
 	}
 }
 
