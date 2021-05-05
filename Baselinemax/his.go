@@ -7,21 +7,16 @@ import (
 	"time"
 )
 
-func LBcache(c chan string, ts int) (time.Duration, string, string) {
+func LBcache(c chan string, ts int) ( string, string) {
 	var mem1, mem2, output string
-	var elapsed time.Duration
 	rd := randate()
 	randate1 := "his " + rd
 
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------\u001B[48;5;208mHISTORY\u001B[0m------------------- Client no.", ts)
-		start := time.Now()
-
 		c <- randate1
-
 		output = <-c
-		elapsed = time.Since(start)
 		mem1 = <-c
 		mem2 = <-c
 		done := <-c
@@ -35,7 +30,7 @@ func LBcache(c chan string, ts int) (time.Duration, string, string) {
 		}
 	}
 
-	return elapsed, mem1, mem2
+	return  mem1, mem2
 }
 
 func randate() string {

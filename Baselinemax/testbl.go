@@ -70,11 +70,11 @@ func main() {
 		p.Y.Label.Text = "Transactions(time)"
 
 		for i := 0; i < min; i++ {
-			time.Sleep(time.Second)
 			temp3 := counttana + countthis + counttget
 			points[i].X = float64(i)
 			points[i].Y = float64(temp3 - temp)
 			temp = temp3
+			time.Sleep(time.Second)
 		}
 	}()
 	timeout := time.After(time.Duration(*allt*60) * time.Second)
@@ -83,7 +83,6 @@ func main() {
 
 		select {
 		case <-timeout:
-			defer db.Close()
 			err := plotutil.AddLinePoints(p, "Throuhput/s", points)
 			if err != nil {
 				log.Fatal(err)
@@ -104,18 +103,15 @@ func main() {
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
 			fmt.Println("Analysis request: ", counttana)
 			fmt.Println("Analysis count: ", countall)
-			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
 			fmt.Println("History request: ", countthis)
 			fmt.Println("History count: ", count2)
-			fmt.Println(">>Average History time :", (float64(hisavg)/float64(time.Millisecond))/float64(counthis), "ms")
 			fmt.Println()
 			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
 			fmt.Println("Transaction request: ", counttget)
 			fmt.Println("Transaction count: ", countadd+countwd+countget)
 			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
-			fmt.Println(">>Average transaction time :", (float64(awgavg)/float64(time.Millisecond))/float64(countawg), "ms")
 			return
 
 		case ts := <-c:
@@ -124,11 +120,12 @@ func main() {
 				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
 
 				//Add,WD,get test >> Initial request
-				elapsed, temp1, temp2, rd := DBcache(c1, ts)
+				temp1, temp2, rd := DBcache(c1, ts)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
 
+				counttget++
 				opcount3 <- 1
 				switch {
 				case rd <= 20:
@@ -139,7 +136,7 @@ func main() {
 					opcountget <- countget
 				}
 
-				opcountawg <- elapsed
+				opcountawg <- 1
 
 				timed := rand.Intn(5-1)+1
 				// Additional request of the user
@@ -148,10 +145,13 @@ func main() {
 					rdt := rand.Intn(100-1)+1
 					switch {
 					case rdt <= 60: // 60% chance
+						counttget++
 						dbtest(c1, ts)
 					case rdt <= 90: // 25% chance
+						countthis++
 						histest(c1, ts)
 					case rdt <= 100: // 15% chance
+						counttana++
 						anatest(c1, ts)
 					}
 				}
@@ -188,22 +188,19 @@ func main() {
 		}
 
 		select{
-		case elapsed := <- opcountawg:
-			awgavg = awgavg + elapsed
+		case <- opcountawg:
 			countawg++
 		default:
 		}
 
 		select{
-		case elapsed := <- opcounthis:
-			hisavg = hisavg + elapsed
+		case <- opcounthis:
 			counthis++
 		default:
 		}
 
 		select{
-		case elapsed := <- opanaavg:
-			anaavg = anaavg + elapsed
+		case <- opanaavg:
 			countall++
 		default:
 		}
@@ -223,7 +220,7 @@ func main() {
 
 func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
-	elapsed, _, _, rd := DBcache(c1, ts)
+	 _, _, rd := DBcache(c1, ts)
 	opcount3 <- 1
 	switch {
 	case rd <= 20:
@@ -234,20 +231,20 @@ func dbtest(c1 chan string, ts int){
 		opcountget <- countget
 	}
 
-	opcountawg <- elapsed
+	opcountawg <- 1
 }
 
 func anatest(c1 chan string, ts int){
 	//Analysis test
-	elapsed, _, _ := Analysis(c1, ts)
-	opanaavg <- elapsed
+	 _, _ = Analysis(c1, ts)
+	opanaavg <- 1
 }
 
 func histest(c1 chan string, ts int){
 	//history test
-	elapsed, _, _ := LBcache(c1, ts)
+	 _, _ = LBcache(c1, ts)
 	opcount2 <- 1
 
-	opcounthis <- elapsed
+	opcounthis <- 1
 
 }

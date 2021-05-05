@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
-	"time"
 )
 
-func DBcache(c chan string, ts int) (time.Duration, string, string, int) {
+func DBcache(c chan string, ts int) ( string, string, int) {
 	var mem1, mem2, output, rdact string
 	var ran int
-	var elapsed time.Duration
 
 	chance := rand.Intn(100-1) + 1
 	switch{
@@ -43,12 +41,8 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, int) {
 
 	begin := <-c
 	if begin == "begin" {
-		start := time.Now()
-
 		c <- rdact
-
 		output = <-c
-		elapsed = time.Since(start)
 		mem1 = <-c
 		mem2 = <-c
 
@@ -60,7 +54,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, int) {
 
 	done := <-c
 	if done == "done" {
-		return elapsed, mem1, mem2, rd
+		return mem1, mem2, rd
 	}
-	return elapsed, mem1, mem2, rd
+	return  mem1, mem2, rd
 }

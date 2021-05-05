@@ -69,11 +69,11 @@ func main() {
 		p.Y.Label.Text = "Transactions(time)"
 
 		for i := 0; i < min; i++ {
-			time.Sleep(time.Second)
 			temp3 := counttana + countthis + counttget
 			points[i].X = float64(i)
 			points[i].Y = float64(temp3 - temp)
 			temp = temp3
+			time.Sleep(time.Second)
 		}
 	}()
 
@@ -103,21 +103,20 @@ func main() {
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
 			fmt.Println("Analysis request: ", counttana)
 			fmt.Println("Analysis count: ", countall)
-			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
 			fmt.Println("History request: ", countthis)
 			fmt.Println("History count: ", count2)
-			fmt.Println("Miss count:", countmiss, ">>Average miss time : ", (float64(missavg)/float64(time.Millisecond))/float64(countmiss), "ms")
-			fmt.Println("Hit count:", counthit, ">>Average hit time : ", (float64(hitavg)/float64(time.Millisecond))/float64(counthit), "ms")
+			fmt.Println("Miss count:", countmiss)
+			fmt.Println("Hit count:", counthit)
 			fmt.Println(">>HIT RATE: ", (float64(counthit)/float64(countmiss+counthit))*100, "%")
 			fmt.Println()
 			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
 			fmt.Println("Transaction request: ", counttget)
 			fmt.Println("Transaction count: ", countadd+countwd+countget)
 			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
-			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
-			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
+			fmt.Println("Miss count:", countmiss2)
+			fmt.Println("Hit count:", counthit2)
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
 			return
 
@@ -127,7 +126,7 @@ func main() {
 				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
 
 				//Add,WD,get test >> Initial request
-				elapsed, temp1, temp2, rd, state := DBcache(c1, ts)
+				temp1, temp2, rd, state := DBcache(c1, ts)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
@@ -145,10 +144,10 @@ func main() {
 
 				switch state {
 				case "true\n.":
-					opcounthit <- elapsed
+					opcounthit <- 1
 
 				case "false\n.":
-					opcountmiss <- elapsed
+					opcountmiss <- 1
 				default:
 					opcount3 <- 0
 
@@ -204,36 +203,31 @@ func main() {
 		}
 
 		select{
-		case elapsed := <- opcounthit:
-			hitavg2 = hitavg2 + elapsed
+		case <- opcounthit:
 			counthit2++
 		default:
 		}
 
 		select{
-		case elapsed := <- opcountmiss:
-			missavg2 = missavg2 + elapsed
+		case <- opcountmiss:
 			countmiss2++
 		default:
 		}
 
 		select{
-		case elapsed := <- opanaavg:
-			anaavg = anaavg + elapsed
+		case  <- opanaavg:
 			countall++
 		default:
 		}
 
 		select{
-		case elapsed := <- ophitavg:
-			hitavg = hitavg + elapsed
+		case <- ophitavg:
 			counthit++
 		default:
 		}
 
 		select{
-		case elapsed := <- opmissavg:
-			missavg = missavg + elapsed
+		case <- opmissavg:
 			countmiss++
 		default:
 		}
@@ -253,7 +247,7 @@ func main() {
 
 func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
-	elapsed, _, _, rd, state := DBcache(c1, ts)
+	_, _, rd, state := DBcache(c1, ts)
 	opcount3 <- 1
 
 		switch {
@@ -267,9 +261,9 @@ func dbtest(c1 chan string, ts int){
 
 		switch state {
 		case "true\n.":
-			opcounthit <- elapsed
+			opcounthit <- 1
 		case "false\n.":
-			opcountmiss <- elapsed
+			opcountmiss <- 1
 		default:
 			opcount3 <- 0
 		}
@@ -277,20 +271,20 @@ func dbtest(c1 chan string, ts int){
 
 func anatest(c1 chan string, ts int){
 	//Analysis test
-	elapsed, _, _ := Analysis(c1, ts)
+	 _,_ = Analysis(c1, ts)
 
-	opanaavg <- elapsed
+	opanaavg <- 1
 }
 
 func histest(c1 chan string, ts int){
 	//history test
-	elapsed, _, _, state := LBcache(c1, ts)
+	 _, _, state := LBcache(c1, ts)
 
 	opcount2 <- 1
 	switch state {
 	case "true.":
-		ophitavg <- elapsed
+		ophitavg <- 1
 	case "false.":
-		opmissavg <- elapsed
+		opmissavg <- 1
 	}
 }

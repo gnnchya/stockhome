@@ -66,6 +66,7 @@ func randomTimestamp() string {
 
 // analysis code ****************************************************
 func analysis1(start string, cana chan string) {
+	defer func(){ <-sana }()
 	var aWith, bWith, cWith, dWith string
 
 	aWith = MostWithA()

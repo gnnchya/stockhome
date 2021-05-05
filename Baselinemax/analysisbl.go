@@ -7,20 +7,16 @@ import (
 	"time"
 )
 
-func Analysis(c chan string, ts int) (time.Duration, string, string) {
+func Analysis(c chan string, ts int) ( string, string) {
 	var mem1, mem2, output string
-	var elapsed time.Duration
 	rd := randomTimestamp()
 	randate := "ana " + rd
 
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------\u001b[48;5;89mANALYSIS\u001b[0m------------------- Client no.", ts)
-		start := time.Now()
 		c <- randate
-
 		output = <-c
-		elapsed = time.Since(start)
 		mem1 = <-c
 		mem2 = <-c
 		done := <-c
@@ -34,7 +30,7 @@ func Analysis(c chan string, ts int) (time.Duration, string, string) {
 			output = "None"
 		}
 	}
-	return elapsed, mem1, mem2
+	return  mem1, mem2
 }
 
 func randomTimestamp() string {

@@ -41,7 +41,6 @@ func init(){
 	db.SetMaxOpenConns(10)
 	db.SetConnMaxLifetime(time.Minute * 3)
 }
-}
 
 func main() {
 	rand.Seed(69)
@@ -87,11 +86,11 @@ func main() {
 		p.Y.Label.Text = "Transactions(time)"
 
 		for i := 0; i < min; i++ {
-			time.Sleep(time.Second)
 			temp3 := counttana + countthis + counttget
 			points[i].X = float64(i)
 			points[i].Y = float64(temp3 - temp)
 			temp = temp3
+			time.Sleep(time.Second)
 		}
 	}()
 
@@ -149,6 +148,7 @@ func main() {
 					mem1, mem2 = temp1, temp2
 				}
 
+				counttget++
 				opcount3 <- 1
 				switch correct {
 				case "yes":

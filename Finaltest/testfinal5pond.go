@@ -85,11 +85,11 @@ func main() {
 		p.Y.Label.Text = "Transactions(time)"
 
 		for i := 0; i < min; i++ {
-			time.Sleep(time.Second)
 			temp3 := counttana + countthis + counttget
 			points[i].X = float64(i)
 			points[i].Y = float64(temp3 - temp)
 			temp = temp3
+			time.Sleep(time.Second)
 		}
 	}()
 
