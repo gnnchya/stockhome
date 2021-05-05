@@ -3,7 +3,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -274,16 +273,10 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 }
 
 // ---------------------------------------------------------------------------------------------------
-func rtDB(buf *bytes.Buffer) []string {
+func rtDB(buf *bytes.Buffer) []string{
+	defer func(){ <-sana }()
+
 	var err error
-
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-
-	defer db.Close()
-
 	day := time.Now().AddDate(0, 0, -1)
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
 	// row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
@@ -303,6 +296,7 @@ func rtDB(buf *bytes.Buffer) []string {
 		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
 		buf.Write(line)
 	}
+	row.Close()
 
 	s := strings.Split(buf.String(), ",")
 	return s
