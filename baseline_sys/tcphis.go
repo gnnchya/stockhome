@@ -54,10 +54,6 @@ func rec(con net.Conn) {
 		switch msg[0] {
 		case "his":
 			sendhis(con, his(msg[1]))
-		case "exit":
-			con.Close()
-			fmt.Println("EOF")
-			return
 		default:
 			send(con, "Some How Error!")
 		}

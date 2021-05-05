@@ -65,10 +65,6 @@ func rec(con net.Conn) {
 			send(con, withdraw(id[0], id[1], id[2]))
 		case "get":
 			send(con, getItemAmount(msg[1]))
-		case "exit":
-			con.Close()
-			fmt.Println("EOF")
-			return
 		default:
 			send(con, "Some How Error!")
 		}

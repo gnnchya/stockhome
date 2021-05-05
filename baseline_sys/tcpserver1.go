@@ -65,10 +65,6 @@ func rec(con net.Conn) {
 			send(con, access(data))
 		case "get":
 			send(con, access(data))
-		case "exit":
-			con.Close()
-			fmt.Println("EOF")
-			return
 		default:
 			send(con, "Some How Error!")
 		}
