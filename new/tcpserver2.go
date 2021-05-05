@@ -71,7 +71,7 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			sana <- true
+
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 		case "add":
@@ -128,7 +128,7 @@ func his(msg string) string {
 
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
-	defer func() { <-sana }()
+
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
@@ -336,6 +336,8 @@ func rtDB(buf *bytes.Buffer) []string {
 	// 	fmt.Println("Error: Cannot open database")
 	// }
 	// defer db.Close()
+	sana <- true
+	defer func() { <-sana }()
 	day := time.Now().AddDate(0, 0, -1)
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
 	if err != nil {
