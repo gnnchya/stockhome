@@ -76,7 +76,7 @@ func rec(con net.Conn) {
 			}
 			sadd <- true
 			send(con, addToDB(iid, amt, uid))
-			addNew(iid, amt, uid)
+			defer addNew(iid, amt, uid)
 		case "wd":
 			msg[1] = strings.TrimSpace(msg[1])
 			id := strings.Split(msg[1], "-")
@@ -100,7 +100,7 @@ func rec(con net.Conn) {
 			}
 			swd <- true
 			send(con, withDrawToDB(iid, amt*(-1), uid))
-			withdraw(iid, amt, uid)
+			defer withdraw(iid, amt, uid)
 		case "get":
 			msg[1] = strings.TrimSpace(msg[1])
 			iid, err := strconv.Atoi(msg[1])
