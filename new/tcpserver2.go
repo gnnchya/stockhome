@@ -15,7 +15,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var sana = make(chan bool, 2300)
+// var sana = make(chan bool, 2300)
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
@@ -53,7 +53,7 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			sana <- true
+			// sana <- true
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 		case "add":
@@ -110,7 +110,7 @@ func his(msg string) string {
 
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
-	defer func() { <-sana }()
+	// defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
 	var aWith, bWith, cWith, dWith string
 	Wg := sync.WaitGroup{}
