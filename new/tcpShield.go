@@ -132,7 +132,7 @@ func send(con net.Conn, msg string) {
 }
 
 func GetAmount(itemID int) string {
-	defer func() { <-sget }()
+
 	var amount int
 	check := Db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
@@ -320,7 +320,7 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
-
+	defer func() { <-sget }()
 	if find, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
 		val := find.currentAmount
