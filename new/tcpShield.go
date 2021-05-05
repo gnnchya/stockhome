@@ -16,10 +16,17 @@ import (
 
 var myCache LRU
 var mutex = &sync.Mutex{}
+var Db *sql.DB
 
 var sadd = make(chan bool, 500)
 var swd = make(chan bool, 500)
 var sget = make(chan bool, 500)
+
+func init(){
+	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+}
 
 func main() {
 
@@ -126,11 +133,6 @@ func send(con net.Conn, msg string) {
 func GetAmount(itemID int) string {
 
 	defer func() { <-sget }()
-	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer Db.Close()
 	row, err := Db.Query("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID)
 
 	if err != nil {
@@ -149,11 +151,6 @@ func addNew(itemID int, amount int, userID int) string {
 	defer func() { <-sadd }()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
-	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer Db.Close()
 	var checkID int
 	var statement string
 
@@ -202,11 +199,6 @@ func addExist(itemID int, amount int, userID int, Db *sql.DB) string {
 func withdraw(itemID int, amount int, userID int) string {
 
 	defer func() { <-swd }()
-	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer Db.Close()
 	var checkID, stock int
 	var statement string
 
