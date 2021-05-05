@@ -132,7 +132,6 @@ func send(con net.Conn, msg string) {
 }
 
 func GetAmount(itemID int) string {
-
 	var amount int
 	check := Db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
