@@ -18,9 +18,9 @@ var myCache LRU
 var mutex = &sync.Mutex{}
 var Db *sql.DB
 var err error
-var sadd = make(chan bool, 1000)
-var swd = make(chan bool, 1000)
-var sget = make(chan bool, 1000)
+var sadd = make(chan bool, 5916)
+var swd = make(chan bool, 19353)
+var sget = make(chan bool, 24882)
 
 func init() {
 	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -82,7 +82,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			// sadd <- true
+			sadd <- true
 			send(con, addToDB(iid, amt, uid))
 			addNew(iid, amt, uid)
 		case "wd":
@@ -106,7 +106,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			// swd <- true
+			swd <- true
 			send(con, withDrawToDB(iid, amt*(-1), uid))
 			withdraw(iid, amt, uid)
 		case "get":
@@ -116,7 +116,7 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			// sget <- true
+			sget <- true
 			send(con, getAmountbyItem(iid))
 		case "exit":
 			con.Close()
@@ -132,8 +132,7 @@ func send(con net.Conn, msg string) {
 }
 
 func GetAmount(itemID int) string {
-
-	// defer func() { <-sget }()
+	defer func() { <-sget }()
 	var amount int
 	check := Db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
@@ -144,8 +143,7 @@ func GetAmount(itemID int) string {
 }
 
 func addNew(itemID int, amount int, userID int) string {
-
-	// defer func() { <-sadd }()
+	defer func() { <-sadd }()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
 	var checkID int
@@ -194,8 +192,7 @@ func addExist(itemID int, amount int, userID int, Db *sql.DB) string {
 }
 
 func withdraw(itemID int, amount int, userID int) string {
-
-	// defer func() { <-swd }()
+	defer func() { <-swd }()
 	var checkID, stock int
 	var statement string
 
