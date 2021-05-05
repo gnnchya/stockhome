@@ -58,13 +58,13 @@ func rec(con net.Conn) {
 			date[2] = strings.TrimSpace(date[2])
 			send(con, analysis(date[0], date[1], date[2]))
 		case "his":
-			send(con, his(msg))
+			send(con, his(data))
 		case "add":
-			send(con, access(msg))
+			send(con, access(data))
 		case "wd":
-			send(con, access(msg))
+			send(con, access(data))
 		case "get":
-			send(con, access(msg))
+			send(con, access(data))
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
