@@ -18,12 +18,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var shis = make(chan bool, 1)
-var supd = make(chan bool, 1)
-var en = make(chan bool, 1)
-var de = make(chan bool, 1)
+// var shis = make(chan bool, 1)
+// var supd = make(chan bool, 1)
+// var en = make(chan bool, 1)
+// var de = make(chan bool, 1)
 
-
+var upd sync.Mutex
+var en sync.Mutex
+var de sync.Mutex
 // var m sync.Mutex
 
 func main() {
@@ -177,8 +179,7 @@ func (q *Queue) deQ(list string) {
 }
 
 func (q *Queue) update(n *Node) {
-	defer func() { <-supd }()
-	supd <- true
+	upd.Lock()
 	n.count++
 	for n.next != nil && n.count > n.next.count {
 		nt := n.next
@@ -196,7 +197,7 @@ func (q *Queue) update(n *Node) {
 		nt.prev = n.prev
 		n.prev, nt.next = nt, n
 	}
-	<-supd
+	upd.Unlock()
 	return
 }
 
@@ -221,21 +222,21 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 		q.update(item)
 		return
 	} else if c.size+valSize < c.capacity {
-		en <- true
+		en.Lock()
 		c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
 		q.enQ(c.block[itemId])
 		c.size += valSize
-		<-en
+		en.Unlock()
 		return
 	}
-	de <- true
+	de.Lock()
 	for c.size+valSize > c.capacity {
 		q.deQ("Lfu")
 	}
 	c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
 	q.enQ(c.block[itemId])
 	c.size += valSize
-	<-de
+	de.Unlock()
 	return
 }
 
