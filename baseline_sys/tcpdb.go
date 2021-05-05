@@ -148,7 +148,7 @@ func getItemAmount(itemID string) string {
 	if check != nil {
 		return "Not in DB."
 	}
-	a := itemID + "-" + strconv.Itoa(amount) + "."
+	a := itemID + "-" + strconv.Itoa(amount)
 	fmt.Println(a)
 	return a
 
