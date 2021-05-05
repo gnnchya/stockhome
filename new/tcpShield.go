@@ -360,6 +360,7 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 
 	find, found := l.PageMap[itemID]
 	if found {
+		fmt.Println("-----HIT-----")
 		if find.currentAmount+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
 			return -1, found
@@ -376,6 +377,7 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 			delete(l.PageMap, key)
 		}
 		// itemamount  เป็นลบแล้วไม่ found
+		fmt.Println("-----MISS-----")
 		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		if GetAmountVal+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
