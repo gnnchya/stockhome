@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -112,34 +111,24 @@ func analysis(year string, month string, day string) string {
 	// mana.Lock()
 	defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
-	var aWith, bWith, cWith, dWith string
-	Wg := sync.WaitGroup{}
 	buf := bytes.NewBuffer(make([]byte, 0))
 	s := rtDB(buf)
-	Wg.Add(1)
-	go func() {
-		aWith = MostWithA(&Wg, s)
-	}()
-	Wg.Add(1)
-	go func() {
-		bWith = MostWithDate(start, &Wg, s)
-	}()
-	Wg.Add(1)
-	go func() {
-		cWith = WithTime(&Wg, s)
-	}()
-	Wg.Add(1)
-	go func() {
-		dWith = WithDate(&Wg, s)
-	}()
-	Wg.Wait()
-	s = nil
-	buf = nil
+	ac := make(chan string)
+	bc := make(chan string)
+	cc := make(chan string)
+	dc := make(chan string)
+	go MostWithA(ac, s)
+	go MostWithDate(start, bc, s)
+	go WithTime(cc, s)
+	go WithDate(dc, s)
+	aWith := <-ac
+	bWith := <-bc
+	cWith := <-cc
+	dWith := <-dc
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWithA(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithA(ac chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
@@ -168,9 +157,11 @@ func MostWithA(Wg *sync.WaitGroup, s []string) string {
 
 	sort.Slice(withSort, func(i, j int) bool {
 		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
-			return a > b
+			ac <- a > b
+			return
 		}
-		return withSort[i] < withSort[j]
+		ac <- withSort[i] < withSort[j]
+		return
 	})
 
 	var i int = 0
@@ -181,11 +172,11 @@ func MostWithA(Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-	return txt.String()
+	ac <- txt.String()
+	return
 }
 
-func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithDate(start string, bc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	startDate, _ := time.Parse("2006-01-02", start)
@@ -219,9 +210,11 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 
 	sort.Slice(withSort, func(i, j int) bool {
 		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
-			return a > b
+			bc <- a > b
+			return
 		}
-		return withSort[i] < withSort[j]
+		bc <- withSort[i] < withSort[j]
+		return
 	})
 
 	var i int = 0
@@ -232,12 +225,11 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-
-	return txt.String()
+	bc <- txt.String()
+	return
 }
 
-func WithTime(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithTime(cc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	// Make map for keeping
@@ -268,11 +260,11 @@ func WithTime(Wg *sync.WaitGroup, s []string) string {
 	for _, time := range withSort {
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
-	return txt.String()
+	cc <- txt.String()
+	return
 }
 
-func WithDate(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithDate(dc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
@@ -308,7 +300,8 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-	return txt.String()
+	dc <- txt.String()
+	return
 }
 
 // ---------------------------------------------------------------------------------------------------
