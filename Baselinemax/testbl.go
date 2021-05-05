@@ -69,7 +69,7 @@ func main() {
 		p.X.Label.Text = "Time(s)"
 		p.Y.Label.Text = "Transactions(time)"
 
-		for i := 0; i < min; i-- {
+		for i := 0; i < min; i++ {
 			time.Sleep(time.Second)
 			temp3 := counttana + countthis + counttget
 			points[i].X = float64(i)
