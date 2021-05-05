@@ -21,6 +21,7 @@ var mwd sync.Mutex
 var mget sync.Mutex
 var mhis sync.Mutex
 var db *sql.DB
+var err error
 
 var sana = make(chan bool, 2)
 

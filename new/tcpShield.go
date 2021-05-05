@@ -31,7 +31,6 @@ func init() {
 }
 
 func main() {
-
 	myCache.InitLRU(5000)
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
