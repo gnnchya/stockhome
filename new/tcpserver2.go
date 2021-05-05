@@ -326,7 +326,7 @@ func rtDB(buf *bytes.Buffer) []string {
 	if err != nil {
 		fmt.Print(err)
 	}
-
+	defer row.Close()
 	// Slice each row
 	for row.Next() {
 		var itemID, amount int
