@@ -66,7 +66,7 @@ func send(con net.Conn, msg string) {
 }
 
 func sendhis(con net.Conn, msg []byte) {
-	temp := append(msg...)
+	temp := append(msg)
 	temp1 := append(temp, []byte(".")...)
 	con.Write(temp1)
 
