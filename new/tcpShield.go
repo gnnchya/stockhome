@@ -17,13 +17,13 @@ import (
 var myCache LRU
 var mutex = &sync.Mutex{}
 var Db *sql.DB
-
+var err error
 var sadd = make(chan bool, 500)
 var swd = make(chan bool, 500)
 var sget = make(chan bool, 500)
 
 func init(){
-	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
