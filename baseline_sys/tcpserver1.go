@@ -58,7 +58,7 @@ func rec(con net.Conn) {
 			date[2] = strings.TrimSpace(date[2])
 			send(con, analysis(date[0], date[1], date[2]))
 		case "his":
-			sendhis(con, his(msg))
+			send(con, his(msg))
 		case "add":
 			send(con, access(msg))
 		case "wd":

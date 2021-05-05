@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"database/sql"
 	"fmt"
 	"net"
@@ -59,21 +58,13 @@ func rec(con net.Conn) {
 			date[2] = strings.TrimSpace(date[2])
 			send(con, analysis(date[0], date[1], date[2]))
 		case "his":
-			sendhis(con, his(msg[1]))
+			send(con, his(msg))
 		case "add":
-			id := strings.Split(msg[1], "-")
-			id[0] = strings.TrimSpace(id[0])
-			id[1] = strings.TrimSpace(id[1])
-			id[2] = strings.TrimSpace(id[2])
-			send(con, add(id[0], id[1], id[2]))
+			send(con, access(msg))
 		case "wd":
-			id := strings.Split(msg[1], "-")
-			id[0] = strings.TrimSpace(id[0])
-			id[1] = strings.TrimSpace(id[1])
-			id[2] = strings.TrimSpace(id[2])
-			send(con, withdraw(id[0], id[1], id[2]))
+			send(con, access(msg))
 		case "get":
-			send(con, getItemAmount(msg[1]))
+			send(con, access(msg))
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
@@ -89,11 +80,36 @@ func send(con net.Conn, msg string) {
 
 }
 
-func sendhis(con net.Conn, msg []byte) {
-	temp := append([]byte("Server: "), msg...)
-	temp1 := append(temp, []byte(".")...)
-	con.Write(temp1)
+func his(msg string) string {
+	con, err := net.Dial("tcp", "139.59.116.139:5004")
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	con.Write([]byte(msg))
+	defer con.Close()
+	val, err := bufio.NewReader(con).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	return val
+}
 
+func access(msg string) string {
+	con, err := net.Dial("tcp", "143.198.195.15:5003")
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	con.Write([]byte(msg))
+	defer con.Close()
+	val, err := bufio.NewReader(con).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return "nil"
+	}
+	return val
 }
 
 var db *sql.DB
@@ -288,111 +304,4 @@ func WithDate() string {
 	}
 	defer row.Close()
 	return txt.String()
-}
-
-func add(userID string, itemID string, itemAmount string) string {
-
-	var checkID, stock int
-	var statement string
-	itemID2, _ := strconv.Atoi(itemID)
-	amount, _ := strconv.Atoi(itemAmount)
-
-	check := db.QueryRow("SELECT itemID FROM stock WHERE itemID = (?)", itemID2).Scan(&checkID)
-
-	if check != nil {
-		_, err := db.Exec("INSERT INTO stock VALUES (?, ?)", itemID, amount)
-
-		if err != nil {
-			fmt.Println(err)
-		}
-		statement = fmt.Sprint("Added %d to database (%d units) | Item in Stock: %d\n", itemID, amount, amount)
-
-	} else {
-		check := db.QueryRow("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID).Scan(&checkID, &stock)
-
-		if check != nil {
-			fmt.Println("Error: Item does not exist in database")
-		} else {
-			_, err := db.Exec("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock+amount, itemID2)
-
-			if err != nil {
-				fmt.Println(err)
-				return "error happended in addExist"
-			}
-			statement = fmt.Sprintf("Added %s to database (%d units) | Item in Stock: %d.", itemID, amount, stock+amount)
-		}
-	}
-	fmt.Println(statement)
-	return itemID + "-" + strconv.Itoa(stock-amount)
-}
-
-func withdraw(userID string, itemID string, itemAmount string) string {
-
-	var checkID, stock int
-	var statement string
-	itemID2, _ := strconv.Atoi(itemID)
-	amount, _ := strconv.Atoi(itemAmount)
-
-	check := db.QueryRow("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID2).Scan(&checkID, &stock)
-
-	if check != nil {
-		fmt.Println("Error: No item in stock")
-
-	} else if amount > stock {
-		fmt.Println("Error: Amount exceeds stock")
-
-	} else {
-		_, err := db.Exec("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock-amount, itemID2)
-
-		if err != nil {
-			fmt.Printf("\n")
-		}
-		statement = fmt.Sprintf("Withdrawn %s from database (%d units) | Item in Stock: %d.", itemID, amount, stock-amount)
-	}
-	fmt.Println(statement)
-
-	return itemID + "-" + strconv.Itoa(stock-amount)
-}
-
-func getItemAmount(itemID string) string {
-
-	var amount int
-	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
-
-	if check != nil {
-		return "Not in DB."
-	}
-	a := itemID + "-" + strconv.Itoa(amount) + "."
-	fmt.Println(a)
-	return a
-}
-
-func his(filename string) []byte {
-	Date := filename[0:4] + "-" + filename[4:6]
-	buf := bytes.NewBuffer(make([]byte, 0))
-	col := []byte("userID,itemID,amount,date,time")
-	buf.Write(col)
-	startDate := Date + "-01" //2021-02-01
-	endDate := Date + "-31"   //2021-02-31
-
-	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
-	if err != nil {
-		fmt.Print(err)
-	}
-	// Slice each row
-	for row.Next() {
-		var userID, itemID, amount int
-		var date, time string
-		err = row.Scan(&userID, &itemID, &amount, &date, &time)
-		if err != nil {
-			fmt.Print(err)
-		}
-		// Write each line
-		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
-		buf.Write(line)
-	}
-	row.Close()
-
-	// Data that will be sent
-	return buf.Bytes()
 }

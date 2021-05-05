@@ -12,6 +12,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+var db *sql.DB
+
 func main() {
 	connect, err := net.Listen("tcp", "139.59.116.139:5004")
 	if err != nil {
