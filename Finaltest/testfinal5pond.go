@@ -20,7 +20,7 @@ import (
 
 var points plotter.XYs
 var p = plot.New()
-var sana = make(chan bool, 3000)
+var sana = make(chan bool, 4600)
 var shis = make(chan bool, 1)
 var scache = make(chan bool, 23000)
 var db *sql.DB
