@@ -17,10 +17,10 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int)
 	correct := "yes"
 
 	chance := rand.Intn(100-1) + 1
-	switch{
-	case chance <= 70: //70%
+	switch {
+	case chance <= 80: //70%
 		ran = rand.Intn(500-1) + 1
-	case chance <= 85: //15%
+	case chance <= 90: //15%
 		ran = rand.Intn(3000-501) + 501
 	case chance <= 95: //10%
 		ran = rand.Intn(7000-3001) + 3001
