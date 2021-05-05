@@ -26,6 +26,8 @@ func init(){
 	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
+	}
+	defer Db.close()
 }
 
 func main() {
