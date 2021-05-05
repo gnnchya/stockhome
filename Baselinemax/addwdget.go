@@ -4,42 +4,45 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
-	"time"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
-func DBcache(c chan string, ts int) (time.Duration, string, string, int) {
+func DBcache(c chan string, ts int) ( string, string, int) {
 	var mem1, mem2, output, rdact string
 	var ran int
-	var elapsed time.Duration
 
-	// rand.Seed(time.Now().UTC().UnixNano())
-	ran = rand.Intn(10000-1) + 1 //10000
+	chance := rand.Intn(100-1) + 1
+	switch {
+	case chance <= 80: //70%
+		ran = rand.Intn(500-1) + 1
+	case chance <= 90: //15%
+		ran = rand.Intn(3000-501) + 501
+	case chance <= 95: //10%
+		ran = rand.Intn(7000-3001) + 3001
+	case chance <= 100: //5%
+		ran = rand.Intn(10000-7001) + 7001
+	default:
+		ran = rand.Intn(10000-1) + 1
+	}
+
 	rdact = strconv.Itoa(ran)
 	rd := rand.Intn(100-1)+1
 	switch {
 	case rd <= 20: // 20% chance
 		rdact = "add " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(10-5)+5)
-		fmt.Println("---------------------\u001B[48;5;22mADD\u001B[0m--------------------- Client no.", ts)
+		fmt.Println("---------------------ADD--------------------- Client no.", ts)
 	case rd <= 55: // 35% chance
 		rdact = "wd " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(5-1)+1)
-		fmt.Println("-------------------\u001B[48;5;88mWITHDRAW\u001B[0m------------------ Client no.", ts)
+		fmt.Println("-------------------WITHDRAW------------------ Client no.", ts)
 	case rd <= 100: // 45% chance
 		rdact = "get " + rdact
-		fmt.Println("-------------------\u001B[48;5;25mACQUIRE\u001B[0m------------------- Client no.", ts)
+		fmt.Println("-------------------ACQUIRE------------------- Client no.", ts)
 
 	}
 
 	begin := <-c
 	if begin == "begin" {
-		//fmt.Println(rdact)
-		start := time.Now()
-
 		c <- rdact
-
 		output = <-c
-		elapsed = time.Since(start)
 		mem1 = <-c
 		mem2 = <-c
 
@@ -51,7 +54,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, int) {
 
 	done := <-c
 	if done == "done" {
-		return elapsed, mem1, mem2, rd
+		return mem1, mem2, rd
 	}
-	return elapsed, mem1, mem2, rd
+	return  mem1, mem2, rd
 }

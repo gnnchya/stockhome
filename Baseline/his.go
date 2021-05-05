@@ -1,3 +1,4 @@
+//ref :https://stackoverflow.com/questions/43495745/how-to-generate-random-date-in-go-lang/43497333
 package main
 
 import (
@@ -21,7 +22,6 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string) {
 	begin := <-c
 	if begin == "begin" {
 		fmt.Println("-------------------\u001B[48;5;208mHISTORY\u001B[0m------------------- Client no.", ts)
-		//fmt.Println(randate1)
 		go retrieve(rd, clb)
 		start := time.Now()
 
@@ -43,22 +43,17 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string) {
 	}
 
 	if output != "None" {
-		check := <-clb + "."
-		if output == check {
-			//fmt.Println("\033[32m -->Correct output\033[0m")
-		} else {
-			//fmt.Println("\033[31m -->Incorrect output\033[0m")
+		if output != <-clb + "."{
 			correct = "no"
 		}
 	} else {
-		//fmt.Println("## ERROR ##")
 		correct = "nil"
 	}
-	//fmt.Println("History time elapsed: ", elapsed)
 	return elapsed, mem1, mem2, correct
 }
-//
+
 func retrieve(Date string, clb chan string) {
+	defer func() { <-shis }()
 	buf := bytes.NewBuffer(make([]byte, 0))
 	col := []byte("userID,itemID,amount,date,time")
 	buf.Write(col)
@@ -87,11 +82,19 @@ func retrieve(Date string, clb chan string) {
 }
 
 func randate() string {
-	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
-	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	var min,max int64
+	chance := rand.Intn(100)
+	switch {
+	case chance <= 80: //80%
+		min = time.Date(2019, 3, 1, 0, 0, 0, 0, time.UTC).Unix()
+		max = time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
+	case chance <=100: //20%
+		min = time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+		max = time.Date(2019, 3, 30, 0, 0, 0, 0, time.UTC).Unix()
+	}
+
 	delta := max - min
 
-	//rand.Seed(time.Now().UTC().UnixNano())
 	sec := rand.Int63n(delta) + min
 	date := time.Unix(sec, 0)
 	str := date.Format("2006-01")
