@@ -352,7 +352,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 		page := l.pageList.addFrontPage(itemID, GetAmountVal)
 		l.size++
 		l.PageMap[itemID] = page
-		return GetAmountVal, "false"
+		return GetAmountVal, "True"
 	}
 }
 
