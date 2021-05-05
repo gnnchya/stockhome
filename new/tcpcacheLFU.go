@@ -20,6 +20,9 @@ import (
 
 var shis = make(chan bool, 1)
 var supd = make(chan bool, 1)
+var en = make(chan bool, 1)
+var de = make(chan bool, 1)
+
 
 // var m sync.Mutex
 
@@ -193,6 +196,7 @@ func (q *Queue) update(n *Node) {
 		nt.prev = n.prev
 		n.prev, nt.next = nt, n
 	}
+	<-supd
 	return
 }
 
@@ -211,25 +215,27 @@ func (q *Queue) printQ() {
 }
 
 func (c *Cache) set(q *Queue, itemId int, value []byte) {
-	defer func() { <-shis }()
-	shis <- true
 	valSize := len(value)
-	if _, ok := c.block[itemId]; ok {
-		c.block[itemId].value = value
-		q.update(c.block[itemId])
+	if item, ok := c.block[itemId]; ok {
+		item.value = value
+		q.update(item)
 		return
 	} else if c.size+valSize < c.capacity {
+		en <- true
 		c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
 		q.enQ(c.block[itemId])
 		c.size += valSize
+		<-en
 		return
 	}
+	de <- true
 	for c.size+valSize > c.capacity {
 		q.deQ("Lfu")
 	}
 	c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
 	q.enQ(c.block[itemId])
 	c.size += valSize
+	<-de
 	return
 }
 
@@ -299,7 +305,6 @@ func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, s
 		}
 		row.Close()
 
-		// wg.Add(1)
 		go Save(filename, buf.Bytes())
 		go c.set(q, filename, buf.Bytes())
 		return buf.Bytes()
@@ -377,13 +382,3 @@ func (c *Cache) printCache() {
 	txt = txt[:len(txt)-1] + "]"
 	fmt.Println(txt)
 }
-
-// func history(daterequest int) []byte {
-// 	// var err error
-// 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
-// 	// defer db.Close()
-// 	// if err != nil {
-// 	// 	fmt.Println("Error: Cannot open database")
-// 	// }
-// 	return Lfu.get(&Cache_queue, daterequest)
-// }
