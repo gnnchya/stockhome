@@ -326,7 +326,8 @@ func rtDB(buf *bytes.Buffer) []string {
 		fmt.Println("Error: Cannot open database")
 	}
 	defer db.Close()
-	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
+	day := time.Now().AddDate(0, 0, -1)
+	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
 	if err != nil {
 		fmt.Print(err)
 	}
