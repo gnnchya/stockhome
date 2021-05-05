@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
 	// "sync"
 
 	"github.com/ricochet2200/go-disk-usage/du"
@@ -94,6 +95,7 @@ var Cache_queue Queue = Queue{Head: nil, Tail: nil}
 // saved file filename
 var Namelist Queue = Queue{nil, nil}
 var Files = make(map[int]*Node)
+
 // var wg sync.WaitGroup
 // var mu sync.Mutex
 
@@ -172,7 +174,7 @@ func (q *Queue) deQ(list string) {
 }
 
 func (q *Queue) update(n *Node) {
-	defer func() { <-supd }() 
+	defer func() { <-supd }()
 	supd <- true
 	n.count++
 	for n.next != nil && n.count > n.next.count {
@@ -209,7 +211,7 @@ func (q *Queue) printQ() {
 }
 
 func (c *Cache) set(q *Queue, itemId int, value []byte) {
-	defer func() { <-shis }() 
+	defer func() { <-shis }()
 	shis <- true
 	valSize := len(value)
 	if _, ok := c.block[itemId]; ok {
@@ -232,7 +234,7 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 }
 
 func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
-	// defer func() { <-shis }() 
+	// defer func() { <-shis }()
 	// m.Lock()
 	// defer m.Unlock()
 	// wg.Add(1)
@@ -268,7 +270,7 @@ func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, s
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
 		// Read(c, q, name)
-		// return 
+		// return
 		return Read(c, q, name)
 	} else {
 		fmt.Println("From DB")
@@ -370,11 +372,11 @@ func Read(c *Cache, q *Queue, filename string) []byte {
 func (c *Cache) printCache() {
 	txt := "Cache["
 	for k, _ := range c.block {
-	 txt += strconv.Itoa(k) + " "
+		txt += strconv.Itoa(k) + " "
 	}
 	txt = txt[:len(txt)-1] + "]"
 	fmt.Println(txt)
-   }
+}
 
 // func history(daterequest int) []byte {
 // 	// var err error
