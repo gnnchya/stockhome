@@ -26,6 +26,7 @@ import (
 var upd sync.Mutex
 var en sync.Mutex
 var de sync.Mutex
+
 // var m sync.Mutex
 
 func main() {
@@ -55,32 +56,26 @@ func main() {
 }
 
 func rec(con net.Conn) {
-	for {
-		// wgall.Add(1)
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println()
-		fmt.Print("Client: " + data)
-		msg := strings.Split(data, ":")
-		msg[0] = strings.TrimSpace(msg[0])
-		msg[1] = strings.TrimSpace(msg[1])
-		date, err := strconv.Atoi(msg[1])
-		if err != nil {
-			fmt.Println("err5", err)
-			return
-		}
-		// fmt.Println("history")
-		// shis <- true
-		a, b := Lfu.get(&Cache_queue, date)
-		// fmt.Println("finish")
-		send(con, a, b)
-		fmt.Println("Cache cap:", Lfu.capacity, "bytes, Cache used:", Lfu.size, "bytes\n")
-		Lfu.printCache()
-		// fmt.Println("hi")
+	defer con.Close()
+	data, err := bufio.NewReader(con).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	fmt.Println()
+	fmt.Print("Client: " + data)
+	msg := strings.Split(data, ":")
+	msg[0] = strings.TrimSpace(msg[0])
+	msg[1] = strings.TrimSpace(msg[1])
+	date, err := strconv.Atoi(msg[1])
+	if err != nil {
+		fmt.Println("err5", err)
+		return
+	}
+	a, b := Lfu.get(&Cache_queue, date)
+	send(con, a, b)
+	fmt.Println("Cache cap:", Lfu.capacity, "bytes, Cache used:", Lfu.size, "bytes\n")
+	Lfu.printCache()
 }
 
 func send(con net.Conn, msg []byte, state string) {
