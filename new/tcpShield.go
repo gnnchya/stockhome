@@ -17,9 +17,9 @@ import (
 var myCache LRU
 var mutex = &sync.Mutex{}
 
-var sadd = make(chan bool, 500)
-var swd = make(chan bool, 500)
-var sget = make(chan bool, 500)
+var sadd = make(chan bool, 100)
+var swd = make(chan bool, 100)
+var sget = make(chan bool, 100)
 
 func main() {
 
