@@ -23,7 +23,7 @@ var sget = make(chan bool, 500)
 
 func main() {
 
-	myCache.InitLRU(2500)
+	myCache.InitLRU(5000)
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
