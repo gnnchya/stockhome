@@ -178,7 +178,7 @@ func fb2(con net.Conn, ser2 net.Conn) {
 
 func checkconnect(port string) bool {
 	t := 600 * time.Second
-	con, err := net.DialTimeout("tcp", port, t)
+	con, err := net.DialTimeout("tcp4", port, t)
 	if err != nil {
 		fmt.Println("Unhealthy: Server " + port + " is Down")
 		// fmt.Println(err)

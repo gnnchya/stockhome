@@ -337,14 +337,14 @@ func rtDB() []string {
 
 func add(userID string, itemID string, itemAmount string, eir error) string {
 	// madd.Lock()
-	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
+	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
 	if eir != nil {
-		fmt.Println(err)
+		fmt.Println(err, "00000")
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
@@ -353,6 +353,7 @@ func add(userID string, itemID string, itemAmount string, eir error) string {
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
+		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
@@ -363,14 +364,14 @@ func add(userID string, itemID string, itemAmount string, eir error) string {
 func withdraw(userID string, itemID string, itemAmount string, eir error) string {
 	// mwd.Lock()
 
-	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
+	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
 	if eir != nil {
-		fmt.Println(err)
+		fmt.Println(err, "00000")
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
@@ -379,6 +380,7 @@ func withdraw(userID string, itemID string, itemAmount string, eir error) string
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
+		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
@@ -389,14 +391,14 @@ func withdraw(userID string, itemID string, itemAmount string, eir error) string
 func getItemAmount(itemID string, eir error) string {
 	// mget.Lock()
 
-	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
+	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
 	if eir != nil {
-		fmt.Println(err)
+		fmt.Println(err, "00000")
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
@@ -405,6 +407,7 @@ func getItemAmount(itemID string, eir error) string {
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
+		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
