@@ -53,78 +53,85 @@ func main() {
 }
 
 func rec(con net.Conn) {
-	defer con.Close()
-	data, err := bufio.NewReader(con).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return
+	for {
+		defer con.Close()
+		data, err := bufio.NewReader(con).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(data)
+		msg := strings.Split(data, ":")
+		msg[0] = strings.TrimSpace(msg[0])
+		switch msg[0] {
+		case "add":
+			msg[1] = strings.TrimSpace(msg[1])
+			id := strings.Split(msg[1], "-")
+			id[0] = strings.TrimSpace(id[0])
+			id[1] = strings.TrimSpace(id[1])
+			id[2] = strings.TrimSpace(id[2])
+			iid, err := strconv.Atoi(id[0])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			amt, err := strconv.Atoi(id[1])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			uid, err := strconv.Atoi(id[2])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			send(con, addToDB(iid, amt, uid))
+			sadd <- true
+			addNew(iid, amt, uid)
+			return
+		case "wd":
+			msg[1] = strings.TrimSpace(msg[1])
+			id := strings.Split(msg[1], "-")
+			id[0] = strings.TrimSpace(id[0])
+			id[1] = strings.TrimSpace(id[1])
+			id[2] = strings.TrimSpace(id[2])
+			iid, err := strconv.Atoi(id[0])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			amt, err := strconv.Atoi(id[1])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			uid, err := strconv.Atoi(id[2])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			send(con, withDrawToDB(iid, amt*(-1), uid))
+			swd <- true
+			withdraw(iid, amt, uid)
+			return
+		case "get":
+			msg[1] = strings.TrimSpace(msg[1])
+			iid, err := strconv.Atoi(msg[1])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			send(con, getAmountbyItem(iid))
+			return
+		case "exit":
+			con.Close()
+			return
+		default:
+			send(con, "DB Error!")
+			return
+		}
 	}
-	fmt.Println(data)
-	msg := strings.Split(data, ":")
-	msg[0] = strings.TrimSpace(msg[0])
-	switch msg[0] {
-	case "add":
-		msg[1] = strings.TrimSpace(msg[1])
-		id := strings.Split(msg[1], "-")
-		id[0] = strings.TrimSpace(id[0])
-		id[1] = strings.TrimSpace(id[1])
-		id[2] = strings.TrimSpace(id[2])
-		iid, err := strconv.Atoi(id[0])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		amt, err := strconv.Atoi(id[1])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		uid, err := strconv.Atoi(id[2])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		send(con, addToDB(iid, amt, uid))
-		sadd <- true
-		addNew(iid, amt, uid)
-	case "wd":
-		msg[1] = strings.TrimSpace(msg[1])
-		id := strings.Split(msg[1], "-")
-		id[0] = strings.TrimSpace(id[0])
-		id[1] = strings.TrimSpace(id[1])
-		id[2] = strings.TrimSpace(id[2])
-		iid, err := strconv.Atoi(id[0])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		amt, err := strconv.Atoi(id[1])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		uid, err := strconv.Atoi(id[2])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		send(con, withDrawToDB(iid, amt*(-1), uid))
-		swd <- true
-		withdraw(iid, amt, uid)
-	case "get":
-		msg[1] = strings.TrimSpace(msg[1])
-		iid, err := strconv.Atoi(msg[1])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		send(con, getAmountbyItem(iid))
-	case "exit":
-		con.Close()
-	default:
-		send(con, "DB Error!")
-	}
-	fmt.Println("POnd")
+
 	return
 }
 
