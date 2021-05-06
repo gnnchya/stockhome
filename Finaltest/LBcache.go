@@ -28,6 +28,7 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 
 		output = <-c
 		elapsed = time.Since(start)
+		shis <- true
 		go retrieve(rd, clb)
 		mem1 = <-c
 		mem2 = <-c
@@ -52,7 +53,6 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 	}
 	return elapsed, mem1, mem2, correct, state
 }
-
 
 func retrieve(Date string, clb chan string) {
 	defer func() { <-shis }()
@@ -85,13 +85,13 @@ func retrieve(Date string, clb chan string) {
 }
 
 func randate() string {
-	var min,max int64
+	var min, max int64
 	chance := rand.Intn(100)
 	switch {
 	case chance <= 80: //80%
 		min = time.Date(2019, 3, 1, 0, 0, 0, 0, time.UTC).Unix()
 		max = time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
-	case chance <=100: //20%
+	case chance <= 100: //20%
 		min = time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
 		max = time.Date(2019, 3, 30, 0, 0, 0, 0, time.UTC).Unix()
 	}

@@ -68,33 +68,22 @@ func randomTimestamp() string {
 
 // analysis code ****************************************************
 func analysis1(start string, cana chan string) {
-	var aWith, bWith, cWith, dWith string
-	Wg := sync.WaitGroup{}
-
+	var start string = year + "-" + month + "-" + day
 	buf := bytes.NewBuffer(make([]byte, 0))
+	sana <- true
 	s := rtDB(buf)
-
-	Wg.Add(1)
-	go func() {
-		aWith = MostWithA(&Wg, s)
-	}()
-
-	Wg.Add(1)
-	go func() {
-		bWith = MostWithDate(start, &Wg, s)
-	}()
-
-	Wg.Add(1)
-	go func() {
-		cWith = WithTime(&Wg, s)
-	}()
-
-	Wg.Add(1)
-	go func() {
-		dWith = WithDate(&Wg, s)
-	}()
-
-	Wg.Wait()
+	ac := make(chan string)
+	bc := make(chan string)
+	cc := make(chan string)
+	dc := make(chan string)
+	go MostWithA(ac, s)
+	go MostWithDate(start, bc, s)
+	go WithTime(cc, s)
+	go WithDate(dc, s)
+	aWith := <-ac
+	bWith := <-bc
+	cWith := <-cc
+	dWith := <-dc
 	cana <- (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -274,7 +263,6 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 // ---------------------------------------------------------------------------------------------------
 func rtDB(buf *bytes.Buffer) []string {
 	defer func() { <-sana }()
-
 	var err error
 	day := time.Now().AddDate(0, 0, -1)
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)

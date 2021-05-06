@@ -83,8 +83,8 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
-		sadd <- true
 		send(con, addToDB(iid, amt, uid))
+		sadd <- true
 		addNew(iid, amt, uid)
 	case "wd":
 		msg[1] = strings.TrimSpace(msg[1])
@@ -107,8 +107,8 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
-		swd <- true
 		send(con, withDrawToDB(iid, amt*(-1), uid))
+		swd <- true
 		withdraw(iid, amt, uid)
 	case "get":
 		msg[1] = strings.TrimSpace(msg[1])

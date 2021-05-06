@@ -187,15 +187,12 @@ func main() {
 
 					switch {
 					case rdt <= 60: // 60% chance
-						scache <- true
 						counttget++
 						dbtest(c1, ts)
 					case rdt <= 90: // 30% chance
-						shis <- true
 						countthis++
 						histest(c1, ts)
 					case rdt <= 100: // 10% chance
-						sana <- true
 						counttana++
 						anatest(c1, ts)
 					}
