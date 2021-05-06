@@ -326,7 +326,6 @@ func rtDB(buf *bytes.Buffer) []string {
 		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
 		buf.Write(line)
 	}
-
 	s := strings.Split(buf.String(), ",")
 	return s
 }
