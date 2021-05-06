@@ -124,7 +124,7 @@ func rec(con net.Conn) {
 	default:
 		send(con, "DB Error!")
 	}
-	fmt.Pirintln("POnd")
+	fmt.Println("POnd")
 	return
 }
 
