@@ -28,7 +28,7 @@ func main() {
 	for {
 		con, err := connect.Accept()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("con", err)
 			return
 		}
 		defer con.Close()
@@ -41,7 +41,7 @@ func rec(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("rec", err)
 			return
 		}
 		fmt.Println()
