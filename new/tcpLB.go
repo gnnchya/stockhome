@@ -20,7 +20,7 @@ var wg2 sync.WaitGroup
 var m sync.Mutex
 
 func main() {
-	connect, err := net.Listen("tcp", "128.199.70.176:9999")
+	connect, err := net.Listen("tcp4", "128.199.70.176:9999")
 	if err != nil {
 		// fmt.Println("err1", err)
 		return
@@ -64,7 +64,7 @@ func main() {
 func rec1(con net.Conn) {
 	wg1.Add(1)
 	mem1++
-	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
+	ser1, err := net.Dial("tcp4", "128.199.70.252:5001")
 	if err != nil {
 		// fmt.Println("err3", err)
 		mem1--
@@ -122,7 +122,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 func rec2(con net.Conn) {
 	wg2.Add(1)
 	mem2++
-	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
+	ser2, err := net.Dial("tcp4", "143.198.219.89:5002")
 	if err != nil {
 		// fmt.Println("err7", err)
 		con.Close()
