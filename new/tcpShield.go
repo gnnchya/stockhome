@@ -49,6 +49,7 @@ func main() {
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}
+	return
 }
 
 func rec(con net.Conn) {
@@ -123,6 +124,7 @@ func rec(con net.Conn) {
 	default:
 		send(con, "DB Error!")
 	}
+	fmt.Pirintln("POnd")
 	return
 }
 
