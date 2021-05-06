@@ -136,7 +136,7 @@ func GetAmount(itemID int) string {
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-	defer Db.close()
+	defer Db.Close()
 	var amount int
 	check := Db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
@@ -152,7 +152,7 @@ func addNew(itemID int, amount int, userID int) string {
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-	defer Db.close()
+	defer Db.Close()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
 	var checkID int
@@ -206,7 +206,7 @@ func withdraw(itemID int, amount int, userID int) string {
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-	defer Db.close()
+	defer Db.Close()
 	var checkID, stock int
 	var statement string
 
