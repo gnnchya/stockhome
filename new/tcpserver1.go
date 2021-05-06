@@ -106,7 +106,7 @@ func his(msg string) string {
 	return data
 }
 
-func Analysis(year string, month string, day string) string {
+func analysis(year string, month string, day string) string {
 	// mana.Lock()
 	var start string = year + "-" + month + "-" + day
 	sana <- true
@@ -169,7 +169,6 @@ func MostWithA(ac chan string, s []string) {
 		}
 	}
 	ac <- txt.String()
-	txt = nil
 	return
 }
 
@@ -221,7 +220,6 @@ func MostWithDate(start string, bc chan string, s []string) {
 		}
 	}
 	bc <- txt.String()
-	txt = strings.Builder
 	return
 }
 
@@ -257,7 +255,6 @@ func WithTime(cc chan string, s []string) {
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
 	cc <- txt.String()
-	txt = nil
 	return
 }
 
@@ -298,7 +295,6 @@ func WithDate(dc chan string, s []string) {
 		}
 	}
 	dc <- txt.String()
-	txt = nil
 	return
 }
 
