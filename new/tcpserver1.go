@@ -52,7 +52,7 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			ana := analysis(date[0], date[1], date[2])
+			ana := Analysis(date[0], date[1], date[2])
 			send(con, ana)
 		case "add":
 			id := strings.Split(msg[1], "-")
@@ -109,9 +109,8 @@ func his(msg string) string {
 func Analysis(year string, month string, day string) string {
 	// mana.Lock()
 	var start string = year + "-" + month + "-" + day
-	buf := bytes.NewBuffer(make([]byte, 0))
 	sana <- true
-	s := rtDB(buf)
+	s := rtDB()
 	ac := make(chan string)
 	bc := make(chan string)
 	cc := make(chan string)
@@ -301,8 +300,9 @@ func WithDate(dc chan string, s []string) {
 
 // ---------------------------------------------------------------------------------------------------
 
-func rtDB(buf *bytes.Buffer) []string {
+func rtDB() []string {
 	defer func() { <-sana }()
+	buf := bytes.NewBuffer(make([]byte, 0))
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -326,7 +326,6 @@ func rtDB(buf *bytes.Buffer) []string {
 		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
 		buf.Write(line)
 	}
-
 	s := strings.Split(buf.String(), ",")
 	return s
 }
