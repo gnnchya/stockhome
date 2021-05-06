@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -87,8 +86,7 @@ func analysis1(start string, cana chan string) {
 	cana <- (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWithA(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithA(ac chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
@@ -130,11 +128,11 @@ func MostWithA(Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-	return txt.String()
+	ac <- txt.String()
+	return
 }
 
-func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithDate(start string, bc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	startDate, _ := time.Parse("2006-01-02", start)
@@ -181,12 +179,11 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-
-	return txt.String()
+	bc <- txt.String()
+	return
 }
 
-func WithTime(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithTime(cc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	// Make map for keeping
@@ -217,11 +214,11 @@ func WithTime(Wg *sync.WaitGroup, s []string) string {
 	for _, time := range withSort {
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
-	return txt.String()
+	cc <- txt.String()
+	return
 }
 
-func WithDate(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithDate(dc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
@@ -257,7 +254,8 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-	return txt.String()
+	dc <- txt.String()
+	return
 }
 
 // ---------------------------------------------------------------------------------------------------
