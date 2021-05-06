@@ -49,40 +49,26 @@ func rec(con net.Conn) {
 		msg := strings.Split(data, ":")
 		msg[0] = strings.TrimSpace(msg[0])
 		msg[1] = strings.TrimSpace(msg[1])
-		switch msg[0] {
-		case "ana":
+		if msg[0] == "ana" {
 			date := strings.Split(msg[1], "-")
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
-		case "add":
-			id := strings.Split(msg[1], "-")
-			id[0] = strings.TrimSpace(id[0])
-			id[1] = strings.TrimSpace(id[1])
-			id[2] = strings.TrimSpace(id[2])
-			add := add(id[0], id[1], id[2], err)
-			send(con, add)
-		case "wd":
-			id := strings.Split(msg[1], "-")
-			id[0] = strings.TrimSpace(id[0])
-			id[1] = strings.TrimSpace(id[1])
-			id[2] = strings.TrimSpace(id[2])
-			wd := withdraw(id[0], id[1], id[2], err)
-			send(con, wd)
-		case "get":
-			get := getItemAmount(msg[1], err)
+		} else if msg[0] == "add" || msg[0] == "wd" || msg[0] == "get" {
+			get := get(msg[1], err)
 			send(con, get)
-		case "exit":
+		} else if msg[0] == "exit" {
 			con.Close()
 			fmt.Println("EOF")
 			return
-		case "his":
+		} else if msg[0] == "his" {
 			his := his(data)
 			send(con, his)
-		default:
+		} else {
 			send(con, "Some How Error!")
+
 		}
 	}
 }
@@ -335,70 +321,70 @@ func rtDB() []string {
 	return s
 }
 
-func add(userID string, itemID string, itemAmount string, eir error) string {
-	// madd.Lock()
-	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	if eir != nil {
-		fmt.Println(err, "00000")
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
-	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
-	val, err := bufio.NewReader(cs).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	fmt.Println(val)
-	// madd.Unlock()
-	return val
-}
+// func add(userID string, itemID string, itemAmount string, eir error) string {
+// 	// madd.Lock()
+// 	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		cs.Close()
+// 		return "nil" + "*" + "no" + "\n"
+// 	}
+// 	if eir != nil {
+// 		fmt.Println(err, "00000")
+// 		cs.Close()
+// 		return "nil" + "*" + "no" + "\n"
+// 	}
+// 	defer cs.Close()
+// 	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
+// 	val, err := bufio.NewReader(cs).ReadString('\n')
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		cs.Close()
+// 		return "nil" + "*" + "no" + "\n"
+// 	}
+// 	fmt.Println(val)
+// 	// madd.Unlock()
+// 	return val
+// }
 
-func withdraw(userID string, itemID string, itemAmount string, eir error) string {
-	// mwd.Lock()
+// func withdraw(userID string, itemID string, itemAmount string, eir error) string {
+// 	// mwd.Lock()
 
-	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	if eir != nil {
-		fmt.Println(err, "00000")
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
-	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
-	val, err := bufio.NewReader(cs).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	fmt.Println(val)
-	// mwd.Unlock()
-	return val
-}
+// 	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		cs.Close()
+// 		return "nil" + "*" + "no" + "\n"
+// 	}
+// 	if eir != nil {
+// 		fmt.Println(err, "00000")
+// 		cs.Close()
+// 		return "nil" + "*" + "no" + "\n"
+// 	}
+// 	defer cs.Close()
+// 	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
+// 	val, err := bufio.NewReader(cs).ReadString('\n')
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		cs.Close()
+// 		return "nil" + "*" + "no" + "\n"
+// 	}
+// 	fmt.Println(val)
+// 	// mwd.Unlock()
+// 	return val
+// }
 
-func getItemAmount(itemID string, eir error) string {
+func get(itemID string, eir error) string {
 	// mget.Lock()
 
-	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
+	cs, err := net.Dialt("tcp4", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
 	if eir != nil {
-		fmt.Println(err, "00000")
+		fmt.Println(err, "000000000")
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
