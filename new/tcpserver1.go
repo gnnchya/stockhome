@@ -35,6 +35,10 @@ func main() {
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}
+	go func(){
+		time.Sleep(50 * time.Second)
+		p.Stop()
+	}()
 }
 
 func rec(con net.Conn) {
@@ -83,8 +87,6 @@ func rec(con net.Conn) {
 			his := his(data)
 			send(con, his)
 			debug.FreeOSMemory()
-			p.Stop()
-			return
 		default:
 			send(con, "Some How Error!")
 		}
