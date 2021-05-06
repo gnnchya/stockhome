@@ -31,6 +31,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		defer con.Close()
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}

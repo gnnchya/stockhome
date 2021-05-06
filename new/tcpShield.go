@@ -123,11 +123,13 @@ func rec(con net.Conn) {
 	default:
 		send(con, "DB Error!")
 	}
+	return
 }
 
 func send(con net.Conn, msg string) {
 	fmt.Println("msg:", msg)
 	con.Write([]byte("Database: " + msg))
+	return
 }
 
 func GetAmount(itemID int) string {

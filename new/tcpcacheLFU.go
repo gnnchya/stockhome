@@ -44,6 +44,7 @@ func main() {
 			// connect.Close()
 			return
 		}
+		defer con.Close()
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 		// go send(con, rec(con))
@@ -71,6 +72,7 @@ func rec(con net.Conn) {
 	send(con, a, b)
 	fmt.Println("Cache cap:", Lfu.capacity, "bytes, Cache used:", Lfu.size, "bytes\n")
 	Lfu.printCache()
+	return
 }
 
 func send(con net.Conn, msg []byte, state string) {
@@ -79,6 +81,7 @@ func send(con net.Conn, msg []byte, state string) {
 	temp1 := append(temp, []byte(state)...)
 	temp2 := append(temp1, []byte(".")...)
 	con.Write(temp2)
+	return
 }
 
 // var db *sql.DB
