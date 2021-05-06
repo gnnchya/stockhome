@@ -48,7 +48,6 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 	if begin == "begin" {
 		start := time.Now()
 		c <- rdact
-
 		output = <-c
 		elapsed = time.Since(start)
 		scache <- true

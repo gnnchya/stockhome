@@ -22,13 +22,13 @@ var sadd = make(chan bool, 3800)
 var swd = make(chan bool, 6700)
 var sget = make(chan bool, 8700)
 
-func init() {
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	// 	defer Db.close()
-}
+// func init() {
+// 	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+// 	if err != nil {
+// 		fmt.Println("Error: Cannot open database")
+// 	}
+// 	defer Db.close()
+// }
 
 func main() {
 	myCache.InitLRU(5000)
@@ -117,7 +117,6 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
-		sget <- true
 		send(con, getAmountbyItem(iid))
 	case "exit":
 		con.Close()
@@ -132,6 +131,12 @@ func send(con net.Conn, msg string) {
 }
 
 func GetAmount(itemID int) string {
+	defer func() { <-sget }()
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer Db.close()
 	var amount int
 	check := Db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
@@ -143,6 +148,11 @@ func GetAmount(itemID int) string {
 
 func addNew(itemID int, amount int, userID int) string {
 	defer func() { <-sadd }()
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer Db.close()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
 	var checkID int
@@ -192,6 +202,11 @@ func addExist(itemID int, amount int, userID int, Db *sql.DB) string {
 
 func withdraw(itemID int, amount int, userID int) string {
 	defer func() { <-swd }()
+	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer Db.close()
 	var checkID, stock int
 	var statement string
 
@@ -319,7 +334,7 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
-	defer func() { <-sget }()
+
 	if find, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
 		val := find.currentAmount
@@ -333,6 +348,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 			delete(l.PageMap, key)
 		}
 		fmt.Println("Miss")
+		sget <- true
 		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		page := l.pageList.addFrontPage(itemID, GetAmountVal)
 		l.size++
