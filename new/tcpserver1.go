@@ -12,6 +12,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"runtime/debug"
 )
 
 var sana = make(chan bool, 1600)
