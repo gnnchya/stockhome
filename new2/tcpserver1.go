@@ -91,7 +91,7 @@ func send(con net.Conn, msg string) {
 
 func his(msg string) string {
 	// mhis.Lock()
-	con, err := net.Dial("tcp", "139.59.116.139:5004")
+	con, err := net.Dial("tcp4", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
 		return "nil"
@@ -384,7 +384,7 @@ func add(userID string, itemID string, itemAmount string) string {
 
 func withdraw(userID string, itemID string, itemAmount string) string {
 	// mwd.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
@@ -404,7 +404,7 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 
 func getItemAmount(itemID string) string {
 	// mget.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()

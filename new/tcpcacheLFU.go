@@ -29,7 +29,7 @@ var de sync.Mutex
 // var m sync.Mutex
 
 func main() {
-	connect, err := net.Listen("tcp", "139.59.116.139:5004")
+	connect, err := net.Listen("tcp4", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -44,10 +44,12 @@ func main() {
 			// connect.Close()
 			return
 		}
+		defer con.Close()
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 		// go send(con, rec(con))
 	}
+	return
 }
 
 func rec(con net.Conn) {
@@ -71,6 +73,7 @@ func rec(con net.Conn) {
 	send(con, a, b)
 	fmt.Println("Cache cap:", Lfu.capacity, "bytes, Cache used:", Lfu.size, "bytes\n")
 	Lfu.printCache()
+	return
 }
 
 func send(con net.Conn, msg []byte, state string) {
@@ -79,6 +82,7 @@ func send(con net.Conn, msg []byte, state string) {
 	temp1 := append(temp, []byte(state)...)
 	temp2 := append(temp1, []byte(".")...)
 	con.Write(temp2)
+	return
 }
 
 // var db *sql.DB

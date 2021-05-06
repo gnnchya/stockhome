@@ -31,8 +31,8 @@ var sget = make(chan bool, 8700)
 // }
 
 func main() {
-	myCache.InitLRU(5000)
-	connect, err := net.Listen("tcp", "143.198.195.15:5003")
+	myCache.InitLRU(2500)
+	connect, err := net.Listen("tcp4", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -49,6 +49,7 @@ func main() {
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}
+	return
 }
 
 func rec(con net.Conn) {
@@ -123,11 +124,14 @@ func rec(con net.Conn) {
 	default:
 		send(con, "DB Error!")
 	}
+	fmt.Println("POnd")
+	return
 }
 
 func send(con net.Conn, msg string) {
 	fmt.Println("msg:", msg)
 	con.Write([]byte("Database: " + msg))
+	return
 }
 
 func GetAmount(itemID int) string {
