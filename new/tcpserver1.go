@@ -135,6 +135,10 @@ func analysis(year string, month string, day string) string {
 	bWith := <-bc
 	cWith := <-cc
 	dWith := <-dc
+	close(ac)
+	close(bc)
+	close(cc)
+	close(dc)
 	defer debug.FreeOSMemory()
 	defer runtime.GC()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
