@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const creations = 200
+const creations = 10
 
 func TestAnalysis(t *testing.T) {
 	for i := 0; i < creations; i++ {
