@@ -323,7 +323,7 @@ func WithDate(dc chan string, s []string) {
 func rtDB() []string {
 	defer func() { <-sana }()
 	//buf := bytes.NewBuffer(make([]byte, 0))
-	cbuf = calloc.Make(reflect.(*bytes.Buffer), 0, 0).(*bytes.Buffer)
+	cbuf := calloc.Make(reflect.(*bytes.Buffer), 0, 0).(*bytes.Buffer)
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
