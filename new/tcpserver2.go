@@ -2,28 +2,18 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"database/sql"
 	"fmt"
 	"net"
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var mana sync.Mutex
-var madd sync.Mutex
-var mwd sync.Mutex
-var mget sync.Mutex
-var mhis sync.Mutex
-
-var sana = make(chan bool, 2)
-
-// var sana = make(chan bool, 1)
+var sana = make(chan bool, 1600)
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
@@ -61,7 +51,6 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			sana <- true
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 		case "add":
@@ -118,35 +107,25 @@ func his(msg string) string {
 
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
-	defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
-	var aWith, bWith, cWith, dWith string
-	Wg := sync.WaitGroup{}
-	buf := bytes.NewBuffer(make([]byte, 0))
-	s := rtDB(buf)
-	Wg.Add(1)
-	go func() {
-		aWith = MostWithA(&Wg, s)
-	}()
-	Wg.Add(1)
-	go func() {
-		bWith = MostWithDate(start, &Wg, s)
-	}()
-	Wg.Add(1)
-	go func() {
-		cWith = WithTime(&Wg, s)
-	}()
-	Wg.Add(1)
-	go func() {
-		dWith = WithDate(&Wg, s)
-	}()
-	Wg.Wait()
-	// mana.Unlock()
+	sana <- true
+	s := rtDB()
+	ac := make(chan string)
+	bc := make(chan string)
+	cc := make(chan string)
+	dc := make(chan string)
+	go MostWithA(ac, s)
+	go MostWithDate(start, bc, s)
+	go WithTime(cc, s)
+	go WithDate(dc, s)
+	aWith := <-ac
+	bWith := <-bc
+	cWith := <-cc
+	dWith := <-dc
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWithA(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithA(ac chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
@@ -181,42 +160,27 @@ func MostWithA(Wg *sync.WaitGroup, s []string) string {
 	})
 
 	var i int = 0
+	var str []string
 	for _, amount := range withSort {
-		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
+		str = append(str, strconv.Itoa(amount)+"|"+strconv.Itoa(withMap[amount]))
 		i++
 		if i >= 100 {
 			break
 		}
 	}
-	return txt.String()
+
+	ac <- (strings.Join(str, "\n")) + "\n"
+	return
 }
 
-func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithDate(start string, bc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	startDate, _ := time.Parse("2006-01-02", start)
 	var end = time.Now()
 
 	withMap := make(map[int]int)
-	// for count <= len(s) {
-	// 	if count+1 >= len(s) {
-	// 		break
-	// 	}
-	// 	amount, _ := strconv.Atoi(s[count+1])
-	// 	id, _ := strconv.Atoi(s[count])
-	// 	check, _ := time.Parse("2006-01-02", s[count+2])
-	// 	if check.After(startDate) && check.Before(end) {
-	// 		if val, ok := withMap[id]; ok {
-	// 			withMap[id] = amount + val
-	// 		} else {
-	// 			withMap[id] = amount
-	// 		}
-	// 	}
-
-	// 	count = count + 4
-	// }
-	for count < len(s) {
+	for count <= len(s) {
 		if count+1 >= len(s) {
 			break
 		}
@@ -249,19 +213,20 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 	})
 
 	var i int = 0
+	var str []string
 	for _, amount := range withSort {
-		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
+		str = append(str, strconv.Itoa(amount)+"|"+strconv.Itoa(withMap[amount]))
 		i++
 		if i >= 100 {
 			break
 		}
 	}
 
-	return txt.String()
+	bc <- (strings.Join(str, "\n")) + "\n"
+	return
 }
 
-func WithTime(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithTime(cc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	// Make map for keeping
@@ -289,35 +254,22 @@ func WithTime(Wg *sync.WaitGroup, s []string) string {
 	}
 	sort.Strings(withSort)
 
+	var str []string
 	for _, time := range withSort {
-		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
+		str = append(str, time+":00 - "+time+":59 | "+strconv.Itoa(withMap[time]))
 	}
-	return txt.String()
+
+	cc <- (strings.Join(str, "\n")) + "\n"
+	return
 }
 
-func WithDate(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithDate(dc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
 	// Make map for keeping
 	withMap := make(map[string]int)
-	// for count <= len(s) {
-	// 	if count+1 >= len(s) {
-	// 		break
-	// 	}
-	// 	amount, _ := strconv.Atoi(s[count+1])
-	// 	date := s[count+2]
-	// 	if val, ok := withMap[date]; ok {
-	// 		withMap[date] = amount + val
-	// 	} else {
-	// 		withMap[date] = amount
-	// 	}
-
-	// 	count = count + 4
-	// }
-
-	for count < len(s) {
+	for count <= len(s) {
 		if count+1 >= len(s) {
 			break
 		}
@@ -340,29 +292,37 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 	sort.Sort(sort.Reverse(sort.StringSlice(withSort)))
 
 	var i int = 0
+	var str []string
 	for _, date := range withSort {
-		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
+		str = append(str, date+"|"+strconv.Itoa(withMap[date]))
 		i++
 		if i >= 100 {
 			break
 		}
 	}
-	return txt.String()
+
+	dc <- (strings.Join(str, "\n")) + "\n"
+	return
 }
 
 // ---------------------------------------------------------------------------------------------------
 
-func rtDB(buf *bytes.Buffer) []string {
+func rtDB() []string {
+	defer func() { <-sana }()
+	var s []string
+
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
+
 	defer db.Close()
 	day := time.Now().AddDate(0, 0, -1)
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
 	if err != nil {
 		fmt.Print(err)
 	}
+	defer row.Close()
 
 	// Slice each row
 	for row.Next() {
@@ -373,11 +333,9 @@ func rtDB(buf *bytes.Buffer) []string {
 			fmt.Print(err)
 		}
 		// Write each line
-		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
-		buf.Write(line)
+		s = append(s, strconv.Itoa(itemID), strconv.Itoa(amount), date, time)
 	}
 
-	s := strings.Split(buf.String(), ",")
 	return s
 }
 

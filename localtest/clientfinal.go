@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	// "sync"
 	"time"
 )
 
@@ -16,7 +18,7 @@ func Client(c chan string) {
 	var err error
 
 	for {
-		con, err = net.Dial("tcp", "128.199.70.176:9999")
+		con, err = net.Dial("tcp", ":9999")
 		if err != nil && try >= 3 {
 			fmt.Println("error: ", err)
 			error3(c)
@@ -172,6 +174,7 @@ func wd(con net.Conn, com []string, c chan string) {
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
+	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -378,7 +381,6 @@ func ana(con net.Conn, com []string, c chan string) {
 
 func get(con net.Conn, com []string, c chan string) {
 	con.Write([]byte(com[0] + ": " + com[1] + "\n"))
-	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)

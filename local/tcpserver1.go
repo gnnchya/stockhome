@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
 	"fmt"
 	"net"
@@ -16,7 +17,7 @@ import (
 var sana = make(chan bool, 1600)
 
 func main() {
-	connect, err := net.Listen("tcp", "128.199.70.252:5001")
+	connect, err := net.Listen("tcp", ":5001")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -89,7 +90,7 @@ func send(con net.Conn, msg string) {
 
 func his(msg string) string {
 	// mhis.Lock()
-	con, err := net.Dial("tcp", "139.59.116.139:5004")
+	con, err := net.Dial("tcp", ":5004")
 	if err != nil {
 		fmt.Println(err)
 		return "nil"
@@ -160,16 +161,14 @@ func MostWithA(ac chan string, s []string) {
 	})
 
 	var i int = 0
-	var str []string
 	for _, amount := range withSort {
-		str = append(str, strconv.Itoa(amount)+"|"+strconv.Itoa(withMap[amount]))
+		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
 		i++
 		if i >= 100 {
 			break
 		}
 	}
-
-	ac <- (strings.Join(str, "\n")) + "\n"
+	ac <- txt.String()
 	return
 }
 
@@ -213,16 +212,14 @@ func MostWithDate(start string, bc chan string, s []string) {
 	})
 
 	var i int = 0
-	var str []string
 	for _, amount := range withSort {
-		str = append(str, strconv.Itoa(amount)+"|"+strconv.Itoa(withMap[amount]))
+		txt.WriteString(strconv.Itoa(amount) + "|" + strconv.Itoa(withMap[amount]) + "\n")
 		i++
 		if i >= 100 {
 			break
 		}
 	}
-
-	bc <- (strings.Join(str, "\n")) + "\n"
+	bc <- txt.String()
 	return
 }
 
@@ -254,12 +251,10 @@ func WithTime(cc chan string, s []string) {
 	}
 	sort.Strings(withSort)
 
-	var str []string
 	for _, time := range withSort {
-		str = append(str, time+":00 - "+time+":59 | "+strconv.Itoa(withMap[time]))
+		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
-
-	cc <- (strings.Join(str, "\n")) + "\n"
+	cc <- txt.String()
 	return
 }
 
@@ -292,16 +287,14 @@ func WithDate(dc chan string, s []string) {
 	sort.Sort(sort.Reverse(sort.StringSlice(withSort)))
 
 	var i int = 0
-	var str []string
 	for _, date := range withSort {
-		str = append(str, date+"|"+strconv.Itoa(withMap[date]))
+		txt.WriteString(date + "|" + strconv.Itoa(withMap[date]) + "\n")
 		i++
 		if i >= 100 {
 			break
 		}
 	}
-
-	dc <- (strings.Join(str, "\n")) + "\n"
+	dc <- txt.String()
 	return
 }
 
@@ -309,13 +302,11 @@ func WithDate(dc chan string, s []string) {
 
 func rtDB() []string {
 	defer func() { <-sana }()
-	var s []string
-
+	buf := bytes.NewBuffer(make([]byte, 0))
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-
 	defer db.Close()
 	day := time.Now().AddDate(0, 0, -1)
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
@@ -323,7 +314,6 @@ func rtDB() []string {
 		fmt.Print(err)
 	}
 	defer row.Close()
-
 	// Slice each row
 	for row.Next() {
 		var itemID, amount int
@@ -333,15 +323,16 @@ func rtDB() []string {
 			fmt.Print(err)
 		}
 		// Write each line
-		s = append(s, strconv.Itoa(itemID), strconv.Itoa(amount), date, time)
+		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
+		buf.Write(line)
 	}
-
-	return s
+	// s := strings.Split(buf.String(), ",")
+	return strings.Split(buf.String(), ",")
 }
 
 func add(userID string, itemID string, itemAmount string) string {
 	// madd.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
@@ -361,7 +352,7 @@ func add(userID string, itemID string, itemAmount string) string {
 
 func withdraw(userID string, itemID string, itemAmount string) string {
 	// mwd.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
@@ -381,7 +372,7 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 
 func getItemAmount(itemID string) string {
 	// mget.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", ":5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()

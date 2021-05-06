@@ -82,7 +82,6 @@ func rec(con net.Conn) {
 				fmt.Println(err)
 				return
 			}
-			
 			send(con, addToDB(iid, amt, uid))
 		case "wd":
 			msg[1] = strings.TrimSpace(msg[1])
@@ -184,7 +183,7 @@ func addNew(itemID int, amount int, userID int) string {
 	return statement
 }
 
-func addExist(itemID int, amount int, userID int, Db *sql.DB ) string {
+func addExist(itemID int, amount int, userID int, Db *sql.DB) string {
 	// For adding EXISTING items. For items CURRENTLY in the database.
 	// If you add a new item, it will die. Use addNew for items NOT in database
 	// defer Wg.Done()

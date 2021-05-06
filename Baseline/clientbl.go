@@ -7,7 +7,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	// "sync"
 	"time"
 )
 
@@ -17,7 +16,6 @@ func Client(c chan string) {
 	var err error
 
 	for {
-		// time.Sleep(1 * time.Millisecond)
 		con, err = net.Dial("tcp", "128.199.70.176:9999")
 		if err != nil && try >= 3 {
 			fmt.Println("error: ", err)
@@ -30,9 +28,7 @@ func Client(c chan string) {
 		}
 	}
 	defer con.Close()
-	// help()
 	for {
-		// fmt.Println("Command: ")
 		c <- "begin"
 		msg := <-c
 		com := strings.Split(msg, " ")
@@ -41,11 +37,9 @@ func Client(c chan string) {
 		case "add":
 			add(con, com, c)
 			c <- "done"
-			// wg.Done()
 		case "wd":
 			wd(con, com, c)
 			c <- "done"
-			// wg.Done()
 		case "his":
 			his(con, com, c)
 			c <- "done"
@@ -57,7 +51,6 @@ func Client(c chan string) {
 		case "get":
 			get(con, com, c)
 			c <- "done"
-			// wg.Done()
 		case "exit":
 			fmt.Println("Client disconnected")
 			con.Close()
@@ -121,7 +114,6 @@ func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
-	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -135,8 +127,6 @@ func add(con net.Conn, com []string, c chan string) { //add userid itemid amount
 	mem2 := strings.TrimSpace(msg[2])
 	c <- mem1
 	c <- mem2
-
-	//fmt.Println(msg[0])
 }
 
 func wd(con net.Conn, com []string, c chan string) {
@@ -180,7 +170,6 @@ func wd(con net.Conn, com []string, c chan string) {
 		return
 	}
 	con.Write([]byte(com[0] + ": " + com[1] + "-" + com[2] + "-" + com[3] + "\n"))
-	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -194,8 +183,6 @@ func wd(con net.Conn, com []string, c chan string) {
 	mem2 := strings.TrimSpace(msg[2])
 	c <- mem1
 	c <- mem2
-
-	//fmt.Println(msg[0])
 }
 
 func his(con net.Conn, com []string, c chan string) {
@@ -255,8 +242,6 @@ func his(con net.Conn, com []string, c chan string) {
 
 	con.Write([]byte(com[0] + ": " + since[0] + since[1] + "\n"))
 
-	//fmt.Println("Downloading...")
-
 	// Create a file that the client wants to download
 	dir, err := os.Getwd()
 	if err != nil {
@@ -296,8 +281,6 @@ func his(con net.Conn, com []string, c chan string) {
 		c <- mem2
 		return
 	}
-
-	//fmt.Println("Download completed")
 	return
 }
 
@@ -384,13 +367,10 @@ func ana(con net.Conn, com []string, c chan string) {
 	mem2 := strings.TrimSpace(msg[2])
 	c <- mem1
 	c <- mem2
-	// fmt.Println(msg[0])
-	//fmt.Println("Server: Response sent")
 }
 
 func get(con net.Conn, com []string, c chan string) {
 	con.Write([]byte(com[0] + ": " + com[1] + "\n"))
-	//fmt.Println("Waiting for respond...")
 	data, err := bufio.NewReader(con).ReadString('`')
 	if err != nil {
 		fmt.Println(err)
@@ -405,7 +385,6 @@ func get(con net.Conn, com []string, c chan string) {
 	c <- mem1
 	c <- mem2
 
-	//fmt.Println(msg[0])
 
 }
 
