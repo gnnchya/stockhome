@@ -132,7 +132,7 @@ func send(con net.Conn, msg string) {
 
 func GetAmount(itemID int) string {
 	defer func() { <-sget }()
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
@@ -148,7 +148,7 @@ func GetAmount(itemID int) string {
 
 func addNew(itemID int, amount int, userID int) string {
 	defer func() { <-sadd }()
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
@@ -202,7 +202,7 @@ func addExist(itemID int, amount int, userID int, Db *sql.DB) string {
 
 func withdraw(itemID int, amount int, userID int) string {
 	defer func() { <-swd }()
-	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
