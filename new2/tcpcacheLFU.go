@@ -29,7 +29,7 @@ var de sync.Mutex
 // var m sync.Mutex
 
 func main() {
-	connect, err := net.Listen("tcp", "139.59.116.139:5004")
+	connect, err := net.Listen("tcp4", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
 		return
