@@ -55,6 +55,7 @@ func rec(con net.Conn) {
 			date[2] = strings.TrimSpace(date[2])
 			ana := Analysis(date[0], date[1], date[2])
 			send(con, ana)
+			debug.FreeOSMemory()
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -79,6 +80,7 @@ func rec(con net.Conn) {
 		case "his":
 			his := his(data)
 			send(con, his)
+			debug.FreeOSMemory()
 		default:
 			send(con, "Some How Error!")
 		}
