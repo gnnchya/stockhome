@@ -13,6 +13,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/pkg/profile"
 )
 
 var sana = make(chan bool, 1600)
@@ -49,6 +50,7 @@ func rec(con net.Conn) {
 		msg[1] = strings.TrimSpace(msg[1])
 		switch msg[0] {
 		case "ana":
+			profile.Start(profile.MemProfile)
 			date := strings.Split(msg[1], "-")
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
@@ -56,6 +58,7 @@ func rec(con net.Conn) {
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 			debug.FreeOSMemory()
+			profile.Stop()
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
