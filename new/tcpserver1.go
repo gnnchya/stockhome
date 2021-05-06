@@ -26,6 +26,10 @@ func main() {
 		return
 	}
 	defer connect.Close()
+	go func(){
+		time.Sleep(50 * time.Second)
+		p.Stop()
+	}()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -35,10 +39,6 @@ func main() {
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}
-	go func(){
-		time.Sleep(50 * time.Second)
-		p.Stop()
-	}()
 }
 
 func rec(con net.Conn) {
