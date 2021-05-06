@@ -320,7 +320,7 @@ func WithDate(dc chan string, s []string) {
 
 func rtDB() []string {
 	defer func() { <-sana }()
-	buf := bytes.NewBuffer(make([]byte, 0, 16000000))
+	buf := bytes.NewBuffer(make([]byte, 0))
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -345,6 +345,7 @@ func rtDB() []string {
 		buf.Write(line)
 	}
 	s := strings.Split(buf.String(), ",")
+	buf.Reset()
 	runtime.GC()
 	debug.FreeOSMemory()
 	return s
