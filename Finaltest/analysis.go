@@ -67,7 +67,6 @@ func randomTimestamp() string {
 
 // analysis code ****************************************************
 func analysis1(start string, cana chan string) {
-	var start string = year + "-" + month + "-" + day
 	buf := bytes.NewBuffer(make([]byte, 0))
 	sana <- true
 	s := rtDB(buf)
