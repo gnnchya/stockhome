@@ -221,7 +221,7 @@ func MostWithDate(start string, bc chan string, s []string) {
 		}
 	}
 	bc <- txt.String()
-	txt = nil
+	txt = strings.Builder
 	return
 }
 
