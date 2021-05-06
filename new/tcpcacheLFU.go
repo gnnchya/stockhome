@@ -38,11 +38,7 @@ func main() {
 	}
 	defer connect.Close()
 	// var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer db.Close()
+
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -253,6 +249,7 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 		// filename := strconv.Itoa(itemId)
 		// retrieve(c, q, itemId)
 		fmt.Println("----MISS----\n")
+		shis <- true
 		return retrieve(c, q, itemId), "false"
 		// fmt.Println(time.Since(a))
 		// fmt.Println("CS:", len(c.block))
@@ -269,6 +266,12 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 }
 
 func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, startDate string, endDate string, filename string
+	defer func() { <-shis }()
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer db.Close()
 	name := strconv.Itoa(filename)
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
@@ -276,7 +279,6 @@ func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, s
 		// return
 		return Read(c, q, name)
 	} else {
-		shis <- true
 		fmt.Println("From DB")
 		Date := name[0:4] + "-" + name[4:6]
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -302,7 +304,6 @@ func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, s
 			buf.Write(line)
 		}
 		row.Close()
-		<-shis
 		go Save(filename, buf.Bytes())
 		go c.set(q, filename, buf.Bytes())
 		return buf.Bytes()
