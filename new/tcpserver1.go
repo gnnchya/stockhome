@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
 	"fmt"
 	"net"
@@ -14,8 +15,6 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/profile"
-	"github.com/timtadh/calloc"
-	"reflect"
 )
 
 var sana = make(chan bool, 1600)
@@ -321,13 +320,12 @@ func WithDate(dc chan string, s []string) {
 
 func rtDB() []string {
 	defer func() { <-sana }()
-	var s []string
-	s = calloc.Make(reflect.TypeOf(s), 0, 0).([]string)
+	buf := bytes.NewBuffer(make([]byte, 0))
+	cbuf =
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
-
 	defer db.Close()
 	day := time.Now().AddDate(0, 0, -1)
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
@@ -335,7 +333,6 @@ func rtDB() []string {
 		fmt.Print(err)
 	}
 	defer row.Close()
-
 	// Slice each row
 	for row.Next() {
 		var itemID, amount int
@@ -345,9 +342,14 @@ func rtDB() []string {
 			fmt.Print(err)
 		}
 		// Write each line
-		s = append(s, strconv.Itoa(itemID), strconv.Itoa(amount), date, time)
+		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
+		buf.Write(line)
 	}
-	defer calloc.Free(s)
+	s := strings.Split(buf.String(), ",")
+	buf.Reset()
+	buf = nil
+	runtime.GC()
+	debug.FreeOSMemory()
 	return s
 }
 
@@ -410,4 +412,3 @@ func getItemAmount(itemID string) string {
 	// mget.Unlock()
 	return val
 }
-
