@@ -61,6 +61,7 @@ func rec(con net.Conn) {
 			date[2] = strings.TrimSpace(date[2])
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
+			runtime.GC()
 			debug.FreeOSMemory()
 		case "add":
 			id := strings.Split(msg[1], "-")
@@ -86,6 +87,7 @@ func rec(con net.Conn) {
 		case "his":
 			his := his(data)
 			send(con, his)
+			runtime.GC()
 			debug.FreeOSMemory()
 		default:
 			send(con, "Some How Error!")
@@ -133,6 +135,7 @@ func analysis(year string, month string, day string) string {
 	cWith := <-cc
 	dWith := <-dc
 	defer debug.FreeOSMemory()
+	defer runtime.GC()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -337,6 +340,8 @@ func rtDB() []string {
 		buf.Write(line)
 	}
 	s := strings.Split(buf.String(), ",")
+	runtime.GC()
+	debug.FreeOSMemory()
 	return s
 }
 
