@@ -52,7 +52,7 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			// sana <- true
+			sana <- true
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 		case "add":
@@ -109,7 +109,7 @@ func his(msg string) string {
 
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
-	// defer func() { <-sana }()
+	defer func() { <-sana }()
 	var start string = year + "-" + month + "-" + day
 	buf := bytes.NewBuffer(make([]byte, 0))
 	s := rtDB(buf)
