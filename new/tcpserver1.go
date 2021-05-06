@@ -169,7 +169,7 @@ func MostWithA(ac chan string, s []string) {
 		}
 	}
 	ac <- txt.String()
-	txt.String() = nil
+	txt = nil
 	return
 }
 
@@ -221,7 +221,7 @@ func MostWithDate(start string, bc chan string, s []string) {
 		}
 	}
 	bc <- txt.String()
-	txt.String() = nil
+	txt = nil
 	return
 }
 
@@ -257,7 +257,7 @@ func WithTime(cc chan string, s []string) {
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
 	cc <- txt.String()
-	txt.String() = nil
+	txt = nil
 	return
 }
 
@@ -298,7 +298,7 @@ func WithDate(dc chan string, s []string) {
 		}
 	}
 	dc <- txt.String()
-	txt.String() = nil
+	txt = nil
 	return
 }
 
