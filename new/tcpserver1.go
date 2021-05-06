@@ -328,6 +328,7 @@ func rtDB() []string {
 	}
 	s := strings.Split(buf.String(), ",")
 	buf.Reset()
+	debug.FreeOSMemory()
 	return s
 }
 
