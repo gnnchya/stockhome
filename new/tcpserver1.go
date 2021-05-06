@@ -62,17 +62,17 @@ func rec(con net.Conn) {
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			add := add(id[0], id[1], id[2])
+			add := add(id[0], id[1], id[2], err)
 			send(con, add)
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wd := withdraw(id[0], id[1], id[2])
+			wd := withdraw(id[0], id[1], id[2], err)
 			send(con, wd)
 		case "get":
-			get := getItemAmount(msg[1])
+			get := getItemAmount(msg[1], err)
 			send(con, get)
 		case "exit":
 			con.Close()
@@ -335,10 +335,15 @@ func rtDB() []string {
 	return s
 }
 
-func add(userID string, itemID string, itemAmount string) string {
+func add(userID string, itemID string, itemAmount string, eir error) string {
 	// madd.Lock()
 	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
 	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil" + "*" + "no" + "\n"
+	}
+	if eir != nil {
 		fmt.Println(err)
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
@@ -355,10 +360,16 @@ func add(userID string, itemID string, itemAmount string) string {
 	return val
 }
 
-func withdraw(userID string, itemID string, itemAmount string) string {
+func withdraw(userID string, itemID string, itemAmount string, eir error) string {
 	// mwd.Lock()
+
 	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
 	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil" + "*" + "no" + "\n"
+	}
+	if eir != nil {
 		fmt.Println(err)
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
@@ -375,10 +386,16 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 	return val
 }
 
-func getItemAmount(itemID string) string {
+func getItemAmount(itemID string, eir error) string {
 	// mget.Lock()
+
 	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
 	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil" + "*" + "no" + "\n"
+	}
+	if eir != nil {
 		fmt.Println(err)
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
