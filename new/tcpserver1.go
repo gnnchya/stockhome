@@ -377,7 +377,7 @@ func rtDB() []string {
 func get(itemID string, eir error) string {
 	// mget.Lock()
 
-	cs, err := net.Dialt("tcp4", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
