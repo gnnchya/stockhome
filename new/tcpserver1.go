@@ -57,7 +57,7 @@ func rec(con net.Conn) {
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
 		} else if msg[0] == "add" || msg[0] == "wd" || msg[0] == "get" {
-			get := get(msg[1], err)
+			get := get(data, err)
 			send(con, get)
 		} else if msg[0] == "exit" {
 			con.Close()
@@ -376,7 +376,6 @@ func rtDB() []string {
 
 func get(itemID string, eir error) string {
 	// mget.Lock()
-
 	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -389,7 +388,7 @@ func get(itemID string, eir error) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	defer cs.Close()
-	cs.Write([]byte("get:" + itemID + "\n"))
+	cs.Write([]byte(data + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
