@@ -328,7 +328,7 @@ func rtDB() []string {
 		buf.Write(line)
 	}
 	s := strings.Split(buf.String(), ",")
-	buf.Reset()
+	buf = bytes.NewBuffer(make([]byte, 0))
 	debug.FreeOSMemory()
 	return s
 }
