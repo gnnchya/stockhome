@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -54,6 +55,7 @@ func rec(con net.Conn) {
 			date[2] = strings.TrimSpace(date[2])
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
+			debug.FreeOSMemory()
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -78,6 +80,7 @@ func rec(con net.Conn) {
 		case "his":
 			his := his(data)
 			send(con, his)
+			debug.FreeOSMemory()
 		default:
 			send(con, "Some How Error!")
 		}
@@ -109,9 +112,8 @@ func his(msg string) string {
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
 	var start string = year + "-" + month + "-" + day
-	buf := bytes.NewBuffer(make([]byte, 0))
 	sana <- true
-	s := rtDB(buf)
+	s := rtDB()
 	ac := make(chan string)
 	bc := make(chan string)
 	cc := make(chan string)
@@ -124,6 +126,7 @@ func analysis(year string, month string, day string) string {
 	bWith := <-bc
 	cWith := <-cc
 	dWith := <-dc
+	defer debug.FreeOSMemory()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -301,8 +304,9 @@ func WithDate(dc chan string, s []string) {
 
 // ---------------------------------------------------------------------------------------------------
 
-func rtDB(buf *bytes.Buffer) []string {
+func rtDB() []string {
 	defer func() { <-sana }()
+	buf := bytes.NewBuffer(make([]byte, 0))
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -389,3 +393,4 @@ func getItemAmount(itemID string) string {
 	// mget.Unlock()
 	return val
 }
+
