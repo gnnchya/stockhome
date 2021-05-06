@@ -2,6 +2,7 @@ package main
 
 import (
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 )
@@ -10,7 +11,12 @@ const creations = 200
 
 func TestAnalysis(t *testing.T) {
 	for i := 0; i < creations; i++ {
-		_ = Analysis(randomTimestamp())
+		date1 := randomTimestamp()
+		date := strings.Split(date1, "-")
+		date[0] = strings.TrimSpace(date[0])
+		date[1] = strings.TrimSpace(date[1])
+		date[2] = strings.TrimSpace(date[2])
+		_ = Analysis(date[0], date[1], date[2])
 	}
 }
 
