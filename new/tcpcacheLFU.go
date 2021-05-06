@@ -83,7 +83,7 @@ func send(con net.Conn, msg []byte, state string) {
 	con.Write(temp2)
 }
 
-var db *sql.DB
+// var db *sql.DB
 
 // capacity size in bytes
 var Lfu Cache = Cache{capacity: 8000000, size: 0, block: make(map[int]*Node)}
@@ -267,7 +267,7 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 
 func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	defer func() { <-shis }()
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
