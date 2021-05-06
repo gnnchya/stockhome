@@ -11,15 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"runtime/debug"
-
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var sana = make(chan bool, 1600)
 
 func main() {
-	connect, err := net.Listen("tcp4", "128.199.70.252:5001")
+	connect, err := net.Listen("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -28,10 +26,9 @@ func main() {
 	for {
 		con, err := connect.Accept()
 		if err != nil {
-			fmt.Println("con", err)
+			fmt.Println(err)
 			return
 		}
-		defer con.Close()
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}
@@ -41,7 +38,7 @@ func rec(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			fmt.Println("rec", err)
+			fmt.Println(err)
 			return
 		}
 		fmt.Println()
@@ -49,26 +46,40 @@ func rec(con net.Conn) {
 		msg := strings.Split(data, ":")
 		msg[0] = strings.TrimSpace(msg[0])
 		msg[1] = strings.TrimSpace(msg[1])
-		if msg[0] == "ana" {
+		switch msg[0] {
+		case "ana":
 			date := strings.Split(msg[1], "-")
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
-		} else if msg[0] == "add" || msg[0] == "wd" || msg[0] == "get" {
-			get := get(data, err)
+		case "add":
+			id := strings.Split(msg[1], "-")
+			id[0] = strings.TrimSpace(id[0])
+			id[1] = strings.TrimSpace(id[1])
+			id[2] = strings.TrimSpace(id[2])
+			add := add(id[0], id[1], id[2])
+			send(con, add)
+		case "wd":
+			id := strings.Split(msg[1], "-")
+			id[0] = strings.TrimSpace(id[0])
+			id[1] = strings.TrimSpace(id[1])
+			id[2] = strings.TrimSpace(id[2])
+			wd := withdraw(id[0], id[1], id[2])
+			send(con, wd)
+		case "get":
+			get := getItemAmount(msg[1])
 			send(con, get)
-		} else if msg[0] == "exit" {
+		case "exit":
 			con.Close()
 			fmt.Println("EOF")
 			return
-		} else if msg[0] == "his" {
+		case "his":
 			his := his(data)
 			send(con, his)
-		} else {
+		default:
 			send(con, "Some How Error!")
-
 		}
 	}
 }
@@ -79,7 +90,7 @@ func send(con net.Conn, msg string) {
 
 func his(msg string) string {
 	// mhis.Lock()
-	con, err := net.Dial("tcp4", "139.59.116.139:5004")
+	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
 		return "nil"
@@ -98,8 +109,9 @@ func his(msg string) string {
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
 	var start string = year + "-" + month + "-" + day
+	buf := bytes.NewBuffer(make([]byte, 0))
 	sana <- true
-	s := rtDB()
+	s := rtDB(buf)
 	ac := make(chan string)
 	bc := make(chan string)
 	cc := make(chan string)
@@ -289,9 +301,8 @@ func WithDate(dc chan string, s []string) {
 
 // ---------------------------------------------------------------------------------------------------
 
-func rtDB() []string {
+func rtDB(buf *bytes.Buffer) []string {
 	defer func() { <-sana }()
-	buf := bytes.NewBuffer(make([]byte, 0))
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -316,83 +327,62 @@ func rtDB() []string {
 		buf.Write(line)
 	}
 	s := strings.Split(buf.String(), ",")
-	buf = bytes.NewBuffer(make([]byte, 0))
-	debug.FreeOSMemory()
 	return s
 }
 
-// func add(userID string, itemID string, itemAmount string, eir error) string {
-// 	// madd.Lock()
-// 	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		cs.Close()
-// 		return "nil" + "*" + "no" + "\n"
-// 	}
-// 	if eir != nil {
-// 		fmt.Println(err, "00000")
-// 		cs.Close()
-// 		return "nil" + "*" + "no" + "\n"
-// 	}
-// 	defer cs.Close()
-// 	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
-// 	val, err := bufio.NewReader(cs).ReadString('\n')
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		cs.Close()
-// 		return "nil" + "*" + "no" + "\n"
-// 	}
-// 	fmt.Println(val)
-// 	// madd.Unlock()
-// 	return val
-// }
-
-// func withdraw(userID string, itemID string, itemAmount string, eir error) string {
-// 	// mwd.Lock()
-
-// 	cs, err := net.DialTimeout("tcp4", "143.198.195.15:5003", 2*time.Second)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		cs.Close()
-// 		return "nil" + "*" + "no" + "\n"
-// 	}
-// 	if eir != nil {
-// 		fmt.Println(err, "00000")
-// 		cs.Close()
-// 		return "nil" + "*" + "no" + "\n"
-// 	}
-// 	defer cs.Close()
-// 	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
-// 	val, err := bufio.NewReader(cs).ReadString('\n')
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		cs.Close()
-// 		return "nil" + "*" + "no" + "\n"
-// 	}
-// 	fmt.Println(val)
-// 	// mwd.Unlock()
-// 	return val
-// }
-
-func get(data string, eir error) string {
-	// mget.Lock()
-	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
+func add(userID string, itemID string, itemAmount string) string {
+	// madd.Lock()
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	if eir != nil {
-		fmt.Println(err, "000000000")
 		cs.Close()
 		return "nil" + "*" + "no" + "\n"
 	}
 	defer cs.Close()
-	cs.Write([]byte(data + "\n"))
+	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
 	val, err := bufio.NewReader(cs).ReadString('\n')
 	if err != nil {
 		fmt.Println(err)
+		return "nil" + "*" + "no" + "\n"
+	}
+	fmt.Println(val)
+	// madd.Unlock()
+	return val
+}
+
+func withdraw(userID string, itemID string, itemAmount string) string {
+	// mwd.Lock()
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	if err != nil {
+		fmt.Println(err)
 		cs.Close()
+		return "nil" + "*" + "no" + "\n"
+	}
+	defer cs.Close()
+	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
+	val, err := bufio.NewReader(cs).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return "nil" + "*" + "no" + "\n"
+	}
+	fmt.Println(val)
+	// mwd.Unlock()
+	return val
+}
+
+func getItemAmount(itemID string) string {
+	// mget.Lock()
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
+	if err != nil {
+		fmt.Println(err)
+		cs.Close()
+		return "nil" + "*" + "no" + "\n"
+	}
+	defer cs.Close()
+	cs.Write([]byte("get:" + itemID + "\n"))
+	val, err := bufio.NewReader(cs).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
