@@ -6,8 +6,8 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
-	"runtime/debug"
 	"runtime"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,6 +15,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/profile"
+	"github.com/timtadh/calloc"
 )
 
 var sana = make(chan bool, 1600)
@@ -27,7 +28,7 @@ func main() {
 		return
 	}
 	defer connect.Close()
-	go func(){
+	go func() {
 		time.Sleep(50 * time.Second)
 		p.Stop()
 	}()
@@ -320,7 +321,8 @@ func WithDate(dc chan string, s []string) {
 
 func rtDB() []string {
 	defer func() { <-sana }()
-	buf := bytes.NewBuffer(make([]byte, 0))
+	//buf := bytes.NewBuffer(make([]byte, 0))
+	cbuf = calloc.Make(reflect.(*bytes.Buffer), 0, 0).(*bytes.Buffer)
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -342,11 +344,12 @@ func rtDB() []string {
 		}
 		// Write each line
 		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
-		buf.Write(line)
+		cbuf.Write(line)
 	}
-	s := strings.Split(buf.String(), ",")
-	buf.Reset()
-	buf = nil
+	s := strings.Split(cbuf.String(), ",")
+	calloc.Free(cbuf)
+	// buf.Reset()
+	// buf = nil
 	runtime.GC()
 	debug.FreeOSMemory()
 	return s
@@ -411,4 +414,3 @@ func getItemAmount(itemID string) string {
 	// mget.Unlock()
 	return val
 }
-
