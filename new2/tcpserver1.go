@@ -37,7 +37,6 @@ func rec(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			con.Close()
 			fmt.Println(err)
 			return
 		}
