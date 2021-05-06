@@ -10,12 +10,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
 	"sync"
 
-	"github.com/ricochet2200/go-disk-usage/du"
-
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/ricochet2200/go-disk-usage/du"
 )
 
 var shis = make(chan bool, 9600)

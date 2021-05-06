@@ -106,7 +106,7 @@ func his(msg string) string {
 	return data
 }
 
-func analysis(year string, month string, day string) string {
+func Analysis(year string, month string, day string) string {
 	// mana.Lock()
 	var start string = year + "-" + month + "-" + day
 	buf := bytes.NewBuffer(make([]byte, 0))
