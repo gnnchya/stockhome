@@ -14,23 +14,23 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/pkg/profile"
+	// "github.com/pkg/profile"
 )
 
 var sana = make(chan bool, 1600)
 
 func main() {
-	p := profile.Start(profile.MemProfile)
+	// p := profile.Start(profile.MemProfile)
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
-	go func() {
-		time.Sleep(50 * time.Second)
-		p.Stop()
-	}()
+	// go func() {
+	// 	time.Sleep(50 * time.Second)
+	// 	p.Stop()
+	// }()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
