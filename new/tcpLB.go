@@ -26,8 +26,8 @@ func main() {
 		return
 	}
 	defer connect.Close()
-	// go hc("5001")
-	// go hc("5002")
+	go hc("128.199.70.252:5001")
+	go hc("143.198.219.89:5002")
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -191,19 +191,19 @@ func checkconnect(port string) bool {
 	return true
 }
 
-// func hc(port string) {
-// 	// reference code "https://kasvith.me/posts/lets-create-a-simple-lb-go/"
-// 	ticker := time.NewTicker(5 * time.Second)
-// 	done := make(chan bool)
-// 	for {
-// 		select {
-// 		case <-done:
-// 			return
-// 		case <-ticker.C:
-// 			checkconnect(port)
-// 		}
-// 	}
-// }
+func hc(port string) {
+	// reference code "https://kasvith.me/posts/lets-create-a-simple-lb-go/"
+	ticker := time.NewTicker(5 * time.Second)
+	done := make(chan bool)
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+			checkconnect(port)
+		}
+	}
+}
 
 func send1(con net.Conn, msg []byte, state string) {
 	temp := append(msg, []byte("*")...)
