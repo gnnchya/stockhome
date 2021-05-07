@@ -85,7 +85,7 @@ func rec(con net.Conn) {
 }
 
 func send(con net.Conn, msg string) {
-	con.Write([]byte("Server: " + msg + "`"))
+	con.Write([]byte("Server: " + msg + "**`"))
 
 }
 
