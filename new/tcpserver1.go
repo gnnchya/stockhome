@@ -37,12 +37,14 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		go func(){
-			for{
-				go rec(con)
-			}
-		}()
+		go pre(con)
 		fmt.Println(con.RemoteAddr())
+	}
+}
+
+func pre(con net.Conn){
+	for{
+		go rec(con)
 	}
 }
 
