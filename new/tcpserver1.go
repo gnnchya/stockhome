@@ -44,7 +44,7 @@ func main() {
 
 func pre(con net.Conn){
 	for{
-		go rec(con)
+		rec(con)
 	}
 }
 
