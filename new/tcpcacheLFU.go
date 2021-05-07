@@ -16,7 +16,7 @@ import (
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
-var shis = make(chan bool, 9600)
+// var shis = make(chan bool, 9600)
 // history chance is 30%, and server max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 30/100*64511/2 = ~9600
 
 // var supd = make(chan bool, 1)
@@ -26,7 +26,7 @@ var shis = make(chan bool, 9600)
 var upd sync.Mutex
 var en sync.Mutex
 var de sync.Mutex
-
+var mhis sync.Mutex
 // var m sync.Mutex
 
 func main() {
@@ -268,6 +268,8 @@ func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
 }
 
 func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, startDate string, endDate string, filename string
+	mhis.Lock()
+	defer mhis.Unlock()
 	name := strconv.Itoa(filename)
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
@@ -275,8 +277,8 @@ func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, s
 		// return
 		return Read(c, q, name)
 	} else {
-		shis <- true
-		defer func() { <-shis }()
+		// shis <- true
+		// defer func() { <-shis }()
 		db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 		if err != nil {
 			fmt.Println("Error: Cannot open database")

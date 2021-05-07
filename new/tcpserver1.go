@@ -16,8 +16,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	// "github.com/pkg/profile"
 )
-
-var sana = make(chan bool, 1600)
+// var sadd = make(chan bool, 3800)
+// var swd = make(chan bool, 6700)
+// var sget = make(chan bool, 8700)
+// var sana = make(chan bool, 1600)
+var mana sync.Mutex
 // analysis chance is 10%, and server max connectin is 64511/4 (devided by four because port is use by testdrive too and also devided in two server) so semaphore of get function is 12/100*64511/4 = ~1600
 
 func main() {
@@ -126,7 +129,7 @@ func his(msg string) string {
 func analysis(year string, month string, day string) string {
 	// mana.Lock()
 	var start string = year + "-" + month + "-" + day
-	sana <- true
+	// sana <- true
 	s := rtDB()
 	ac := make(chan string)
 	bc := make(chan string)
@@ -324,7 +327,9 @@ func WithDate(dc chan string, s []string) {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB() []string {
-    defer func() { <-sana }()
+    // defer func() { <-sana }()
+	mana.Lock()
+	defer mana.Unlock()
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")

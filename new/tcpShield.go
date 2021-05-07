@@ -18,9 +18,12 @@ var myCache LRU
 var mutex = &sync.Mutex{}
 var Db *sql.DB
 var err error
-var sadd = make(chan bool, 3800)
-var swd = make(chan bool, 6700)
-var sget = make(chan bool, 8700) 
+// var sadd = make(chan bool, 3800)
+// var swd = make(chan bool, 6700)
+// var sget = make(chan bool, 8700) 
+var madd sync.Mutex
+var mwd sync.Mutex
+var mget sync.Mutex
 // add chance is 12%, and server max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 12/100*64511/2 = ~3800
 // withdraw chance is 21%, and server max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 21/100*64511/2 = ~6700
 // get chance is 27%, and server max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 27/100*64511/2 = ~8700
@@ -80,7 +83,7 @@ func rec(con net.Conn) {
 				return
 			}
 			send(con, addToDB(iid, amt, uid))
-			sadd <- true
+			// sadd <- true
 			addNew(iid, amt, uid)
 			return
 		case "wd":
@@ -105,7 +108,7 @@ func rec(con net.Conn) {
 				return
 			}
 			send(con, withDrawToDB(iid, amt*(-1), uid))
-			swd <- true
+			// swd <- true
 			withdraw(iid, amt, uid)
 			return
 		case "get":
@@ -136,7 +139,9 @@ func send(con net.Conn, msg string) {
 }
 
 func GetAmount(itemID int) string {
-	defer func() { <-sget }()
+	mget.Lock()
+	defer mget.Unlock()
+	// defer func() { <-sget }()
 	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -155,7 +160,9 @@ func GetAmount(itemID int) string {
 }
 
 func addNew(itemID int, amount int, userID int) string {
-	defer func() { <-sadd }()
+	madd.Lock()
+	defer madd.Unlock()
+	// defer func() { <-sadd }()
 	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -212,7 +219,9 @@ func addExist(itemID int, amount int, userID int, Db *sql.DB) string {
 }
 
 func withdraw(itemID int, amount int, userID int) string {
-	defer func() { <-swd }()
+	mwd.Lock()
+	defer mwd.Unlock()
+	// defer func() { <-swd }()
 	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -361,7 +370,7 @@ func (l *LRU) Read(itemID int) (int, string) {
 			delete(l.PageMap, key)
 		}
 		fmt.Println("Miss")
-		sget <- true
+		// sget <- true
 		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		page := l.pageList.addFrontPage(itemID, GetAmountVal)
 		l.size++
@@ -391,7 +400,7 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		}
 		// itemamount  เป็นลบแล้วไม่ found
 		fmt.Println("-----MISS-----")
-		sget <- true
+		// sget <- true
 		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		if GetAmountVal+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
