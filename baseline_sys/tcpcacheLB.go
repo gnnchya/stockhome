@@ -23,7 +23,7 @@ func main() {
 	for {
 		con, err := connect.Accept()
 		if err != nil {
-			fmt.Println("err2", err)
+			fmt.Println(err)
 			return
 		}
 		fmt.Println(con.RemoteAddr())
@@ -36,13 +36,9 @@ func main() {
 }
 
 func rec1(con net.Conn) {
-
 	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
-		mem1--
-		con.Close()
-		ser1.Close()
 		return
 	}
 	mem1++
@@ -51,9 +47,6 @@ func rec1(con net.Conn) {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
-			con.Close()
-			ser1.Close()
-			mem1--
 			return
 		}
 		fmt.Println()
@@ -70,8 +63,6 @@ func fb1(con net.Conn, ser1 net.Conn) {
 		msg, err := bufio.NewReader(ser1).ReadString('.')
 		if err != nil {
 			fmt.Println(err)
-			con.Close()
-			ser1.Close()
 			return
 		}
 		fmt.Println("Forwarding response..")
@@ -82,13 +73,9 @@ func fb1(con net.Conn, ser1 net.Conn) {
 }
 
 func rec2(con net.Conn) {
-
 	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println(err)
-		mem2--
-		con.Close()
-		ser2.Close()
 		return
 	}
 	mem2++
@@ -97,9 +84,6 @@ func rec2(con net.Conn) {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
-			con.Close()
-			ser2.Close()
-			mem2--
 			return
 		}
 		fmt.Println()
@@ -116,8 +100,6 @@ func fb2(con net.Conn, ser2 net.Conn) {
 		msg, err := bufio.NewReader(ser2).ReadString('.')
 		if err != nil {
 			fmt.Println(err)
-			con.Close()
-			ser2.Close()
 			return
 		}
 		fmt.Println("Forwarding response..")
