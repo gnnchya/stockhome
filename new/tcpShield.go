@@ -131,7 +131,6 @@ func send(con net.Conn, msg string) {
 func GetAmount(itemID int) string {
 	mget.Lock()
 	defer mget.Unlock()
-	// defer func() { <-sget }()
 	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
