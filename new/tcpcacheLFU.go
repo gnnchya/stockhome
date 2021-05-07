@@ -16,7 +16,8 @@ import (
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
-var shis = make(chan bool, 9600)
+var shis = make(chan bool, 19200)
+// history chance is 30%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 30/100*64511/2 = ~9600
 
 // var supd = make(chan bool, 1)
 // var en = make(chan bool, 1)
