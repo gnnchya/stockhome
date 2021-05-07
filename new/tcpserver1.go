@@ -37,13 +37,17 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		go rec(con)
+		go func(){
+			for{
+				go rec(con)
+			}
+		}()
 		fmt.Println(con.RemoteAddr())
 	}
 }
 
 func rec(con net.Conn) {
-	for {
+	// for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
@@ -93,7 +97,7 @@ func rec(con net.Conn) {
 		default:
 			send(con, "Some How Error!")
 		}
-	}
+	// }
 	return
 }
 
