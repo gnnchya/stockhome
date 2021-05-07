@@ -76,8 +76,6 @@ func send(con net.Conn, msg []byte, state string) {
 	return
 }
 
-// var db *sql.DB
-
 // capacity size in bytes
 var Lfu Cache = Cache{capacity: 8000000, size: 0, block: make(map[int]*Node)}
 var Cache_queue Queue = Queue{Head: nil, Tail: nil}
@@ -85,9 +83,6 @@ var Cache_queue Queue = Queue{Head: nil, Tail: nil}
 // saved file filename
 var Namelist Queue = Queue{nil, nil}
 var Files = make(map[int]*Node)
-
-// var wg sync.WaitGroup
-// var mu sync.Mutex
 
 type Cache struct {
 	capacity int //bytes unit
