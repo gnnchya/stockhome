@@ -1,8 +1,12 @@
+//ref :https://stackoverflow.com/questions/43495745/how-to-generate-random-date-in-go-lang/43497333
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand"
+	"runtime"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,13 +22,13 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	correct := "yes"
 	rd := randomTimestamp()
 	randate := "ana " + rd
-	go analysis1(rd, cana)
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println("-------------------\u001b[48;5;89mANALYSIS\u001b[0m------------------- Client no.", ts)
+		fmt.Println("-------------------ANALYSIS------------------- Client no.", ts)
 		start := time.Now()
 		c <- randate
+		go analysis1(rd, cana)
 
 		output = <-c
 		elapsed = time.Since(start)
@@ -49,7 +53,6 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	} else {
 		correct = "nil"
 	}
-
 	return elapsed, mem1, mem2, correct
 }
 
@@ -66,37 +69,42 @@ func randomTimestamp() string {
 
 // analysis code ****************************************************
 func analysis1(start string, cana chan string) {
-	defer func() { <-sana }()
-	var aWith, bWith, cWith, dWith string
-
-	aWith = MostWithA()
-	bWith = MostWithDate(start)
-	cWith = WithTime()
-	dWith = WithDate()
-
+	// buf := bytes.NewBuffer(make([]byte, 0))
+	sana <- true
+	s := rtDB()
+	ac := make(chan string)
+	bc := make(chan string)
+	cc := make(chan string)
+	dc := make(chan string)
+	go MostWithA(ac, s)
+	go MostWithDate(start, bc, s)
+	go WithTime(cc, s)
+	go WithDate(dc, s)
+	aWith := <-ac
+	bWith := <-bc
+	cWith := <-cc
+	dWith := <-dc
 	cana <- (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWithA() string {
+func MostWithA(ac chan string, s []string) {
 	var txt strings.Builder
-	row, err := db.Query("SELECT itemID, amount FROM stockhome.history WHERE action = 0")
-
-	if err != nil {
-		fmt.Print(err)
-	}
+	var count int = 0
 
 	withMap := make(map[int]int)
-
-	for row.Next() {
-		var itemID, amount int
-		err = row.Scan(&itemID, &amount)
-µµ
-		// If exist, add to value. If not, add key.
-		if val, ok := withMap[itemID]; ok {
-			withMap[itemID] = amount + val
-		} else {
-			withMap[itemID] = amount
+	for count <= len(s) {
+		if count+1 >= len(s) {
+			break
 		}
+		amount, _ := strconv.Atoi(s[count+1])
+		id, _ := strconv.Atoi(s[count])
+		if val, ok := withMap[id]; ok {
+			withMap[id] = amount + val
+		} else {
+			withMap[id] = amount
+		}
+
+		count = count + 4
 	}
 
 	// Make slice for sorting
@@ -121,37 +129,38 @@ func MostWithA() string {
 			break
 		}
 	}
-	return txt.String()
+	ac <- txt.String()
+	return
 }
 
-func MostWithDate(start string) string {
+func MostWithDate(start string, bc chan string, s []string) {
 	var txt strings.Builder
+	var count int = 0
 	startDate, _ := time.Parse("2006-01-02", start)
 	var end = time.Now()
-	endDate := end.Format("2006-01-02")
-
-	row, err := db.Query("SELECT itemID, amount FROM stockhome.history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
-
-	if err != nil {
-		fmt.Print(err)
-	}
 
 	withMap := make(map[int]int)
-
-	for row.Next() {
-		var itemID, amount int
-		err = row.Scan(&itemID, &amount)
-
-		// If exist, add to value. If not, add key.
-		if val, ok := withMap[itemID]; ok {
-			withMap[itemID] = amount + val
-		} else {
-			withMap[itemID] = amount
+	for count <= len(s) {
+		if count+1 >= len(s) {
+			break
 		}
+		amount, _ := strconv.Atoi(s[count+1])
+		id, _ := strconv.Atoi(s[count])
+		check, _ := time.Parse("2006-01-02", s[count+2])
+		if check.After(startDate) && check.Before(end) {
+			if val, ok := withMap[id]; ok {
+				withMap[id] = amount + val
+			} else {
+				withMap[id] = amount
+			}
+		}
+
+		count = count + 4
 	}
 
 	// Make slice for sorting
 	withSort := make([]int, 0, len(withMap))
+
 	for amount := range withMap {
 		withSort = append(withSort, amount)
 	}
@@ -171,33 +180,29 @@ func MostWithDate(start string) string {
 			break
 		}
 	}
-
-	defer row.Close()
-	return txt.String()
+	bc <- txt.String()
+	return
 }
 
-func WithTime() string {
+func WithTime(cc chan string, s []string) {
 	var txt strings.Builder
-	row, err := db.Query("SELECT time, amount FROM stockhome.history WHERE action = 0")
-
-	if err != nil {
-		fmt.Print(err)
-	}
-
+	var count int = 0
 	// Make map for keeping
+
 	withMap := make(map[string]int)
-
-	for row.Next() {
-		var amount int
-		var time string
-		err = row.Scan(&time, &amount)
-
-		// If exist, add to value. If not, add key.
+	for count <= len(s) {
+		if count+1 >= len(s) {
+			break
+		}
+		amount, _ := strconv.Atoi(s[count+1])
+		time := s[count+3]
 		if val, ok := withMap[time[0:2]]; ok {
 			withMap[time[0:2]] = amount + val
 		} else {
 			withMap[time[0:2]] = amount
 		}
+
+		count = count + 4
 	}
 
 	// Make slice for sorting
@@ -210,32 +215,29 @@ func WithTime() string {
 	for _, time := range withSort {
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
-	defer row.Close()
-	return txt.String()
+	cc <- txt.String()
+	return
 }
 
-func WithDate() string {
+func WithDate(dc chan string, s []string) {
 	var txt strings.Builder
-	row, err := db.Query("SELECT date, amount FROM stockhome.history WHERE action = 0")
-
-	if err != nil {
-		fmt.Print(err)
-	}
+	var count int = 0
 
 	// Make map for keeping
 	withMap := make(map[string]int)
-
-	for row.Next() {
-		var amount int
-		var date string
-		err = row.Scan(&date, &amount)
-
-		// If exist, add to value. If not, add key.
+	for count <= len(s) {
+		if count+1 >= len(s) {
+			break
+		}
+		amount, _ := strconv.Atoi(s[count+1])
+		date := s[count+2]
 		if val, ok := withMap[date]; ok {
 			withMap[date] = amount + val
 		} else {
 			withMap[date] = amount
 		}
+
+		count = count + 4
 	}
 
 	// Make slice for sorting
@@ -253,6 +255,37 @@ func WithDate() string {
 			break
 		}
 	}
+	dc <- txt.String()
+	return
+}
+
+// ---------------------------------------------------------------------------------------------------
+func rtDB() []string {
+	defer func() { <-sana }()
+	buf := bytes.NewBuffer(make([]byte, 0))
+	day := time.Now().AddDate(0, 0, -1)
+	limit := time.Now().AddDate(-1, 0, 0)
+	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", limit, day)
+	if err != nil {
+		fmt.Print(err)
+	}
 	defer row.Close()
-	return txt.String()
+	// Slice each row
+	for row.Next() {
+		var itemID, amount int
+		var date, time string
+		err = row.Scan(&itemID, &amount, &date, &time)
+		if err != nil {
+			fmt.Print(err)
+		}
+		// Write each line
+		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
+		buf.Write(line)
+	}
+	s := strings.Split(buf.String(), ",")
+	buf.Reset()
+	buf = nil
+	runtime.GC()
+	debug.FreeOSMemory()
+	return s
 }

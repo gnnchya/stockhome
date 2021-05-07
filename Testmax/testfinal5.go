@@ -52,7 +52,7 @@ func main() {
 		for ti := 1; ti <= *cli; ti++ {
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 			c1 := make(chan string)
-			log.Println("\033[36m+++++++++++++++++++ Initiate client no.\u001B[0m", ti)
+			log.Println("+++++++++++++++++++ Initiate client no.", ti)
 			go Client(c1)
 			c <- ti
 			cc <- c1
@@ -91,7 +91,7 @@ func main() {
 				panic(err)
 			}
 			fmt.Println()
-			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
+			fmt.Println("-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
 			fmt.Println("Expected number of client(s) :", *cli)
 			fmt.Println("Total number of spawned client(s) :", (cliCnt))
@@ -103,12 +103,14 @@ func main() {
 			fmt.Println("----------------------------------- ANALYSIS FEATURE <<<<<<<<<<<<<<")
 			fmt.Println("Analysis request: ", counttana)
 			fmt.Println("Analysis count: ", countall)
+			fmt.Println(">>Average analysis time :", (float64(anaavg)/float64(time.Millisecond))/float64(countall), "ms")
 			fmt.Println()
 			fmt.Println("----------------------------------- HISTORY FEATURE <<<<<<<<<<<<<<<")
 			fmt.Println("History request: ", countthis)
 			fmt.Println("History count: ", count2)
 			fmt.Println("Miss count:", countmiss)
 			fmt.Println("Hit count:", counthit)
+			fmt.Println(">>Average History time :", (float64(hisavg)/float64(time.Millisecond))/float64(counthis), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit)/float64(countmiss+counthit))*100, "%")
 			fmt.Println()
 			fmt.Println("-------------------------------- ADD / WD / GETFEATURE <<<<<<<<<<<<")
@@ -117,16 +119,17 @@ func main() {
 			fmt.Println("Add count: ", countadd, "/ Withdraw count:", countwd, "/ Get count:", countget)
 			fmt.Println("Miss count:", countmiss2)
 			fmt.Println("Hit count:", counthit2)
+			fmt.Println(">>Average transaction time :", (float64(awgavg)/float64(time.Millisecond))/float64(countawg), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
 			return
 
 		case ts := <-c:
 			go func(ts int) {
 				c1 := <-cc
-				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
+				log.Printf("Client No %d started", ts)
 
 				//Add,WD,get test >> Initial request
-				temp1, temp2, rd, state := DBcache(c1, ts)
+				elpased, temp1, temp2, rd, state := DBcache(c1, ts)
 				if temp1 != "error" {
 					mem1, mem2 = temp1, temp2
 				}
@@ -203,31 +206,36 @@ func main() {
 		}
 
 		select{
-		case <- opcounthit:
+		case elapsed := <- opcounthit:
+			hitavg2 = hitavg2 + elapsed
 			counthit2++
 		default:
 		}
 
 		select{
-		case <- opcountmiss:
+		case elapsed := <- opcountmiss:
+			missavg2 = missavg2 + elapsed
 			countmiss2++
 		default:
 		}
 
 		select{
-		case  <- opanaavg:
+		case elapsed := <- opanaavg:
+			anaavg = anaavg + elapsed
 			countall++
 		default:
 		}
 
 		select{
-		case <- ophitavg:
+		case elapsed := <- ophitavg:
+			hitavg = hitavg + elapsed
 			counthit++
 		default:
 		}
 
 		select{
-		case <- opmissavg:
+		case elapsed := <- opmissavg:
+			missavg = missavg + elapsed
 			countmiss++
 		default:
 		}
@@ -247,7 +255,7 @@ func main() {
 
 func dbtest(c1 chan string, ts int){
 	//Add,WD,get test
-	_, _, rd, state := DBcache(c1, ts)
+	elapsed, _, _, rd, state := DBcache(c1, ts)
 	opcount3 <- 1
 
 		switch {
@@ -261,9 +269,9 @@ func dbtest(c1 chan string, ts int){
 
 		switch state {
 		case "true\n.":
-			opcounthit <- 1
+			opcounthit <- elapsed
 		case "false\n.":
-			opcountmiss <- 1
+			opcountmiss <- elapsed
 		default:
 			opcount3 <- 0
 		}
@@ -271,20 +279,20 @@ func dbtest(c1 chan string, ts int){
 
 func anatest(c1 chan string, ts int){
 	//Analysis test
-	 _,_ = Analysis(c1, ts)
+	 elapsed , _,_ := Analysis(c1, ts)
 
-	opanaavg <- 1
+	opanaavg <- elapsed
 }
 
 func histest(c1 chan string, ts int){
 	//history test
-	 _, _, state := LBcache(c1, ts)
+	elapsed,  _, _, state := LBcache(c1, ts)
 
 	opcount2 <- 1
 	switch state {
 	case "true.":
-		ophitavg <- 1
+		ophitavg <- elapsed
 	case "false.":
-		opmissavg <- 1
+		opmissavg <- elapsed
 	}
 }
