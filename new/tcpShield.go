@@ -101,7 +101,6 @@ func rec(con net.Conn) {
 				return
 			}
 			send(con, withDrawToDB(iid, amt*(-1), uid))
-			// swd <- true
 			withdraw(iid, amt, uid)
 			return
 		case "get":
