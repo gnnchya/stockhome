@@ -63,7 +63,6 @@ func rec(con net.Conn) {
 			var ana *string
 			*ana = analysis(date[0], date[1], date[2])
 			send(con, *ana)
-			*ana = "a"
 			runtime.GC()
 			debug.FreeOSMemory()
 		case "add":
