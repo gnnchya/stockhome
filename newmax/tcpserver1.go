@@ -14,24 +14,18 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	// "github.com/pkg/profile"
 )
 
 var sana = make(chan bool, 3200)
-// analysis chance is 10%, and max connectin is 64511/4 (devided by four because port is use by testdrive too and also devided in two server) so semaphore of get function is 12/100*64511/4 = ~1600
+// analysis chance is 10% /2(devided by two because it need to devided in two server), and max connectin is about 64511 so semaphore of get function is 12/100*64511/4 = ~3200
 
 func main() {
-	// p := profile.Start(profile.MemProfile)
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
-	// go func() {
-	// 	time.Sleep(50 * time.Second)
-	// 	p.Stop()
-	// }()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -106,7 +100,6 @@ func send(con net.Conn, msg string) {
 }
 
 func his(msg string) string {
-	// mhis.Lock()
 	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
@@ -119,7 +112,6 @@ func his(msg string) string {
 		fmt.Println(err)
 		return "nil"
 	}
-	// mhis.Unlock()
 	return data
 }
 
@@ -359,7 +351,6 @@ func rtDB() []string {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	// madd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -374,12 +365,10 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	// madd.Unlock()
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	// mwd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -394,12 +383,10 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	// mwd.Unlock()
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	// mget.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -414,6 +401,5 @@ func getItemAmount(itemID string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	// mget.Unlock()
 	return val
 }

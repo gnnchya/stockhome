@@ -14,24 +14,18 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	// "github.com/pkg/profile"
 )
 
 var sana = make(chan bool, 3200)
-// analysis chance is 10%, and max connectin is 64511/4 (devided by four because port is use by testdrive too and also devided in two server) so semaphore of get function is 12/100*64511/4 = ~1600
+// analysis chance is 10% /2(devided by two because it need to devided in two server), and max connectin is about 64511 so semaphore of get function is 12/100*64511/4 = ~3200
 
 func main() {
-	// p := profile.Start(profile.MemProfile)
 	connect, err := net.Listen("tcp", "143.198.219.89:5002")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
-	// go func() {
-	// 	time.Sleep(50 * time.Second)
-	// 	p.Stop()
-	// }()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
