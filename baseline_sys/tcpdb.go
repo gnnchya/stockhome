@@ -7,15 +7,11 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB
-var ma sync.Mutex
-var mg sync.Mutex
-var mw sync.Mutex
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
@@ -81,7 +77,6 @@ func send(con net.Conn, msg string) {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-ma.Lock()
 	var checkID, stock int
 	var statement string
 	itemID2, _ := strconv.Atoi(itemID)
@@ -113,12 +108,10 @@ ma.Lock()
 		}
 	}
 	fmt.Println(statement)
-	ma.Unlock()
 	return itemID + "-" + strconv.Itoa(stock+amount)
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-mw.Lock()
 	var checkID, stock int
 	var statement string
 	itemID2, _ := strconv.Atoi(itemID)
@@ -141,12 +134,10 @@ mw.Lock()
 		statement = fmt.Sprintf("Withdrawn %s from database (%d units) | Item in Stock: %d.", itemID, amount, stock-amount)
 	}
 	fmt.Println(statement)
-mw.Unlock()
 	return itemID + "-" + strconv.Itoa(stock-amount)
 }
 
 func getItemAmount(itemID string) string {
-mg.Lock()
 	var amount int
 	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
@@ -155,7 +146,5 @@ mg.Lock()
 	}
 	a := itemID + "-" + strconv.Itoa(amount)
 	fmt.Println(a)
-	mg.Unlock()
 	return a
-
 }

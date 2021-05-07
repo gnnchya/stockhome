@@ -21,6 +21,9 @@ var err error
 var sadd = make(chan bool, 3800)
 var swd = make(chan bool, 6700)
 var sget = make(chan bool, 8700) 
+var ma sync.Mutex
+var mw sync.Mutex
+var mg sync.Mutex
 // add chance is 12%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 12/100*64511/2 = ~3800
 // withdraw chance is 21%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 21/100*64511/2 = ~6700
 // get chance is 27%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 27/100*64511/2 = ~8700
@@ -399,24 +402,29 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 }
 
 func getAmountbyItem(itemID int) string {
+mg.Lock()
 	amount, state := myCache.Read(itemID)
 	itemid := strconv.Itoa(itemID)
 	result := strconv.Itoa(amount)
 	fmt.Println(itemid + "-" + result + "*" + state + "\n")
+mg.Unlock()
 	return (itemid + "-" + result + "*" + state + "\n")
 }
 
 // add()
 func addToDB(itemID int, amount int, userID int) string {
+ma.Lock()
 	var val int
 	var state bool
 	val, state = myCache.Input(itemID, amount)
+ma.Unlock()
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
 
 }
 
 //withdraw()
 func withDrawToDB(itemID int, amount int, userID int) string {
+mw.Lock()
 	var eir int
 	var state bool
 	eir, state = myCache.Input(itemID, amount)
@@ -424,5 +432,6 @@ func withDrawToDB(itemID int, amount int, userID int) string {
 	if eir == -1 {
 		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
+mw.Unlock()
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
 }
