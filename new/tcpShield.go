@@ -428,10 +428,9 @@ mw.Lock()
 	var eir int
 	var state bool
 	eir, state = myCache.Input(itemID, amount)
-
+	mw.Unlock()
 	if eir == -1 {
 		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
-mw.Unlock()
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(eir) + "*" + strconv.FormatBool(state) + "\n"
 }
