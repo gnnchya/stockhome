@@ -17,12 +17,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	// "github.com/pkg/profile"
 )
-// var sadd = make(chan bool, 3800)
-// var swd = make(chan bool, 6700)
-// var sget = make(chan bool, 8700)
-// var sana = make(chan bool, 1600)
+
 var mana sync.Mutex
-// analysis chance is 10%, and server max connectin is 64511/4 (devided by four because port is use by testdrive too and also devided in two server) so semaphore of get function is 12/100*64511/4 = ~1600
 
 func main() {
 	// p := profile.Start(profile.MemProfile)
@@ -110,7 +106,6 @@ func send(con net.Conn, msg string) {
 }
 
 func his(msg string) string {
-	// mhis.Lock()
 	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
@@ -123,14 +118,11 @@ func his(msg string) string {
 		fmt.Println(err)
 		return "nil"
 	}
-	// mhis.Unlock()
 	return data
 }
 
 func analysis(year string, month string, day string) string {
-	// mana.Lock()
 	var start string = year + "-" + month + "-" + day
-	// sana <- true
 	s := rtDB()
 	ac := make(chan string)
 	bc := make(chan string)
@@ -328,7 +320,6 @@ func WithDate(dc chan string, s []string) {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB() []string {
-    // defer func() { <-sana }()
 	mana.Lock()
 	defer mana.Unlock()
 	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
@@ -368,7 +359,6 @@ func rtDB() []string {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	// madd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -383,12 +373,10 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	// madd.Unlock()
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	// mwd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -403,12 +391,10 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	// mwd.Unlock()
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	// mget.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -423,6 +409,5 @@ func getItemAmount(itemID string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	// mget.Unlock()
 	return val
 }
