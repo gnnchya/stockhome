@@ -17,7 +17,9 @@ import (
 	// "github.com/pkg/profile"
 )
 
-var sana = make(chan bool, 1600)
+var sana = make(chan bool, 3200)
+// analysis chance is 10%, and max connectin is 64511/4 (devided by four because port is use by testdrive too and also devided in two server) so semaphore of get function is 12/100*64511/4 = ~1600
+
 
 func main() {
 	// p := profile.Start(profile.MemProfile)

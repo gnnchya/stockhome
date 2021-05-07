@@ -22,7 +22,7 @@ var m sync.Mutex
 func main() {
 	connect, err := net.Listen("tcp4", "128.199.70.176:9999")
 	if err != nil {
-		// fmt.Println("err1", err)
+		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
@@ -31,7 +31,7 @@ func main() {
 	for {
 		con, err := connect.Accept()
 		if err != nil {
-			// fmt.Println("err2", err)
+			fmt.Println(err)
 			return
 		}
 		fmt.Println(con.RemoteAddr())
@@ -66,7 +66,7 @@ func rec1(con net.Conn) {
 	mem1++
 	ser1, err := net.Dial("tcp4", "128.199.70.252:5001")
 	if err != nil {
-		// fmt.Println("err3", err)
+		fmt.Println(err)
 		mem1--
 		con.Close()
 		ser1.Close()
@@ -78,7 +78,7 @@ func rec1(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			// fmt.Println("err4", err)
+			fmt.Println(err)
 			con.Close()
 			ser1.Close()
 			mem1--
@@ -107,6 +107,7 @@ func fb1(con net.Conn, ser1 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser1).ReadString('.')
 		if err != nil {
+			fmt.Println(err)
 			con.Write([]byte("Server is down. Please try again!"))
 			con.Close()
 			ser1.Close()
@@ -124,7 +125,7 @@ func rec2(con net.Conn) {
 	mem2++
 	ser2, err := net.Dial("tcp4", "143.198.219.89:5002")
 	if err != nil {
-		// fmt.Println("err7", err)
+		fmt.Println(err)
 		con.Close()
 		ser2.Close()
 		return
@@ -135,7 +136,7 @@ func rec2(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			// fmt.Println("err8", err)
+			fmt.Println(err)
 			con.Close()
 			ser2.Close()
 			mem2--
@@ -164,6 +165,7 @@ func fb2(con net.Conn, ser2 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser2).ReadString('.')
 		if err != nil {
+			fmt.Println(err)
 			con.Write([]byte("Server is down. Please try again!"))
 			con.Close()
 			ser2.Close()

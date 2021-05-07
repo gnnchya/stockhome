@@ -18,20 +18,15 @@ var myCache LRU
 var mutex = &sync.Mutex{}
 var Db *sql.DB
 var err error
-var sadd = make(chan bool, 3800)
-var swd = make(chan bool, 6700)
-var sget = make(chan bool, 8700)
-
-// func init() {
-// 	Db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-// 	if err != nil {
-// 		fmt.Println("Error: Cannot open database")
-// 	}
-// 	defer Db.close()
-// }
+var sadd = make(chan bool, 7900)
+var swd = make(chan bool, 13400)
+var sget = make(chan bool, 17400) 
+// add chance is 12%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 12/100*64511/2 = ~3800
+// withdraw chance is 21%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 21/100*64511/2 = ~6700
+// get chance is 27%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 27/100*64511/2 = ~8700
 
 func main() {
-	myCache.InitLRU(2500)
+	myCache.InitLRU(1000)
 	connect, err := net.Listen("tcp4", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
