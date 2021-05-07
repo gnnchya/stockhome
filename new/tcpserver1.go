@@ -14,45 +14,41 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/pkg/profile"
+	// "github.com/pkg/profile"
 )
 
 var sana = make(chan bool, 1600)
 
 func main() {
-	p := profile.Start(profile.MemProfile)
-	connect, err := net.Listen("tcp", "128.199.70.252:5001")
+	// p := profile.Start(profile.MemProfile)
+	connect, err := net.Listen("tcp", "tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
-	go func() {
-		time.Sleep(130 * time.Second)
-		p.Stop()
-	}()
+	// go func() {
+	// 	time.Sleep(50 * time.Second)
+	// 	p.Stop()
+	// }()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		go pre(con)
+		defer con.Close()
+		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}
 }
 
-func pre(con net.Conn){
-	for{
-		rec(con)
-	}
-}
-
 func rec(con net.Conn) {
-	// for {
+	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
+			con.Close()
 			return
 		}
 		fmt.Println()
@@ -70,7 +66,6 @@ func rec(con net.Conn) {
 			send(con, ana)
 			runtime.GC()
 			debug.FreeOSMemory()
-			return
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -78,7 +73,6 @@ func rec(con net.Conn) {
 			id[2] = strings.TrimSpace(id[2])
 			add := add(id[0], id[1], id[2])
 			send(con, add)
-			return
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -86,11 +80,9 @@ func rec(con net.Conn) {
 			id[2] = strings.TrimSpace(id[2])
 			wd := withdraw(id[0], id[1], id[2])
 			send(con, wd)
-			return
 		case "get":
 			get := getItemAmount(msg[1])
 			send(con, get)
-			return
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
@@ -100,12 +92,10 @@ func rec(con net.Conn) {
 			send(con, his)
 			runtime.GC()
 			debug.FreeOSMemory()
-			return
 		default:
 			send(con, "Some How Error!")
-			return
 		}
-	// }
+	}
 	return
 }
 

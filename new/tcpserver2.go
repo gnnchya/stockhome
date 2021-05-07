@@ -37,6 +37,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		defer con.Close()
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}
@@ -47,6 +48,7 @@ func rec(con net.Conn) {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
+			con.Close()
 			return
 		}
 		fmt.Println()

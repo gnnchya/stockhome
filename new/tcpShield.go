@@ -45,7 +45,7 @@ func main() {
 			// connect.Close()
 			return
 		}
-		// defer con.Close()
+		defer con.Close()
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}
