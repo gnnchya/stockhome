@@ -12,6 +12,9 @@ import (
 )
 
 var db *sql.DB
+var ma sync.Mutex
+var mg sync.Mutex
+var mw sync.Mutex
 
 func main() {
 	connect, err := net.Listen("tcp", "143.198.195.15:5003")
@@ -77,7 +80,7 @@ func send(con net.Conn, msg string) {
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-
+ma.Lock()
 	var checkID, stock int
 	var statement string
 	itemID2, _ := strconv.Atoi(itemID)
@@ -109,11 +112,12 @@ func add(userID string, itemID string, itemAmount string) string {
 		}
 	}
 	fmt.Println(statement)
+	ma.Unlock()
 	return itemID + "-" + strconv.Itoa(stock+amount)
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-
+mw.Lock()
 	var checkID, stock int
 	var statement string
 	itemID2, _ := strconv.Atoi(itemID)
@@ -136,12 +140,12 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		statement = fmt.Sprintf("Withdrawn %s from database (%d units) | Item in Stock: %d.", itemID, amount, stock-amount)
 	}
 	fmt.Println(statement)
-
+mw.Unlock()
 	return itemID + "-" + strconv.Itoa(stock-amount)
 }
 
 func getItemAmount(itemID string) string {
-
+mg.Lock()
 	var amount int
 	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
@@ -150,6 +154,7 @@ func getItemAmount(itemID string) string {
 	}
 	a := itemID + "-" + strconv.Itoa(amount)
 	fmt.Println(a)
+	mg.Unlock()
 	return a
 
 }
