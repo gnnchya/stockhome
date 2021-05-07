@@ -17,36 +17,35 @@ var mem2 int = 0
 var mem3 int = 0
 var wg1 sync.WaitGroup
 var wg2 sync.WaitGroup
+var m sync.Mutex
 
 func main() {
-	connect, err := net.Listen("tcp", "128.199.70.176:9999")
+	connect, err := net.Listen("tcp4", "128.199.70.176:9999")
 	if err != nil {
-		// fmt.Println("err1", err)
+		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
-	// go hc("5001")
-	// go hc("5002")
+	go hc("128.199.70.252:5001")
+	go hc("143.198.219.89:5002")
 	for {
 		con, err := connect.Accept()
 		if err != nil {
-			// fmt.Println("err2", err)
+			fmt.Println(err)
 			return
 		}
 		fmt.Println(con.RemoteAddr())
 		if checkconnect("128.199.70.252:5001") == false {
 			if checkconnect("143.198.219.89:5002") == false {
-				fmt.Println("All server is down")
+				con.Write([]byte("All server is down. Please try again"))
 			} else {
-				fmt.Println("Server 1 is down. Please try again.")
 				go rec2(con)
 				wg2.Wait()
 			}
 		} else if checkconnect("143.198.219.89:5002") == false {
 			if checkconnect("128.199.70.252:5001") == false {
-				fmt.Println("All server is down")
+				con.Write([]byte("All server is down. Please try again"))
 			} else {
-				fmt.Println("Server 2 is down. Please try again.")
 				go rec1(con)
 				wg1.Wait()
 			}
@@ -65,9 +64,9 @@ func main() {
 func rec1(con net.Conn) {
 	wg1.Add(1)
 	mem1++
-	ser1, err := net.Dial("tcp", "128.199.70.252:5001")
+	ser1, err := net.Dial("tcp4", "128.199.70.252:5001")
 	if err != nil {
-		// fmt.Println("err3", err)
+		fmt.Println(err)
 		mem1--
 		con.Close()
 		ser1.Close()
@@ -79,7 +78,7 @@ func rec1(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			// fmt.Println("err4", err)
+			fmt.Println(err)
 			con.Close()
 			ser1.Close()
 			mem1--
@@ -108,6 +107,8 @@ func fb1(con net.Conn, ser1 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser1).ReadString('.')
 		if err != nil {
+			fmt.Println(err)
+			con.Write([]byte("Server is down. Please try again!"))
 			con.Close()
 			ser1.Close()
 			return
@@ -122,9 +123,9 @@ func fb1(con net.Conn, ser1 net.Conn) {
 func rec2(con net.Conn) {
 	wg2.Add(1)
 	mem2++
-	ser2, err := net.Dial("tcp", "143.198.219.89:5002")
+	ser2, err := net.Dial("tcp4", "143.198.219.89:5002")
 	if err != nil {
-		// fmt.Println("err7", err)
+		fmt.Println(err)
 		con.Close()
 		ser2.Close()
 		return
@@ -135,7 +136,7 @@ func rec2(con net.Conn) {
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
-			// fmt.Println("err8", err)
+			fmt.Println(err)
 			con.Close()
 			ser2.Close()
 			mem2--
@@ -164,16 +165,14 @@ func fb2(con net.Conn, ser2 net.Conn) {
 	for {
 		msg, err := bufio.NewReader(ser2).ReadString('.')
 		if err != nil {
-			// fmt.Println("err10", err)
-			// mem2--
+			fmt.Println(err)
+			con.Write([]byte("Server is down. Please try again!"))
 			con.Close()
 			ser2.Close()
 			return
 		}
 		fmt.Println("Forwarding response..")
 		fmt.Println()
-		// fmt.Println(msg)
-		// fmt.Println(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2))
 		con.Write([]byte(msg + "*" + strconv.Itoa(mem1) + "*" + strconv.Itoa(mem2)))
 		con.Write([]byte("`"))
 	}
@@ -181,10 +180,10 @@ func fb2(con net.Conn, ser2 net.Conn) {
 
 func checkconnect(port string) bool {
 	t := 600 * time.Second
-	con, err := net.DialTimeout("tcp", port, t)
+	con, err := net.DialTimeout("tcp4", port, t)
 	if err != nil {
 		fmt.Println("Unhealthy: Server " + port + " is Down")
-		// fmt.Println(err)
+		fmt.Println(err)
 		return false
 	}
 	fmt.Println("Healthy: Server " + port + " is Up")
@@ -192,19 +191,19 @@ func checkconnect(port string) bool {
 	return true
 }
 
-// func hc(port string) {
-// 	// reference code "https://kasvith.me/posts/lets-create-a-simple-lb-go/"
-// 	ticker := time.NewTicker(5 * time.Second)
-// 	done := make(chan bool)
-// 	for {
-// 		select {
-// 		case <-done:
-// 			return
-// 		case <-ticker.C:
-// 			checkconnect(port)
-// 		}
-// 	}
-// }
+func hc(port string) {
+	// reference code "https://kasvith.me/posts/lets-create-a-simple-lb-go/"
+	ticker := time.NewTicker(5 * time.Second)
+	done := make(chan bool)
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+			checkconnect(port)
+		}
+	}
+}
 
 func send1(con net.Conn, msg []byte, state string) {
 	temp := append(msg, []byte("*")...)

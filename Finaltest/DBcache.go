@@ -48,10 +48,10 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 	if begin == "begin" {
 		start := time.Now()
 		c <- rdact
+		go show(ran, cdb)
 		output = <-c
 		elapsed = time.Since(start)
 		scache <- true
-		go show(ran, cdb)
 		mem1 = <-c
 		mem2 = <-c
 		state = <-c

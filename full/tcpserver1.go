@@ -6,20 +6,18 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
+	"runtime"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
+	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var mana sync.Mutex
-var madd sync.Mutex
-var mwd sync.Mutex
-var mget sync.Mutex
-var mhis sync.Mutex
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
@@ -28,17 +26,13 @@ func main() {
 		return
 	}
 	defer connect.Close()
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer db.Close()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
+		defer con.Close()
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
 	}
@@ -49,6 +43,7 @@ func rec(con net.Conn) {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
+			con.Close()
 			return
 		}
 		fmt.Println()
@@ -64,6 +59,8 @@ func rec(con net.Conn) {
 			date[2] = strings.TrimSpace(date[2])
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
+			runtime.GC()
+			debug.FreeOSMemory()
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -88,18 +85,21 @@ func rec(con net.Conn) {
 		case "his":
 			his := his(data)
 			send(con, his)
+			runtime.GC()
+			debug.FreeOSMemory()
 		default:
 			send(con, "Some How Error!")
 		}
 	}
+	return
 }
 
 func send(con net.Conn, msg string) {
 	con.Write([]byte("Server: " + msg + "."))
+	return
 }
 
 func his(msg string) string {
-	mhis.Lock()
 	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
@@ -112,42 +112,34 @@ func his(msg string) string {
 		fmt.Println(err)
 		return "nil"
 	}
-	mhis.Unlock()
 	return data
 }
 
-var db *sql.DB
-
 func analysis(year string, month string, day string) string {
-	mana.Lock()
 	var start string = year + "-" + month + "-" + day
-	var aWith, bWith, cWith, dWith string
-	Wg := sync.WaitGroup{}
-	buf := bytes.NewBuffer(make([]byte, 0))
-	s := rtDB(buf)
-	Wg.Add(1)
-	go func() {
-		aWith = MostWithA(&Wg, s)
-	}()
-	Wg.Add(1)
-	go func() {
-		bWith = MostWithDate(start, &Wg, s)
-	}()
-	Wg.Add(1)
-	go func() {
-		cWith = WithTime(&Wg, s)
-	}()
-	Wg.Add(1)
-	go func() {
-		dWith = WithDate(&Wg, s)
-	}()
-	Wg.Wait()
-	mana.Unlock()
+	s := rtDB()
+	ac := make(chan string)
+	bc := make(chan string)
+	cc := make(chan string)
+	dc := make(chan string)
+	go MostWithA(ac, s)
+	go MostWithDate(start, bc, s)
+	go WithTime(cc, s)
+	go WithDate(dc, s)
+	aWith := <-ac
+	bWith := <-bc
+	cWith := <-cc
+	dWith := <-dc
+	close(ac)
+	close(bc)
+	close(cc)
+	close(dc)
+	defer debug.FreeOSMemory()
+	defer runtime.GC()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWithA(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithA(ac chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
@@ -189,11 +181,11 @@ func MostWithA(Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-	return txt.String()
+	ac <- txt.String()
+	return
 }
 
-func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithDate(start string, bc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	startDate, _ := time.Parse("2006-01-02", start)
@@ -240,12 +232,11 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-
-	return txt.String()
+	bc <- txt.String()
+	return
 }
 
-func WithTime(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithTime(cc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	// Make map for keeping
@@ -276,11 +267,11 @@ func WithTime(Wg *sync.WaitGroup, s []string) string {
 	for _, time := range withSort {
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
-	return txt.String()
+	cc <- txt.String()
+	return
 }
 
-func WithDate(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithDate(dc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
@@ -316,37 +307,52 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-	return txt.String()
+	dc <- txt.String()
+	return
 }
 
 // ---------------------------------------------------------------------------------------------------
 
-func rtDB(buf *bytes.Buffer) []string {
-
-	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
+func rtDB() []string {
+	mana.Lock()
+	defer mana.Unlock()
+	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println("Error: Cannot open database")
 	}
-
-	// Slice each row
-	for row.Next() {
-		var itemID, amount int
-		var date, time string
-		err = row.Scan(&itemID, &amount, &date, &time)
-		if err != nil {
-			fmt.Print(err)
-		}
-		// Write each line
-		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
-		buf.Write(line)
-	}
-
-	s := strings.Split(buf.String(), ",")
-	return s
+	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(10)
+	db.SetConnMaxLifetime(time.Minute * 3)
+	defer db.Close()
+    buf := bytes.NewBuffer(make([]byte, 0))
+    day := time.Now().AddDate(0, 0, -1)
+    limit := time.Now().AddDate(-1, 0, 0)
+    row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", limit, day)
+    if err != nil {
+        fmt.Print(err)
+    }
+    defer row.Close()
+    // Slice each row
+    for row.Next() {
+        var itemID, amount int
+        var date, time string
+        err = row.Scan(&itemID, &amount, &date, &time)
+        if err != nil {
+            fmt.Print(err)
+        }
+        // Write each line
+        line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
+        buf.Write(line)
+    }
+    s := strings.Split(buf.String(), ",")
+    buf.Reset()
+    buf = nil
+    runtime.GC()
+    debug.FreeOSMemory()
+    return s
 }
 
 func add(userID string, itemID string, itemAmount string) string {
-	madd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -361,12 +367,10 @@ func add(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	madd.Unlock()
 	return val
 }
 
 func withdraw(userID string, itemID string, itemAmount string) string {
-	mwd.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -381,12 +385,10 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	mwd.Unlock()
 	return val
 }
 
 func getItemAmount(itemID string) string {
-	mget.Lock()
 	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
@@ -401,6 +403,5 @@ func getItemAmount(itemID string) string {
 		return "nil" + "*" + "no" + "\n"
 	}
 	fmt.Println(val)
-	mget.Unlock()
 	return val
 }

@@ -21,7 +21,7 @@ func LBcache(c chan string, ts int) (time.Duration, string, string, string, stri
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println("-------------------\u001B[48;5;208mHISTORY\u001B[0m------------------- Client no.", ts)
+		fmt.Println("-------------------HISTORY------------------- Client no.", ts)
 		start := time.Now()
 
 		c <- randate1

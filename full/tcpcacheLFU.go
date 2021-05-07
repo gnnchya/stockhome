@@ -11,62 +11,60 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/ricochet2200/go-disk-usage/du"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/ricochet2200/go-disk-usage/du"
 )
 
+var upd sync.Mutex
+var en sync.Mutex
+var de sync.Mutex
+var mhis sync.Mutex
+
 func main() {
-	connect, err := net.Listen("tcp", "139.59.116.139:5004")
+	connect, err := net.Listen("tcp4", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
-	// var err error
-	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer db.Close()
+
 	for {
 		con, err := connect.Accept()
 		if err != nil {
 			fmt.Println(err)
-			// connect.Close()
 			return
 		}
+		defer con.Close()
 		go rec(con)
 		fmt.Println(con.RemoteAddr())
-		// go send(con, rec(con))
 	}
+	return
 }
 
 func rec(con net.Conn) {
-	for {
-		// wgall.Add(1)
-		data, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println()
-		fmt.Print("Client: " + data)
-		msg := strings.Split(data, ":")
-		msg[0] = strings.TrimSpace(msg[0])
-		msg[1] = strings.TrimSpace(msg[1])
-		date, err := strconv.Atoi(msg[1])
-		if err != nil {
-			fmt.Println("err5", err)
-			return
-		}
-		// fmt.Println("history")
-		a, b := Lfu.get(&Cache_queue, date)
-		// fmt.Println("finish")
-		send(con, a, b)
-		// fmt.Println("hi")
+	defer con.Close()
+	data, err := bufio.NewReader(con).ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	fmt.Println()
+	fmt.Print("Client: " + data)
+	msg := strings.Split(data, ":")
+	msg[0] = strings.TrimSpace(msg[0])
+	msg[1] = strings.TrimSpace(msg[1])
+	date, err := strconv.Atoi(msg[1])
+	if err != nil {
+		fmt.Println("err5", err)
+		return
+	}
+	a, b := Lfu.get(&Cache_queue, date)
+	send(con, a, b)
+	fmt.Println("Cache cap:", Lfu.capacity, "bytes, Cache used:", Lfu.size, "bytes\n")
+	Lfu.printCache()
+	return
 }
 
 func send(con net.Conn, msg []byte, state string) {
@@ -75,19 +73,21 @@ func send(con net.Conn, msg []byte, state string) {
 	temp1 := append(temp, []byte(state)...)
 	temp2 := append(temp1, []byte(".")...)
 	con.Write(temp2)
+	return
 }
 
-var db *sql.DB
+// var db *sql.DB
 
 // capacity size in bytes
-var Lfu Cache = Cache{capacity: 10000000, size: 0, block: make(map[int]*Node)}
+var Lfu Cache = Cache{capacity: 8000000, size: 0, block: make(map[int]*Node)}
 var Cache_queue Queue = Queue{Head: nil, Tail: nil}
 
 // saved file filename
 var Namelist Queue = Queue{nil, nil}
 var Files = make(map[int]*Node)
-var wg sync.WaitGroup
-var mu sync.Mutex
+
+// var wg sync.WaitGroup
+// var mu sync.Mutex
 
 type Cache struct {
 	capacity int //bytes unit
@@ -164,6 +164,7 @@ func (q *Queue) deQ(list string) {
 }
 
 func (q *Queue) update(n *Node) {
+	upd.Lock()
 	n.count++
 	for n.next != nil && n.count > n.next.count {
 		nt := n.next
@@ -181,6 +182,7 @@ func (q *Queue) update(n *Node) {
 		nt.prev = n.prev
 		n.prev, nt.next = nt, n
 	}
+	upd.Unlock()
 	return
 }
 
@@ -200,57 +202,57 @@ func (q *Queue) printQ() {
 
 func (c *Cache) set(q *Queue, itemId int, value []byte) {
 	valSize := len(value)
-	if _, ok := c.block[itemId]; ok {
-		c.block[itemId].value = value
-		q.update(c.block[itemId])
+	if item, ok := c.block[itemId]; ok {
+		item.value = value
+		q.update(item)
 		return
 	} else if c.size+valSize < c.capacity {
+		en.Lock()
 		c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
 		q.enQ(c.block[itemId])
 		c.size += valSize
+		en.Unlock()
 		return
 	}
+	de.Lock()
 	for c.size+valSize > c.capacity {
 		q.deQ("Lfu")
 	}
 	c.block[itemId] = &Node{key: itemId, value: value, count: 1, next: nil, prev: nil}
 	q.enQ(c.block[itemId])
 	c.size += valSize
+	de.Unlock()
 	return
 }
 
 func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
-	wg.Add(1)
-	state := "true"
-	mu.Lock()
-	defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
-		q.update(c.block[itemId])
+		go q.update(c.block[itemId])
 		fmt.Println("----HIT----")
 		fmt.Println()
+		return c.block[itemId].value, "true"
 	} else {
-		// filename := strconv.Itoa(itemId)
-		retrieve(c, q, itemId)
-		// fmt.Println(time.Since(a))
-		// fmt.Println("CS:", len(c.block))
-		fmt.Println("----MISS----")
-		fmt.Println()
-		state = "false"
+		fmt.Println("----MISS----\n")
+		return retrieve(c, q, itemId), "false"
 	}
-	fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
-	wg.Done()
-	return c.block[itemId].value, state
-	// fmt.Println("Final", c.size, "\n")
-	// fmt.Println(c.block[itemId].value)
 }
 
-func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDate string, endDate string, filename string
+func retrieve(c *Cache, q *Queue, filename int) []byte {
+	mhis.Lock()
+	defer mhis.Unlock()
 	name := strconv.Itoa(filename)
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
-		Read(c, q, name)
-		return
+		return Read(c, q, name)
 	} else {
+		db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+		if err != nil {
+			fmt.Println("Error: Cannot open database")
+		}
+		db.SetMaxIdleConns(10)
+		db.SetMaxOpenConns(10)
+		db.SetConnMaxLifetime(time.Minute * 3)
+		defer db.Close()
 		fmt.Println("From DB")
 		Date := name[0:4] + "-" + name[4:6]
 		buf := bytes.NewBuffer(make([]byte, 0))
@@ -276,11 +278,9 @@ func retrieve(c *Cache, q *Queue, filename int) { //c *Cache, q *Queue, startDat
 			buf.Write(line)
 		}
 		row.Close()
-
-		wg.Add(1)
 		go Save(filename, buf.Bytes())
-		c.set(q, filename, buf.Bytes())
-		return
+		go c.set(q, filename, buf.Bytes())
+		return buf.Bytes()
 	}
 }
 
@@ -288,11 +288,6 @@ var KB = uint64(1024)
 
 // "year-month-date"
 func Save(filename int, data []byte) {
-	// Get current directory
-	// dir, err := os.Getwd()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
 	usage := du.NewDiskUsage("/")
 	// Remove file if storage is going to be full
 	for (usage.Free() / (KB * KB)) < 100 {
@@ -317,15 +312,10 @@ func Save(filename int, data []byte) {
 	}
 	file.Write(data)
 	file.Close()
-	wg.Done()
 }
 
-func Read(c *Cache, q *Queue, filename string) {
-	// dir, err := os.Getwd()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	file, err := os.Open(filename + ".csv") //dir + "/" +
+func Read(c *Cache, q *Queue, filename string) []byte {
+	file, err := os.Open(filename + ".csv")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -342,16 +332,15 @@ func Read(c *Cache, q *Queue, filename string) {
 	}
 	file.Close()
 	name, _ := strconv.Atoi(filename)
-	// c.set(q, 202109, buf.Bytes())
-	c.set(q, name, buf.Bytes())
+	go c.set(q, name, buf.Bytes())
+	return buf.Bytes()
 }
 
-// func history(daterequest int) []byte {
-// 	// var err error
-// 	// db, err = sql.Open("mysql", "root:pinkponk@tcp(127.0.0.1:3306)/stockhome")
-// 	// defer db.Close()
-// 	// if err != nil {
-// 	// 	fmt.Println("Error: Cannot open database")
-// 	// }
-// 	return Lfu.get(&Cache_queue, daterequest)
-// }
+func (c *Cache) printCache() {
+	txt := "Cache["
+	for k, _ := range c.block {
+		txt += strconv.Itoa(k) + " "
+	}
+	txt = txt[:len(txt)-1] + "]"
+	fmt.Println(txt)
+}
