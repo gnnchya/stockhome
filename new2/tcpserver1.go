@@ -60,9 +60,10 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			ana := analysis(date[0], date[1], date[2])
-			send(con, ana)
-			ana = ""
+			var ana *string
+			ana = &(analysis(date[0], date[1], date[2]))
+			send(con, *ana)
+			ana = nil
 			runtime.GC()
 			debug.FreeOSMemory()
 		case "add":
