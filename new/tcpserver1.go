@@ -94,10 +94,12 @@ func rec(con net.Conn) {
 			send(con, "Some How Error!")
 		}
 	}
+	return
 }
 
 func send(con net.Conn, msg string) {
 	con.Write([]byte("Server: " + msg + "."))
+	return
 }
 
 func his(msg string) string {
