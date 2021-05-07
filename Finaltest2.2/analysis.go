@@ -57,7 +57,7 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 }
 
 func randomTimestamp() string {
-	min := time.Date(2019, 12, 31, 0, 0, 0, 0, time.UTC).Unix()
+	min := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC).Unix()
 	max := time.Date(2021, 3, 25, 0, 0, 0, 0, time.UTC).Unix()
 	delta := max - min
 

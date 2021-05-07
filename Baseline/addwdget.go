@@ -31,7 +31,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int)
 	}
 
 	rdact = strconv.Itoa(ran)
-	rd := rand.Intn(100-1)+1
+	rd := rand.Intn(100-1) + 1
 	switch {
 	case rd <= 20: // 20% chance
 		rdact = "add " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(10-5)+5)
@@ -64,7 +64,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int)
 	}
 
 	if output != "None" {
-		if output != <- cdb{
+		if output != <-cdb {
 			correct = "no"
 		}
 	} else {
@@ -78,12 +78,12 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int)
 }
 
 func show(itemID int, cdb chan string) {
-	defer func() { <-shis }()
+	defer func() { <-scache }()
 	var amount int
 	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
 
 	if check != nil {
 		cdb <- "Not in DB"
 	}
-	cdb <- "Server: "+ strconv.Itoa(itemID) + "-" + strconv.Itoa(amount) + "."
+	cdb <- "Server: " + strconv.Itoa(itemID) + "-" + strconv.Itoa(amount) + "."
 }
