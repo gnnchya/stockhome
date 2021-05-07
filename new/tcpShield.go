@@ -210,7 +210,6 @@ func addExist(itemID int, amount int, userID int, Db *sql.DB) string {
 func withdraw(itemID int, amount int, userID int) string {
 	mwd.Lock()
 	defer mwd.Unlock()
-	// defer func() { <-swd }()
 	Db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
@@ -389,7 +388,6 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 		}
 		// itemamount  เป็นลบแล้วไม่ found
 		fmt.Println("-----MISS-----")
-		// sget <- true
 		GetAmountVal, _ := strconv.Atoi(GetAmount(itemID))
 		if GetAmountVal+ItemAmount < 0 {
 			fmt.Print("ItemID: %#v  cannot be withdraw!!, Negative Value", itemID)
