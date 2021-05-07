@@ -18,9 +18,9 @@ var myCache LRU
 var mutex = &sync.Mutex{}
 var Db *sql.DB
 var err error
-var sadd = make(chan bool, 7900)
-var swd = make(chan bool, 13400)
-var sget = make(chan bool, 17400) 
+var sadd = make(chan bool, 3800)
+var swd = make(chan bool, 6700)
+var sget = make(chan bool, 8700) 
 // add chance is 12%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 12/100*64511/2 = ~3800
 // withdraw chance is 21%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 21/100*64511/2 = ~6700
 // get chance is 27%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 27/100*64511/2 = ~8700
