@@ -62,6 +62,7 @@ func rec(con net.Conn) {
 			date[2] = strings.TrimSpace(date[2])
 			ana := analysis(date[0], date[1], date[2])
 			send(con, ana)
+			ana = ""
 			runtime.GC()
 			debug.FreeOSMemory()
 		case "add":
