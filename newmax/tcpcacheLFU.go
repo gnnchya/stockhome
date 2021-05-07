@@ -76,12 +76,18 @@ func send(con net.Conn, msg []byte, state string) {
 	return
 }
 
+// var db *sql.DB
+
+// capacity size in bytes
 var Lfu Cache = Cache{capacity: 8000000, size: 0, block: make(map[int]*Node)}
 var Cache_queue Queue = Queue{Head: nil, Tail: nil}
 
 // saved file filename
 var Namelist Queue = Queue{nil, nil}
 var Files = make(map[int]*Node)
+
+// var wg sync.WaitGroup
+// var mu sync.Mutex
 
 type Cache struct {
 	capacity int //bytes unit
@@ -220,20 +226,43 @@ func (c *Cache) set(q *Queue, itemId int, value []byte) {
 }
 
 func (c *Cache) get(q *Queue, itemId int) ([]byte, string) {
+	// defer func() { <-shis }()
+	// m.Lock()
+	// defer m.Unlock()
+	// wg.Add(1)
+	// state := "true"
+	// mu.Lock()
+	// defer mu.Unlock()
 	if _, ok := c.block[itemId]; ok {
 		go q.update(c.block[itemId])
 		fmt.Println("----HIT----")
 		fmt.Println()
 		return c.block[itemId].value, "true"
 	} else {
+		// filename := strconv.Itoa(itemId)
+		// retrieve(c, q, itemId)
 		fmt.Println("----MISS----\n")
 		return retrieve(c, q, itemId), "false"
+		// fmt.Println(time.Since(a))
+		// fmt.Println("CS:", len(c.block))
+		// fmt.Println("----MISS----")
+		// fmt.Println()
+		// state = "false"
+	}
+	// fmt.Println("Cache cap:", c.capacity, "bytes, Cache used:", c.size, "bytes\n")
+	// c.printCache()
+	// wg.Done()
+	//// return c.block[itemId].value, state
+	// fmt.Println("Final", c.size, "\n")
+	// fmt.Println(c.block[itemId].value)
 }
 
-func retrieve(c *Cache, q *Queue, filename int) []byte {
+func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, startDate string, endDate string, filename string
 	name := strconv.Itoa(filename)
 	if _, ok := Files[filename]; ok {
 		fmt.Println("From VM")
+		// Read(c, q, name)
+		// return
 		return Read(c, q, name)
 	} else {
 		shis <- true
@@ -278,7 +307,13 @@ var KB = uint64(1024)
 
 // "year-month-date"
 func Save(filename int, data []byte) {
+	// Get current directory
+	// dir, err := os.Getwd()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 	usage := du.NewDiskUsage("/")
+	// Remove file if storage is going to be full
 	for (usage.Free() / (KB * KB)) < 100 {
 		if Namelist.isEmpty() {
 			return
@@ -295,16 +330,21 @@ func Save(filename int, data []byte) {
 	Namelist.enQ(Files[filename])
 
 	// Create file in the same directory
-	file, err := os.Create(strconv.Itoa(filename) + ".csv")
+	file, err := os.Create(strconv.Itoa(filename) + ".csv") //dir + "/" +
 	if err != nil {
 		fmt.Println("An error encountered:", err)
 	}
 	file.Write(data)
 	file.Close()
+	// wg.Done()
 }
 
 func Read(c *Cache, q *Queue, filename string) []byte {
-	file, err := os.Open(filename + ".csv") 
+	// dir, err := os.Getwd()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	file, err := os.Open(filename + ".csv") //dir + "/" +
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -321,6 +361,7 @@ func Read(c *Cache, q *Queue, filename string) []byte {
 	}
 	file.Close()
 	name, _ := strconv.Atoi(filename)
+	// c.set(q, 202109, buf.Bytes())
 	go c.set(q, name, buf.Bytes())
 	return buf.Bytes()
 }
