@@ -20,17 +20,17 @@ import (
 var sana = make(chan bool, 1600)
 
 func main() {
-	// p := profile.Start(profile.MemProfile)
+	p := profile.Start(profile.MemProfile)
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
-	// go func() {
-	// 	time.Sleep(50 * time.Second)
-	// 	p.Stop()
-	// }()
+	go func() {
+		time.Sleep(50 * time.Second)
+		p.Stop()
+	}()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
