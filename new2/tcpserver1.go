@@ -43,7 +43,6 @@ func main() {
 }
 
 func rec(con net.Conn) {
-	var ana *string
 	for {
 		data, err := bufio.NewReader(con).ReadString('\n')
 		if err != nil {
@@ -61,7 +60,7 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			*ana = analysis(date[0], date[1], date[2])
+			ana = analysis(date[0], date[1], date[2])
 			send(con, *ana)
 			runtime.GC()
 			debug.FreeOSMemory()
