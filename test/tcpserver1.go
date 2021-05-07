@@ -14,15 +14,19 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var sana = make(chan bool, 1600)
-
 func main() {
-	connect, err := net.Listen("tcp", "128.199.70.252:5001")
+	connect, err := net.Listen("tcp", "128.199.70.176:9999")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
+	// var err error
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer db.Close()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
@@ -41,6 +45,7 @@ func rec(con net.Conn) {
 			fmt.Println(err)
 			return
 		}
+
 		fmt.Println()
 		fmt.Print("Client: " + data)
 		msg := strings.Split(data, ":")
@@ -52,32 +57,27 @@ func rec(con net.Conn) {
 			date[0] = strings.TrimSpace(date[0])
 			date[1] = strings.TrimSpace(date[1])
 			date[2] = strings.TrimSpace(date[2])
-			ana := Analysis(date[0], date[1], date[2])
-			send(con, ana)
+			send(con, analysis(date[0], date[1], date[2]))
+		case "his":
+			sendhis(con, his(msg[1]))
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			add := add(id[0], id[1], id[2])
-			send(con, add)
+			send(con, add(id[0], id[1], id[2]))
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
 			id[1] = strings.TrimSpace(id[1])
 			id[2] = strings.TrimSpace(id[2])
-			wd := withdraw(id[0], id[1], id[2])
-			send(con, wd)
+			send(con, withdraw(id[0], id[1], id[2]))
 		case "get":
-			get := getItemAmount(msg[1])
-			send(con, get)
+			send(con, getItemAmount(msg[1]))
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
 			return
-		case "his":
-			his := his(data)
-			send(con, his)
 		default:
 			send(con, "Some How Error!")
 		}
@@ -85,65 +85,51 @@ func rec(con net.Conn) {
 }
 
 func send(con net.Conn, msg string) {
-	con.Write([]byte("Server: " + msg + "."))
+	con.Write([]byte("Server: " + msg + "`"))
+
 }
 
-func his(msg string) string {
-	// mhis.Lock()
-	con, err := net.Dial("tcp", "139.59.116.139:5004")
-	if err != nil {
-		fmt.Println(err)
-		return "nil"
-	}
-	defer con.Close()
-	con.Write([]byte(msg))
-	data, err := bufio.NewReader(con).ReadString('.')
-	if err != nil {
-		fmt.Println(err)
-		return "nil"
-	}
-	// mhis.Unlock()
-	return data
+func sendhis(con net.Conn, msg []byte) {
+	temp := append([]byte("Server: "), msg...)
+	temp1 := append(temp, []byte("`")...)
+	con.Write(temp1)
+
 }
 
-func Analysis(year string, month string, day string) string {
-	// mana.Lock()
+var db *sql.DB
+
+func analysis(year string, month string, day string) string {
 	var start string = year + "-" + month + "-" + day
-	sana <- true
-	s := rtDB()
-	ac := make(chan string)
-	bc := make(chan string)
-	cc := make(chan string)
-	dc := make(chan string)
-	go MostWithA(ac, s)
-	go MostWithDate(start, bc, s)
-	go WithTime(cc, s)
-	go WithDate(dc, s)
-	aWith := <-ac
-	bWith := <-bc
-	cWith := <-cc
-	dWith := <-dc
+	var aWith, bWith, cWith, dWith string
+
+	aWith = MostWithA()
+	bWith = MostWithDate(start)
+	cWith = WithTime()
+	dWith = WithDate()
+
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWithA(ac chan string, s []string) {
+func MostWithA() string {
 	var txt strings.Builder
-	var count int = 0
+	row, err := db.Query("SELECT itemID, amount FROM stockhome.history WHERE action = 0")
+
+	if err != nil {
+		fmt.Print(err)
+	}
 
 	withMap := make(map[int]int)
-	for count <= len(s) {
-		if count+1 >= len(s) {
-			break
-		}
-		amount, _ := strconv.Atoi(s[count+1])
-		id, _ := strconv.Atoi(s[count])
-		if val, ok := withMap[id]; ok {
-			withMap[id] = amount + val
-		} else {
-			withMap[id] = amount
-		}
 
-		count = count + 4
+	for row.Next() {
+		var itemID, amount int
+		err = row.Scan(&itemID, &amount)
+
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[itemID]; ok {
+			withMap[itemID] = amount + val
+		} else {
+			withMap[itemID] = amount
+		}
 	}
 
 	// Make slice for sorting
@@ -154,11 +140,8 @@ func MostWithA(ac chan string, s []string) {
 	}
 
 	sort.Slice(withSort, func(i, j int) bool {
-		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
-			return a > b
-		}
-		return withSort[i] < withSort[j]
-	})
+		return withMap[withSort[i]] > withMap[withSort[j]]
+	   })
 
 	var i int = 0
 	for _, amount := range withSort {
@@ -168,48 +151,44 @@ func MostWithA(ac chan string, s []string) {
 			break
 		}
 	}
-	ac <- txt.String()
-	return
+	return txt.String()
 }
 
-func MostWithDate(start string, bc chan string, s []string) {
+func MostWithDate(start string) string {
 	var txt strings.Builder
-	var count int = 0
 	startDate, _ := time.Parse("2006-01-02", start)
 	var end = time.Now()
+	endDate := end.Format("2006-01-02")
+
+	row, err := db.Query("SELECT itemID, amount FROM stockhome.history WHERE action = 0 AND date BETWEEN (?) AND (?)", startDate, endDate)
+
+	if err != nil {
+		fmt.Print(err)
+	}
 
 	withMap := make(map[int]int)
-	for count <= len(s) {
-		if count+1 >= len(s) {
-			break
-		}
-		amount, _ := strconv.Atoi(s[count+1])
-		id, _ := strconv.Atoi(s[count])
-		check, _ := time.Parse("2006-01-02", s[count+2])
-		if check.After(startDate) && check.Before(end) {
-			if val, ok := withMap[id]; ok {
-				withMap[id] = amount + val
-			} else {
-				withMap[id] = amount
-			}
-		}
 
-		count = count + 4
+	for row.Next() {
+		var itemID, amount int
+		err = row.Scan(&itemID, &amount)
+
+		// If exist, add to value. If not, add key.
+		if val, ok := withMap[itemID]; ok {
+			withMap[itemID] = amount + val
+		} else {
+			withMap[itemID] = amount
+		}
 	}
 
 	// Make slice for sorting
 	withSort := make([]int, 0, len(withMap))
-
 	for amount := range withMap {
 		withSort = append(withSort, amount)
 	}
 
 	sort.Slice(withSort, func(i, j int) bool {
-		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
-			return a > b
-		}
-		return withSort[i] < withSort[j]
-	})
+		return withMap[withSort[i]] > withMap[withSort[j]]
+	   })
 
 	var i int = 0
 	for _, amount := range withSort {
@@ -219,29 +198,33 @@ func MostWithDate(start string, bc chan string, s []string) {
 			break
 		}
 	}
-	bc <- txt.String()
-	return
+
+	defer row.Close()
+	return txt.String()
 }
 
-func WithTime(cc chan string, s []string) {
+func WithTime() string {
 	var txt strings.Builder
-	var count int = 0
-	// Make map for keeping
+	row, err := db.Query("SELECT time, amount FROM stockhome.history WHERE action = 0")
 
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	// Make map for keeping
 	withMap := make(map[string]int)
-	for count <= len(s) {
-		if count+1 >= len(s) {
-			break
-		}
-		amount, _ := strconv.Atoi(s[count+1])
-		time := s[count+3]
+
+	for row.Next() {
+		var amount int
+		var time string
+		err = row.Scan(&time, &amount)
+
+		// If exist, add to value. If not, add key.
 		if val, ok := withMap[time[0:2]]; ok {
 			withMap[time[0:2]] = amount + val
 		} else {
 			withMap[time[0:2]] = amount
 		}
-
-		count = count + 4
 	}
 
 	// Make slice for sorting
@@ -254,29 +237,32 @@ func WithTime(cc chan string, s []string) {
 	for _, time := range withSort {
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
-	cc <- txt.String()
-	return
+	defer row.Close()
+	return txt.String()
 }
 
-func WithDate(dc chan string, s []string) {
+func WithDate() string {
 	var txt strings.Builder
-	var count int = 0
+	row, err := db.Query("SELECT date, amount FROM stockhome.history WHERE action = 0")
+
+	if err != nil {
+		fmt.Print(err)
+	}
 
 	// Make map for keeping
 	withMap := make(map[string]int)
-	for count <= len(s) {
-		if count+1 >= len(s) {
-			break
-		}
-		amount, _ := strconv.Atoi(s[count+1])
-		date := s[count+2]
+
+	for row.Next() {
+		var amount int
+		var date string
+		err = row.Scan(&date, &amount)
+
+		// If exist, add to value. If not, add key.
 		if val, ok := withMap[date]; ok {
 			withMap[date] = amount + val
 		} else {
 			withMap[date] = amount
 		}
-
-		count = count + 4
 	}
 
 	// Make slice for sorting
@@ -294,98 +280,115 @@ func WithDate(dc chan string, s []string) {
 			break
 		}
 	}
-	dc <- txt.String()
-	return
+	defer row.Close()
+	return txt.String()
 }
 
-// ---------------------------------------------------------------------------------------------------
+func add(userID string, itemID string, itemAmount string) string {
 
-func rtDB() []string {
-	defer func() { <-sana }()
-	buf := bytes.NewBuffer(make([]byte, 0))
-	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
+	var checkID, stock int
+	var statement string
+	itemID2, _ := strconv.Atoi(itemID)
+	amount, _ := strconv.Atoi(itemAmount)
+
+	check := db.QueryRow("SELECT itemID FROM stock WHERE itemID = (?)", itemID2).Scan(&checkID)
+
+	if check != nil {
+		_, err := db.Exec("INSERT INTO stock VALUES (?, ?)", itemID, amount)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+		statement = fmt.Sprint("Added %d to database (%d units) | Item in Stock: %d\n", itemID, amount, amount)
+
+	} else {
+		check := db.QueryRow("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID).Scan(&checkID, &stock)
+
+		if check != nil {
+			fmt.Println("Error: Item does not exist in database")
+		} else {
+			_, err := db.Exec("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock+amount, itemID2)
+
+			if err != nil {
+				fmt.Println(err)
+				return "error happended in addExist"
+			}
+			statement = fmt.Sprintf("Added %s to database (%d units) | Item in Stock: %d.", itemID, amount, stock+amount)
+		}
 	}
-	defer db.Close()
-	day := time.Now().AddDate(0, 0, -1)
-	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
+	fmt.Println(statement)
+	return itemID + "-" + strconv.Itoa(stock-amount)
+}
+
+func withdraw(userID string, itemID string, itemAmount string) string {
+
+	var checkID, stock int
+	var statement string
+	itemID2, _ := strconv.Atoi(itemID)
+	amount, _ := strconv.Atoi(itemAmount)
+
+	check := db.QueryRow("SELECT itemID, amount FROM stock WHERE itemID = (?)", itemID2).Scan(&checkID, &stock)
+
+	if check != nil {
+		fmt.Println("Error: No item in stock")
+
+	} else if amount > stock {
+		fmt.Println("Error: Amount exceeds stock")
+
+	} else {
+		_, err := db.Exec("UPDATE stock SET amount = (?) WHERE itemID = (?)", stock-amount, itemID2)
+
+		if err != nil {
+			fmt.Printf("\n")
+		}
+		statement = fmt.Sprintf("Withdrawn %s from database (%d units) | Item in Stock: %d.", itemID, amount, stock-amount)
+	}
+	fmt.Println(statement)
+
+	return itemID + "-" + strconv.Itoa(stock-amount)
+}
+
+func getItemAmount(itemID string) string {
+
+	var amount int
+	check := db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
+
+	if check != nil {
+		return "Not in DB."
+	}
+	a := itemID + "-" + strconv.Itoa(amount) + "."
+	fmt.Println(a)
+	return a
+
+
+}
+
+func his(filename string) []byte {
+	Date := filename[0:4] + "-" + filename[4:6]
+	buf := bytes.NewBuffer(make([]byte, 0))
+	col := []byte("userID,itemID,amount,date,time")
+	buf.Write(col)
+	startDate := Date + "-01" //2021-02-01
+	endDate := Date + "-31"   //2021-02-31
+
+	row, err := db.Query("SELECT userID, itemID, amount, date, time FROM history WHERE date BETWEEN (?) AND (?) ORDER BY date ASC, time ASC", startDate, endDate)
 	if err != nil {
 		fmt.Print(err)
 	}
-	defer row.Close()
 	// Slice each row
 	for row.Next() {
-		var itemID, amount int
+		var userID, itemID, amount int
 		var date, time string
-		err = row.Scan(&itemID, &amount, &date, &time)
+		err = row.Scan(&userID, &itemID, &amount, &date, &time)
 		if err != nil {
 			fmt.Print(err)
 		}
 		// Write each line
-		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
+		line := []byte("\n" + strconv.Itoa(userID) + "," + strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time)
 		buf.Write(line)
 	}
-	s := strings.Split(buf.String(), ",")
-	return s
-}
+	row.Close()
 
-func add(userID string, itemID string, itemAmount string) string {
-	// madd.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
-	cs.Write([]byte("add:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
-	val, err := bufio.NewReader(cs).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
-	}
-	fmt.Println(val)
-	// madd.Unlock()
-	return val
-}
-
-func withdraw(userID string, itemID string, itemAmount string) string {
-	// mwd.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
-	cs.Write([]byte("wd:" + itemID + "-" + itemAmount + "-" + userID + "\n"))
-	val, err := bufio.NewReader(cs).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
-	}
-	fmt.Println(val)
-	// mwd.Unlock()
-	return val
-}
-
-func getItemAmount(itemID string) string {
-	// mget.Lock()
-	cs, err := net.Dial("tcp", "143.198.195.15:5003")
-	if err != nil {
-		fmt.Println(err)
-		cs.Close()
-		return "nil" + "*" + "no" + "\n"
-	}
-	defer cs.Close()
-	cs.Write([]byte("get:" + itemID + "\n"))
-	val, err := bufio.NewReader(cs).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return "nil" + "*" + "no" + "\n"
-	}
-	fmt.Println(val)
-	// mget.Unlock()
-	return val
+	// Data that will be sent
+	return buf.Bytes()
 }
