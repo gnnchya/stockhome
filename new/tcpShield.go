@@ -342,7 +342,6 @@ func (l *LRU) InitLRU(capacity int) {
 }
 
 func (l *LRU) Read(itemID int) (int, string) {
-
 	if find, found := l.PageMap[itemID]; found {
 		fmt.Println("HIT")
 		val := find.currentAmount
@@ -366,7 +365,6 @@ func (l *LRU) Read(itemID int) (int, string) {
 }
 
 func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
-
 	find, found := l.PageMap[itemID]
 	if found {
 		fmt.Println("-----HIT-----")
@@ -402,33 +400,27 @@ func (l *LRU) Input(itemID int, ItemAmount int) (int, bool) {
 }
 
 func getAmountbyItem(itemID int) string {
-mg.Lock()
 	amount, state := myCache.Read(itemID)
 	itemid := strconv.Itoa(itemID)
 	result := strconv.Itoa(amount)
 	fmt.Println(itemid + "-" + result + "*" + state + "\n")
-mg.Unlock()
 	return (itemid + "-" + result + "*" + state + "\n")
 }
 
 // add()
 func addToDB(itemID int, amount int, userID int) string {
-ma.Lock()
 	var val int
 	var state bool
 	val, state = myCache.Input(itemID, amount)
-ma.Unlock()
 	return strconv.Itoa(itemID) + "-" + strconv.Itoa(val) + "*" + strconv.FormatBool(state) + "\n"
 
 }
 
 //withdraw()
 func withDrawToDB(itemID int, amount int, userID int) string {
-mw.Lock()
 	var eir int
 	var state bool
 	eir, state = myCache.Input(itemID, amount)
-	mw.Unlock()
 	if eir == -1 {
 		return "cannot withdraw, Database got negative amount" + "*" + strconv.FormatBool(state) + "\n"
 	}
