@@ -70,6 +70,7 @@ func rec(con net.Conn) {
 			send(con, ana)
 			runtime.GC()
 			debug.FreeOSMemory()
+			return
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -77,6 +78,7 @@ func rec(con net.Conn) {
 			id[2] = strings.TrimSpace(id[2])
 			add := add(id[0], id[1], id[2])
 			send(con, add)
+			return
 		case "wd":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -84,9 +86,11 @@ func rec(con net.Conn) {
 			id[2] = strings.TrimSpace(id[2])
 			wd := withdraw(id[0], id[1], id[2])
 			send(con, wd)
+			return
 		case "get":
 			get := getItemAmount(msg[1])
 			send(con, get)
+			return
 		case "exit":
 			con.Close()
 			fmt.Println("EOF")
@@ -96,8 +100,10 @@ func rec(con net.Conn) {
 			send(con, his)
 			runtime.GC()
 			debug.FreeOSMemory()
+			return
 		default:
 			send(con, "Some How Error!")
+			return
 		}
 	// }
 	return
