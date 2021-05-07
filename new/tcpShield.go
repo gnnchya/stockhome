@@ -21,9 +21,9 @@ var err error
 var sadd = make(chan bool, 3800)
 var swd = make(chan bool, 6700)
 var sget = make(chan bool, 8700) 
-// add chance is 12%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 12/100*64511/2 = ~3800
-// withdraw chance is 21%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 21/100*64511/2 = ~6700
-// get chance is 27%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 27/100*64511/2 = ~8700
+// add chance is 12%, and server max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 12/100*64511/2 = ~3800
+// withdraw chance is 21%, and server max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 21/100*64511/2 = ~6700
+// get chance is 27%, and server max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 27/100*64511/2 = ~8700
 
 func main() {
 	myCache.InitLRU(1000)
@@ -141,6 +141,9 @@ func GetAmount(itemID int) string {
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
+	Db.SetMaxIdleConns(10)
+	Db.SetMaxOpenConns(10)
+	Db.SetConnMaxLifetime(time.Minute * 3)
 	defer Db.Close()
 	var amount int
 	check := Db.QueryRow("SELECT amount FROM stock WHERE itemID = (?)", itemID).Scan(&amount)
@@ -157,6 +160,9 @@ func addNew(itemID int, amount int, userID int) string {
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
+	Db.SetMaxIdleConns(10)
+	Db.SetMaxOpenConns(10)
+	Db.SetConnMaxLifetime(time.Minute * 3)
 	defer Db.Close()
 	// For adding NEW items. For items NOT CURRENTLY in the database.
 	// If you add an existing item, it will die. Use addExist for items already in database
@@ -211,6 +217,9 @@ func withdraw(itemID int, amount int, userID int) string {
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
+	Db.SetMaxIdleConns(10)
+	Db.SetMaxOpenConns(10)
+	Db.SetConnMaxLifetime(time.Minute * 3)
 	defer Db.Close()
 	var checkID, stock int
 	var statement string

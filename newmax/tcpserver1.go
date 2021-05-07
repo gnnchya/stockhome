@@ -17,7 +17,7 @@ import (
 )
 
 var sana = make(chan bool, 3200)
-// analysis chance is 10% /2(devided by two because it need to devided in two server), and max connectin is about 64511 so semaphore of get function is 12/100*64511/4 = ~3200
+// analysis chance is 10% /2(devided by two because it need to devided in two server), and server max connection is about 64511 so semaphore of analysis function is 10/100*64511/2 = ~3200
 
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")

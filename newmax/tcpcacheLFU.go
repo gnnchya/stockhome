@@ -17,7 +17,7 @@ import (
 )
 
 var shis = make(chan bool, 19200)
-// history chance is 30%, and max connectin is about 64511 so semaphore of get function is 30/100*64511/2 = ~9600
+// history chance is 30%, and server max connectin is about 64511 so semaphore of history function is 30/100*64511 = ~19200
 
 var upd sync.Mutex
 var en sync.Mutex

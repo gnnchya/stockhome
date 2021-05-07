@@ -21,9 +21,9 @@ var err error
 var sadd = make(chan bool, 7700)
 var swd = make(chan bool, 13500)
 var sget = make(chan bool, 17400) 
-// add chance is 12%, and max connectin is about 64511 so semaphore of get function is 12/100*64511/2 = ~7700
-// withdraw chance is 21%, and max connectin is about 64511 so semaphore of get function is 21/100*64511/2 = ~13500
-// get chance is 27%, and max connectin is about 64511 so semaphore of get function is 27/100*64511/2 = ~17400
+// add chance is 12%, and server max connectin is about 64511 so semaphore of add function is 12/100*64511 = ~7700
+// withdraw chance is 21%, and server max connectin is about 64511 so semaphore of withdraw function is 21/100*64511 = ~13500
+// get chance is 27%, and server max connectin is about 64511 so semaphore of get function is 27/100*64511 = ~17400
 
 func main() {
 	myCache.InitLRU(1000)

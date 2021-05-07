@@ -17,7 +17,7 @@ import (
 )
 
 var shis = make(chan bool, 9600)
-// history chance is 30%, and max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 30/100*64511/2 = ~9600
+// history chance is 30%, and server max connectin is 64511/2 (devided by two because port is use by testdrive too) so semaphore of get function is 30/100*64511/2 = ~9600
 
 // var supd = make(chan bool, 1)
 // var en = make(chan bool, 1)
@@ -281,6 +281,9 @@ func retrieve(c *Cache, q *Queue, filename int) []byte { //c *Cache, q *Queue, s
 		if err != nil {
 			fmt.Println("Error: Cannot open database")
 		}
+		db.SetMaxIdleConns(10)
+		db.SetMaxOpenConns(10)
+		db.SetConnMaxLifetime(time.Minute * 3)
 		defer db.Close()
 		fmt.Println("From DB")
 		Date := name[0:4] + "-" + name[4:6]

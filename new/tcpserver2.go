@@ -18,7 +18,7 @@ import (
 )
 
 var sana = make(chan bool, 1600)
-// analysis chance is 10%, and max connectin is 64511/4 (devided by four because port is use by testdrive too and also devided in two server) so semaphore of get function is 12/100*64511/4 = ~1600
+// analysis chance is 10%, and server max connectin is 64511/4 (devided by four because port is use by testdrive too and also devided in two server) so semaphore of get function is 12/100*64511/4 = ~1600
 
 func main() {
 	// p := profile.Start(profile.MemProfile)
@@ -329,6 +329,9 @@ func rtDB() []string {
 	if err != nil {
 		fmt.Println("Error: Cannot open database")
 	}
+	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(10)
+	db.SetConnMaxLifetime(time.Minute * 3)
 	defer db.Close()
     buf := bytes.NewBuffer(make([]byte, 0))
     day := time.Now().AddDate(0, 0, -1)
