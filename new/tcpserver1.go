@@ -21,7 +21,7 @@ var sana = make(chan bool, 1600)
 
 func main() {
 	// p := profile.Start(profile.MemProfile)
-	connect, err := net.Listen("tcp", "tcp", "128.199.70.252:5001")
+	connect, err := net.Listen("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
 		return
