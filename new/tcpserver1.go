@@ -14,7 +14,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	// "github.com/pkg/profile"
+	"github.com/pkg/profile"
 )
 
 var sana = make(chan bool, 1600)
