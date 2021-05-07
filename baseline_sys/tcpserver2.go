@@ -152,11 +152,8 @@ func MostWithA() string {
 	}
 
 	sort.Slice(withSort, func(i, j int) bool {
-		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
-			return a > b
-		}
-		return withSort[i] < withSort[j]
-	})
+		return withMap[withSort[i]] > withMap[withSort[j]]
+	   })
 
 	var i int = 0
 	for _, amount := range withSort {
@@ -202,11 +199,8 @@ func MostWithDate(start string) string {
 	}
 
 	sort.Slice(withSort, func(i, j int) bool {
-		if a, b := withMap[withSort[i]], withMap[withSort[j]]; a != b {
-			return a > b
-		}
-		return withSort[i] < withSort[j]
-	})
+		return withMap[withSort[i]] > withMap[withSort[j]]
+	   })
 
 	var i int = 0
 	for _, amount := range withSort {
