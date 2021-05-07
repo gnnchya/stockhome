@@ -31,7 +31,7 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 	}
 
 	rdact = strconv.Itoa(ran)
-	rd := rand.Intn(100-1)+1
+	rd := rand.Intn(100-1) + 1
 	switch {
 	case rd <= 20: // 20% chance
 		rdact = "add " + strconv.Itoa(rand.Intn(1000000)) + " " + rdact + " " + strconv.Itoa(rand.Intn(10-5)+5)
@@ -48,9 +48,9 @@ func DBcache(c chan string, ts int) (time.Duration, string, string, string, int,
 	if begin == "begin" {
 		start := time.Now()
 		c <- rdact
-
 		output = <-c
 		elapsed = time.Since(start)
+		scache <- true
 		go show(ran, cdb)
 		mem1 = <-c
 		mem2 = <-c

@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -21,7 +20,6 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	correct := "yes"
 	rd := randomTimestamp()
 	randate := "ana " + rd
-	
 
 	begin := <-c
 	if begin == "begin" {
@@ -47,9 +45,9 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 	}
 
 	if output != "None" {
-		if output != "Server: " + <-cana {
+		if output != "Server: "+<-cana {
 			correct = "no"
-		   }
+		}
 	} else {
 		correct = "nil"
 	}
@@ -68,39 +66,26 @@ func randomTimestamp() string {
 }
 
 // analysis code ****************************************************
-func analysis1(start string, cana chan string){
-	var aWith, bWith, cWith, dWith string
-	Wg := sync.WaitGroup{}
-
+func analysis1(start string, cana chan string) {
 	buf := bytes.NewBuffer(make([]byte, 0))
+	sana <- true
 	s := rtDB(buf)
-
-	Wg.Add(1)
-	go func() {
-		aWith = MostWithA(&Wg, s)
-	}()
-
-	Wg.Add(1)
-	go func() {
-		bWith = MostWithDate(start, &Wg, s)
-	}()
-
-	Wg.Add(1)
-	go func() {
-		cWith = WithTime(&Wg, s)
-	}()
-
-	Wg.Add(1)
-	go func() {
-		dWith = WithDate(&Wg, s)
-	}()
-
-	Wg.Wait()
-	cana <-  (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
+	ac := make(chan string)
+	bc := make(chan string)
+	cc := make(chan string)
+	dc := make(chan string)
+	go MostWithA(ac, s)
+	go MostWithDate(start, bc, s)
+	go WithTime(cc, s)
+	go WithDate(dc, s)
+	aWith := <-ac
+	bWith := <-bc
+	cWith := <-cc
+	dWith := <-dc
+	cana <- (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
-func MostWithA(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithA(ac chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
@@ -142,11 +127,11 @@ func MostWithA(Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-	return txt.String()
+	ac <- txt.String()
+	return
 }
 
-func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func MostWithDate(start string, bc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	startDate, _ := time.Parse("2006-01-02", start)
@@ -193,12 +178,11 @@ func MostWithDate(start string, Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-
-	return txt.String()
+	bc <- txt.String()
+	return
 }
 
-func WithTime(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithTime(cc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 	// Make map for keeping
@@ -229,11 +213,11 @@ func WithTime(Wg *sync.WaitGroup, s []string) string {
 	for _, time := range withSort {
 		txt.WriteString(time + ":00 - " + time + ":59 | " + strconv.Itoa(withMap[time]) + "\n")
 	}
-	return txt.String()
+	cc <- txt.String()
+	return
 }
 
-func WithDate(Wg *sync.WaitGroup, s []string) string {
-	defer Wg.Done()
+func WithDate(dc chan string, s []string) {
 	var txt strings.Builder
 	var count int = 0
 
@@ -269,13 +253,13 @@ func WithDate(Wg *sync.WaitGroup, s []string) string {
 			break
 		}
 	}
-	return txt.String()
+	dc <- txt.String()
+	return
 }
 
 // ---------------------------------------------------------------------------------------------------
-func rtDB(buf *bytes.Buffer) []string{
-	defer func(){ <-sana }()
-
+func rtDB(buf *bytes.Buffer) []string {
+	defer func() { <-sana }()
 	var err error
 	day := time.Now().AddDate(0, 0, -1)
 	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
