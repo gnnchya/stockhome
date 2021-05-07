@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
-	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,7 +15,15 @@ import (
 )
 
 var sana = make(chan bool, 1600)
+var db *sql.DB
+var err error
+func init(){
 
+	db, err = sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+}
 func main() {
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
 	if err != nil {
@@ -55,7 +62,6 @@ func rec(con net.Conn) {
 			date[2] = strings.TrimSpace(date[2])
 			ana := Analysis(date[0], date[1], date[2])
 			send(con, ana)
-			debug.FreeOSMemory()
 		case "add":
 			id := strings.Split(msg[1], "-")
 			id[0] = strings.TrimSpace(id[0])
@@ -80,7 +86,6 @@ func rec(con net.Conn) {
 		case "his":
 			his := his(data)
 			send(con, his)
-			debug.FreeOSMemory()
 		default:
 			send(con, "Some How Error!")
 		}
@@ -93,7 +98,7 @@ func send(con net.Conn, msg string) {
 
 func his(msg string) string {
 	// mhis.Lock()
-	con, err := net.Dial("tcp4", "139.59.116.139:5004")
+	con, err := net.Dial("tcp", "139.59.116.139:5004")
 	if err != nil {
 		fmt.Println(err)
 		return "nil"
@@ -112,37 +117,8 @@ func his(msg string) string {
 func Analysis(year string, month string, day string) string {
 	// mana.Lock()
 	var start string = year + "-" + month + "-" + day
-
-	// buf := bytes.NewBuffer(make([]byte, 0))
-	// db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	// if err != nil {
-	// 	fmt.Println("Error: Cannot open database")
-	// }
-	// defer db.Close()
-	// dayy := time.Now().AddDate(0, 0, -1)
-	// row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", dayy)
-	// if err != nil {
-	// 	fmt.Print(err)
-	// }
-	// defer row.Close()
-	// // Slice each row
-	// for row.Next() {
-	// 	var itemID, amount int
-	// 	var date, timee string
-	// 	err = row.Scan(&itemID, &amount, &date, &timee)
-	// 	if err != nil {
-	// 		fmt.Print(err)
-	// 	}
-	// 	// Write each line
-	// 	line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + timee + ",")
-	// 	buf.Write(line)
-	// }
 	sana <- true
 	s := rtDB()
-	// buf.Write([]byte("`"))
-	// sss, _ := buf.ReadString('`')
-	// s := strings.Split(sss, ",")
-	// s := strings.Split(buf.String(), ",")
 	ac := make(chan string)
 	bc := make(chan string)
 	cc := make(chan string)
@@ -155,8 +131,6 @@ func Analysis(year string, month string, day string) string {
 	bWith := <-bc
 	cWith := <-cc
 	dWith := <-dc
-	defer debug.FreeOSMemory()
-	// defer runtime.GC()
 	return (aWith + "\n" + bWith + "\n" + cWith + "\n" + dWith + ".")
 }
 
@@ -337,13 +311,10 @@ func WithDate(dc chan string, s []string) {
 func rtDB() []string {
 	defer func() { <-sana }()
 	buf := bytes.NewBuffer(make([]byte, 0))
-	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer db.Close()
+	//defer db.Close()
 	day := time.Now().AddDate(0, 0, -1)
-	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
+	limit := time.Now().AddDate(-1, 0, 0)
+	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", limit,  day)
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -351,13 +322,13 @@ func rtDB() []string {
 	// Slice each row
 	for row.Next() {
 		var itemID, amount int
-		var date, time string
-		err = row.Scan(&itemID, &amount, &date, &time)
+		var date, timee string
+		err = row.Scan(&itemID, &amount, &date, &timee)
 		if err != nil {
 			fmt.Print(err)
 		}
 		// Write each line
-		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
+		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + timee + ",")
 		buf.Write(line)
 	}
 	s := strings.Split(buf.String(), ",")
@@ -386,7 +357,7 @@ func add(userID string, itemID string, itemAmount string) string {
 
 func withdraw(userID string, itemID string, itemAmount string) string {
 	// mwd.Lock()
-	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
@@ -406,7 +377,7 @@ func withdraw(userID string, itemID string, itemAmount string) string {
 
 func getItemAmount(itemID string) string {
 	// mget.Lock()
-	cs, err := net.Dial("tcp4", "143.198.195.15:5003")
+	cs, err := net.Dial("tcp", "143.198.195.15:5003")
 	if err != nil {
 		fmt.Println(err)
 		cs.Close()
