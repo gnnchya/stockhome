@@ -322,6 +322,11 @@ func WithDate(dc chan string, s []string) {
 
 func rtDB() []string {
     defer func() { <-sana }()
+	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
+	if err != nil {
+		fmt.Println("Error: Cannot open database")
+	}
+	defer db.Close()
     buf := bytes.NewBuffer(make([]byte, 0))
     day := time.Now().AddDate(0, 0, -1)
     limit := time.Now().AddDate(-1, 0, 0)
