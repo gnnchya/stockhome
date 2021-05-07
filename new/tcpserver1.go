@@ -321,37 +321,33 @@ func WithDate(dc chan string, s []string) {
 // ---------------------------------------------------------------------------------------------------
 
 func rtDB() []string {
-	defer func() { <-sana }()
-	buf := bytes.NewBuffer(make([]byte, 0))
-	db, err := sql.Open("mysql", "root:pinkponk@tcp(209.97.170.50:3306)/stockhome")
-	if err != nil {
-		fmt.Println("Error: Cannot open database")
-	}
-	defer db.Close()
-	day := time.Now().AddDate(0, 0, -1)
-	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
-	if err != nil {
-		fmt.Print(err)
-	}
-	defer row.Close()
-	// Slice each row
-	for row.Next() {
-		var itemID, amount int
-		var date, time string
-		err = row.Scan(&itemID, &amount, &date, &time)
-		if err != nil {
-			fmt.Print(err)
-		}
-		// Write each line
-		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
-		buf.Write(line)
-	}
-	s := strings.Split(buf.String(), ",")
-	buf.Reset()
-	buf = nil
-	runtime.GC()
-	debug.FreeOSMemory()
-	return s
+    defer func() { <-sana }()
+    buf := bytes.NewBuffer(make([]byte, 0))
+    day := time.Now().AddDate(0, 0, -1)
+    limit := time.Now().AddDate(-1, 0, 0)
+    row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", limit, day)
+    if err != nil {
+        fmt.Print(err)
+    }
+    defer row.Close()
+    // Slice each row
+    for row.Next() {
+        var itemID, amount int
+        var date, time string
+        err = row.Scan(&itemID, &amount, &date, &time)
+        if err != nil {
+            fmt.Print(err)
+        }
+        // Write each line
+        line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
+        buf.Write(line)
+    }
+    s := strings.Split(buf.String(), ",")
+    buf.Reset()
+    buf = nil
+    runtime.GC()
+    debug.FreeOSMemory()
+    return s
 }
 
 func add(userID string, itemID string, itemAmount string) string {
