@@ -3,8 +3,11 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"math/rand"
+	"runtime"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -258,16 +261,16 @@ func WithDate(dc chan string, s []string) {
 }
 
 // ---------------------------------------------------------------------------------------------------
-func rtDB(buf *bytes.Buffer) []string {
+func rtDB() []string {
 	defer func() { <-sana }()
-	var err error
+	buf := bytes.NewBuffer(make([]byte, 0))
 	day := time.Now().AddDate(0, 0, -1)
-	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN '1999-01-01' AND (?)", day)
-	// row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0")
+	limit := time.Now().AddDate(-1, 0, 0)
+	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", limit,  day)
 	if err != nil {
 		fmt.Print(err)
 	}
-
+	defer row.Close()
 	// Slice each row
 	for row.Next() {
 		var itemID, amount int
@@ -280,8 +283,10 @@ func rtDB(buf *bytes.Buffer) []string {
 		line := []byte(strconv.Itoa(itemID) + "," + strconv.Itoa(amount) + "," + date + "," + time + ",")
 		buf.Write(line)
 	}
-	row.Close()
-
 	s := strings.Split(buf.String(), ",")
+	buf.Reset()
+	buf = nil
+	runtime.GC()
+	debug.FreeOSMemory()
 	return s
 }
