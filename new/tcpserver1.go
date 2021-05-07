@@ -28,7 +28,7 @@ func main() {
 	}
 	defer connect.Close()
 	go func() {
-		time.Sleep(50 * time.Second)
+		time.Sleep(130 * time.Second)
 		p.Stop()
 	}()
 	for {
