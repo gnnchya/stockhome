@@ -15,23 +15,17 @@ import (
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
-	// "github.com/pkg/profile"
 )
 
 var mana sync.Mutex
 
 func main() {
-	// p := profile.Start(profile.MemProfile)
 	connect, err := net.Listen("tcp", "128.199.70.252:5001")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer connect.Close()
-	// go func() {
-	// 	time.Sleep(50 * time.Second)
-	// 	p.Stop()
-	// }()
 	for {
 		con, err := connect.Accept()
 		if err != nil {
