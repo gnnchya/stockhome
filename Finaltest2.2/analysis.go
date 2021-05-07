@@ -3,7 +3,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"math/rand"
 	"runtime"
@@ -26,7 +25,7 @@ func Analysis(c chan string, ts int) (time.Duration, string, string, string) {
 
 	begin := <-c
 	if begin == "begin" {
-		fmt.Println("-------------------\u001b[48;5;89mANALYSIS\u001b[0m------------------- Client no.", ts)
+		fmt.Println("-------------------ANALYSIS------------------- Client no.", ts)
 		start := time.Now()
 		c <- randate
 		go analysis1(rd, cana)
@@ -70,9 +69,9 @@ func randomTimestamp() string {
 
 // analysis code ****************************************************
 func analysis1(start string, cana chan string) {
-	buf := bytes.NewBuffer(make([]byte, 0))
+	// buf := bytes.NewBuffer(make([]byte, 0))
 	sana <- true
-	s := rtDB(buf)
+	s := rtDB()
 	ac := make(chan string)
 	bc := make(chan string)
 	cc := make(chan string)
@@ -266,7 +265,7 @@ func rtDB() []string {
 	buf := bytes.NewBuffer(make([]byte, 0))
 	day := time.Now().AddDate(0, 0, -1)
 	limit := time.Now().AddDate(-1, 0, 0)
-	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", limit,  day)
+	row, err := db.Query("SELECT itemID, amount, date, time FROM history WHERE action = 0 AND date BETWEEN (?) AND (?)", limit, day)
 	if err != nil {
 		fmt.Print(err)
 	}

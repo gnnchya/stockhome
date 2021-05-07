@@ -12,14 +12,14 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"gonum.org/v1/plot"
-	"gonum.org/v1/plot/plotter"
-	"gonum.org/v1/plot/plotutil"
-	"gonum.org/v1/plot/vg"
+	// "gonum.org/v1/plot"
+	// "gonum.org/v1/plot/plotter"
+	// "gonum.org/v1/plot/plotutil"
+	// "gonum.org/v1/plot/vg"
 )
 
-var points plotter.XYs
-var p = plot.New()
+// var points plotter.XYs
+// var p = plot.New()
 var sana = make(chan bool, 200)
 var shis = make(chan bool, 600)
 var scache = make(chan bool, 1200)
@@ -68,7 +68,7 @@ func main() {
 		for ti := 1; ti <= *cli; ti++ {
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 			c1 := make(chan string)
-			log.Println("\033[36m+++++++++++++++++++ Initiate client no.\u001B[0m", ti)
+			log.Println("+++++++++++++++++++ Initiate client no.", ti)
 			go Client(c1)
 			c <- ti
 			cc <- c1
@@ -76,22 +76,22 @@ func main() {
 		}
 	}(c)
 
-	go func() {
-		min := *allt * 60
-		temp := 0
-		points = make(plotter.XYs, min)
-		p.Title.Text = "Throughput"
-		p.X.Label.Text = "Time(s)"
-		p.Y.Label.Text = "Transactions(time)"
+	// go func() {
+	// 	min := *allt * 60
+	// 	temp := 0
+	// 	points = make(plotter.XYs, min)
+	// 	p.Title.Text = "Throughput"
+	// 	p.X.Label.Text = "Time(s)"
+	// 	p.Y.Label.Text = "Transactions(time)"
 
-		for i := 0; i < min; i++ {
-			time.Sleep(time.Second)
-			temp3 := counttana + countthis + counttget
-			points[i].X = float64(i)
-			points[i].Y = float64(temp3 - temp)
-			temp = temp3
-		}
-	}()
+	// 	for i := 0; i < min; i++ {
+	// 		time.Sleep(time.Second)
+	// 		temp3 := counttana + countthis + counttget
+	// 		points[i].X = float64(i)
+	// 		points[i].Y = float64(temp3 - temp)
+	// 		temp = temp3
+	// 	}
+	// }()
 
 	timeout := time.After(time.Duration((*allt*60)+5) * time.Second)
 
@@ -100,15 +100,15 @@ func main() {
 		select {
 		case <-timeout:
 			defer db.Close()
-			err := plotutil.AddLinePoints(p, "Throuhput/s", points)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if err := p.Save(5*vg.Inch, 5*vg.Inch, "ThroughputFinal.pdf"); err != nil {
-				panic(err)
-			}
+			// err := plotutil.AddLinePoints(p, "Throuhput/s", points)
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// if err := p.Save(5*vg.Inch, 5*vg.Inch, "ThroughputFinal.pdf"); err != nil {
+			// 	panic(err)
+			// }
 			fmt.Println()
-			fmt.Println("\u001B[36m-----------------------------------RESULT---------------------------------------")
+			fmt.Println("-----------------------------------RESULT---------------------------------------")
 			log.Printf("Test is complete, Total Online time : %d minute(s)", *allt)
 			fmt.Println("Expected number of client(s) :", *cli)
 			fmt.Println("Total number of spawned client(s) :", (cliCnt))
@@ -138,19 +138,21 @@ func main() {
 			fmt.Println("Miss count:", countmiss2, ">>Average miss time : ", (float64(missavg2)/float64(time.Millisecond))/float64(countmiss2), "ms")
 			fmt.Println("Hit count:", counthit2, ">>Average hit time : ", (float64(hitavg2)/float64(time.Millisecond))/float64(counthit2), "ms")
 			fmt.Println(">>HIT RATE: ", (float64(counthit2)/float64(countmiss2+counthit2))*100, "%")
-			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%\033[0m")
+			fmt.Println("++Cache Data correctness: ", (float64(counthit2+countmiss2)/float64(count3))*100, "%")
 			return
 
 		case ts := <-c:
 			go func(ts int) {
 				c1 := <-cc
-				log.Printf("\033[33mClient No %d started\u001B[0m", ts)
+				log.Printf("Client No %d started", ts)
 
 				//Add,WD,get test >> Initial request
 				counttget++
 				elapsed, temp1, temp2, correct, rd, state := DBcache(c1, ts)
 				if temp1 != "error" {
-					mem1, mem2 = temp1, temp2
+					if temp1 >= mem1 || temp2 >= mem2 {
+						mem1, mem2 = temp1, temp2
+					}
 				}
 
 				opcount3 <- 1
