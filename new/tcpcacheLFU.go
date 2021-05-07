@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
+"time"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/ricochet2200/go-disk-usage/du"
 )
